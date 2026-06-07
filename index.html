@@ -1006,7 +1006,6 @@
         body.redacted input.redact-input { color:transparent !important; background:#1c1c1e !important; border-color:#1c1c1e !important; caret-color:transparent; }
         body.redacted .student-portrait { background:#1c1c1e !important; }
         body.redacted .student-portrait * { visibility:hidden !important; }
-        body.redacted .user-pic-wrap::after { content:''; position:absolute; inset:0; border-radius:50%; background:#1c1c1e; }
     </style>
 <script src="https://accounts.google.com/gsi/client" async defer onload="window._gisReady=true;if(typeof initGDrive==='function')initGDrive();"></script>
 <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
@@ -1042,9 +1041,7 @@
             <span id="drive-user-name" style="display:none;"></span>
             <button id="manage-gear-btn" onclick="switchTab('manage')" title="Manage" style="padding:0.25rem;border:none;background:transparent;cursor:pointer;font-size:1.15rem;line-height:1;color:#86868b;transition:color 0.2s;display:flex;align-items:center;" onmouseover="this.style.color='#1d1d1f'" onmouseout="this.style.color='#86868b'">&#9881;</button>
             <button onclick="signOut()" style="padding:0.25rem 0.65rem;border:1px solid #d2d2d7;border-radius:8px;background:transparent;cursor:pointer;font-size:0.75rem;font-family:inherit;color:#86868b;transition:all 0.2s;white-space:nowrap;" onmouseover="this.style.background='#f5f5f7'" onmouseout="this.style.background='transparent'">Sign out</button>
-            <div class="user-pic-wrap" style="display:none;width:30px;height:30px;border-radius:50%;position:relative;flex-shrink:0;">
-                <img id="drive-user-pic" src="" alt="" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:1.5px solid #e8e8ed;display:block;">
-            </div>
+            <span style="font-size:1.4rem;line-height:1;flex-shrink:0;">&#128100;</span>
         </div>
     </div>
 </header>
@@ -2652,8 +2649,6 @@ function signInWithGoogle() {
 function signOut() {
     gDriveToken = null;
     driveFolderCache = {};
-    var picEl = document.getElementById('drive-user-pic');
-    if (picEl) { picEl.src = ''; var pw = picEl.closest('.user-pic-wrap'); if (pw) pw.style.display = 'none'; }
     document.getElementById('drive-user-info').style.display = 'none';
     document.getElementById('login-overlay').style.display = 'flex';
 }
@@ -2666,8 +2661,6 @@ function fetchUserInfo() {
     .then(function(info) {
         var nameEl = document.getElementById('drive-user-name');
         if (nameEl) nameEl.textContent = info.given_name || info.name || '';
-        var picEl = document.getElementById('drive-user-pic');
-        if (picEl && info.picture) { picEl.src = info.picture; var pw = picEl.closest('.user-pic-wrap'); if (pw) pw.style.display = 'block'; }
         document.getElementById('drive-user-info').style.display = 'flex';
         document.getElementById('login-overlay').style.display = 'none';
         loadAppLogo();
