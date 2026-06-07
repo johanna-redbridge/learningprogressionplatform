@@ -1042,14 +1042,6 @@
     <!-- Available sub-panel -->
     <div id="lc-subtab-available" class="lc-subtab-panel">
         <div class="view-container">
-            <div style="display:flex;gap:0.3rem;align-items:center;margin-bottom:0.6rem;flex-wrap:nowrap;">
-                <div id="av-subject-btns" class="toggle-group"></div>
-                <input type="text" id="av-ccss" placeholder="Credit…" title="Filter by CCSS standard ID" oninput="avFilterCCSS=this.value.trim();renderAvailable()" style="width:100px;padding:0.3rem 0.6rem;border:1px solid #d2d2d7;border-radius:8px;font-size:0.72rem;font-family:inherit;outline:none;" onfocus="this.style.borderColor='#FF8200'" onblur="this.style.borderColor='#d2d2d7'">
-                <div style="display:flex;align-items:center;gap:0.25rem;margin-left:auto;">
-                    <button onclick="avSearchToggle()" id="av-search-icon-btn" title="Search" style="background:none;border:none;cursor:pointer;font-size:0.95rem;padding:0.3rem;line-height:1;color:#86868b;border-radius:6px;" onmouseover="this.style.color='#1d1d1f'" onmouseout="this.style.color='#86868b'">&#128269;</button>
-                    <input type="text" id="av-search" placeholder="Search…" oninput="renderAvailable()" style="display:none;width:130px;padding:0.3rem 0.6rem;border:1px solid #d2d2d7;border-radius:8px;font-size:0.72rem;font-family:inherit;outline:none;" onfocus="this.style.borderColor='#FF8200'" onblur="this.style.borderColor='#d2d2d7'" onkeydown="if(event.key==='Escape'){avSearchToggle();}">
-                </div>
-            </div>
             <div class="progress-table-wrapper" id="available-grid"></div>
         </div>
     </div>
@@ -4861,6 +4853,8 @@ var avFilterStage = 'all';
 var avFilterType = 'all';
 var avSortCol = 'name';
 var avSortDir = 1;
+var avSearchOpen = false;
+var avSearchVal = '';
 function avSortBy(col) {
     if (avSortCol === col) { avSortDir = -avSortDir; } else { avSortCol = col; avSortDir = 1; }
     renderAvailable();
@@ -5017,7 +5011,7 @@ function hexDarken(hex, amount) {
 }
 
 function renderAvailable() {
-    var search = document.getElementById('av-search').value.toLowerCase();
+    var search = avSearchVal.toLowerCase();
     var grid = document.getElementById('available-grid');
 
     var filtered = credits.filter(function(c) {
@@ -5074,7 +5068,6 @@ function renderAvailable() {
         var active = avFilterSubject === s;
         subjHtml += '<button class="toggle-btn" onclick="setAvFilter(\'subject\',\'' + s.replace(/'/g, "\\'") + '\')" title="' + s + '" style="' + (active ? 'background:' + sc.bg + ';color:' + (sc.tc||'#fff') + ';box-shadow:0 1px 3px rgba(0,0,0,0.12);' : 'color:' + (sc.ic||sc.bg) + ';') + '">' + subjLabel(s) + '</button>';
     });
-    document.getElementById('av-subject-btns').innerHTML = subjHtml;
 
     var WH_CATS = [
         { code: 'WH.AL2.CL', range: '1–3', name: '—' },
@@ -5099,10 +5092,7 @@ function renderAvailable() {
     function avSortTh(col, label, extraStyle) {
         var isDD = col === 'stage' || col === 'subject' || col === 'type';
         if (isDD) {
-            var fval = col==='stage' ? avFilterStage : col==='type' ? avFilterType : avFilterSubject;
-            var on = fval !== 'all';
-            var pill = on ? ' <span style="font-size:0.58em;background:#FF8200;color:#fff;border-radius:4px;padding:0 4px;vertical-align:middle;">'+fval+'</span>' : '';
-            return '<th onclick="avOpenDD(\''+col+'\',this,event)" style="cursor:pointer;user-select:none;'+(on?'color:#FF8200;':'')+(extraStyle||'')+'">'+label+pill+' <span style="opacity:.5;font-size:.65em;">▾</span></th>';
+            return '<th onclick="avOpenDD(\''+col+'\',this,event)" style="cursor:pointer;user-select:none;'+(extraStyle||'')+'">'+label+' <span style="opacity:.5;font-size:.65em;">▾</span></th>';
         }
         var active = avSortCol === col;
         var arrow = active ? (avSortDir === 1 ? ' ↑' : ' ↓') : ' <span style="opacity:.3;font-size:0.6em;">↕</span>';
@@ -5112,7 +5102,10 @@ function renderAvailable() {
     html += '<colgroup><col style="width:36px"><col style="width:25%"><col style="width:5%"><col style="width:12%"><col style="width:8%"><col style="width:8%"><col style="width:9%"><col style="width:9%"><col style="width:13%"></colgroup>';
     html += '<thead><tr>';
     html += '<th></th>';
-    html += avSortTh('name', 'Credit Name');
+    var _nArrow = avSortCol === 'name' ? (avSortDir === 1 ? ' ↑' : ' ↓') : ' <span style="opacity:.3;font-size:0.6em;">↕</span>';
+    var _glass = '<span onclick="event.stopPropagation();avSearchOpen=!avSearchOpen;if(!avSearchOpen)avSearchVal=\'\';renderAvailable();" title="Search" style="cursor:pointer;margin-left:5px;vertical-align:middle;opacity:' + (avSearchOpen ? '1' : '0.4') + '"><svg width="11" height="11" viewBox="0 0 11 11" style="vertical-align:middle;"><circle cx="4.5" cy="4.5" r="3.2" fill="none" stroke="currentColor" stroke-width="1.4"/><line x1="7" y1="7" x2="10" y2="10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></span>';
+    var _inp = avSearchOpen ? '<div><input id="av-search-inline" type="text" value="' + avSearchVal.replace(/"/g,'&quot;') + '" placeholder="Search…" oninput="avSearchVal=this.value;renderAvailable()" onkeydown="if(event.key===\'Escape\'){avSearchOpen=false;avSearchVal=\'\';renderAvailable();}" onclick="event.stopPropagation()" style="width:85%;margin-top:3px;padding:2px 5px;border:1px solid #d2d2d7;border-radius:5px;font-size:0.68rem;font-family:inherit;outline:none;font-weight:400;"></div>' : '';
+    html += '<th onclick="avSortBy(\'name\')" style="cursor:pointer;user-select:none;">Credit Name' + _nArrow + _glass + _inp + '</th>';
     html += '<th style="text-align:center;">Doc</th>';
     html += avSortTh('subject', 'Subject');
     html += avSortTh('stage', 'Stage');
@@ -5181,6 +5174,7 @@ function renderAvailable() {
 
     html += '</tbody></table>';
     grid.innerHTML = html;
+    if (avSearchOpen) { var _si = document.getElementById('av-search-inline'); if (_si) { _si.focus(); _si.setSelectionRange(_si.value.length, _si.value.length); } }
 }
 
 var PRACTICE_OPTIONS_FOLDER_ID = '1Og36LoWVp39WV4JxBw_qQK90LqCKtxxI';
