@@ -141,8 +141,7 @@
         }
 
         /* Credit Cards */
-        #available-grid { min-height: calc(100vh - 160px); max-height: none; overflow-y: visible; }
-        #available-grid table thead th { position: sticky; top: var(--nav-h-2, 100px); z-index: 180; background: #5c5b5a; }
+        #available-grid { max-height: calc(100vh - var(--nav-h-2, 100px) - 3rem); overflow-y: auto; }
         #available-grid a:hover {
             text-decoration: underline;
         }
