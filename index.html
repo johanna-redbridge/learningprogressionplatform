@@ -3249,7 +3249,7 @@ async function enhanceCreditsWithMetadata() {
         loadCreditDocs();
         if (typeof renderAvailable === 'function') renderAvailable();
         if (currentTab === 'student' && studentTabStudentId) renderStudentTab();
-        if (currentTab === 'earned') renderEarnedCredits();
+        if (currentTab === 'earned' || currentLCSubtab === 'earned') renderEarnedCredits();
     } catch(e) { console.warn('[Credits] metadata load failed:', e); }
 }
 
