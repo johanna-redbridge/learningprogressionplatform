@@ -12801,7 +12801,8 @@ function renderFPGrowthView() {
                 '<label style="font-size:.82rem;font-weight:600;color:#1d1d1f;">Student</label>'
                 + '<select id="fp-long-sel" style="padding:5px 10px;border-radius:8px;border:1px solid #d1d1d6;font-family:inherit;font-size:.82rem;">'
                 + students.map(function(s){ return '<option value="' + s.name.replace(/"/g,'&quot;') + '"' + (s.name===sel?' selected':'') + '>' + fullName(s.name).replace(/</g,'&lt;') + (s.al?' — AL'+s.al:'') + '</option>'; }).join('')
-                + '</select>')
+                + '</select>'
+                + _sdTierHtml(readingTierData, student.name))
             + '<button onclick="fpWholeSchoolMode=!fpWholeSchoolMode;renderFPGrowthView();" style="padding:5px 14px;border-radius:8px;border:1.5px solid #FFC8BB;font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer;'
             + (fpWholeSchoolMode ? 'background:#FFC8BB;color:#1d1d1f;' : 'background:#fff;color:#1d1d1f;')
             + '">Average Growth</button>'
@@ -13125,7 +13126,8 @@ function renderFP() {
     fpStudents = null; fpScoringLoaded = false;
     el.innerHTML = '<p style="padding:1rem;color:#aeaeb2;">Loading F&amp;P data…</p>';
     if (fpViewMode === 'growth') {
-        loadFpData(function() { renderFPGrowthView(); });
+        var _fpN = 2; function _fpDone() { if (!--_fpN) renderFPGrowthView(); }
+        loadFpData(_fpDone); loadReadingTierData(_fpDone);
     } else {
         loadFpData(function() { renderFPTable(); });
     }
@@ -17140,14 +17142,17 @@ function renderWbStudentGrowth() {
     _wbShowContent();
     var el = document.getElementById('wb-content');
     if (!el) return;
-    if (!wbLongData) {
+    if (!wbLongData || writingTierData === null) {
         el.innerHTML = '<p style="padding:1rem;color:#aeaeb2;">Loading…</p>';
-        fetch(WB_LONG_URL).then(function(r) { return r.text(); }).then(function(text) {
-            wbLongData = parseWbLongCsv(text);
-            renderWbStudentGrowth();
-        }).catch(function() {
-            el.innerHTML = '<p style="padding:1rem;color:#ff3b30;">Failed to load data.</p>';
-        });
+        var _wbN = 2; function _wbDone() { if (!--_wbN) renderWbStudentGrowth(); }
+        if (!wbLongData) {
+            fetch(WB_LONG_URL).then(function(r) { return r.text(); }).then(function(text) {
+                wbLongData = parseWbLongCsv(text); _wbDone();
+            }).catch(function() {
+                el.innerHTML = '<p style="padding:1rem;color:#ff3b30;">Failed to load data.</p>';
+            });
+        } else { _wbDone(); }
+        loadWritingTierData(_wbDone);
         return;
     }
     var allStudents = wbLongData || [];
@@ -17162,6 +17167,7 @@ function renderWbStudentGrowth() {
         + '<option value="">— All students —</option>'
         + allStudents.map(function(s){ return '<option value="' + s.name.replace(/"/g,'&quot;') + '"' + (s.name===wbSgSelectedStudent?' selected':'') + '>' + fullName(s.name).replace(/</g,'&lt;') + (s.al?' — AL'+s.al:'') + '</option>'; }).join('')
         + '</select>'
+        + (!wbAvgGrowthMode && wbSgSelectedStudent ? _sdTierHtml(writingTierData, wbSgSelectedStudent) : '')
         + '<button onclick="wbAvgGrowthMode=!wbAvgGrowthMode;renderWbStudentGrowth();" style="padding:5px 14px;border-radius:8px;border:1.5px solid #E87BB0;font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer;'
         + (wbAvgGrowthMode ? 'background:#E87BB0;color:#fff;' : 'background:#fff;color:#1d1d1f;')
         + '">Average Growth</button>'
