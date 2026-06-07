@@ -10900,25 +10900,13 @@ function xrefReadDetailHTML(){
     var fpRec = fpStudents ? fpStudents.find(function(s){ return xrefNorm(s.name)===xrefNorm(xrefStudent) || s.name===xrefStudent; }) : null;
     if (fpRec && fpRec.boy) headerHtml += '<span style="padding:3px 10px;border-radius:10px;font-size:0.75rem;font-weight:600;background:#fff0ed;color:#9a3412;">F&amp;P BOY: '+fpDisplayLevel(fpRec.boy)+'</span>';
     if (fpRec && fpRec.moy) headerHtml += '<span style="padding:3px 10px;border-radius:10px;font-size:0.75rem;font-weight:600;background:#ffc8bb;color:#7c2d12;">F&amp;P MOY: '+fpDisplayLevel(fpRec.moy)+'</span>';
-    headerHtml += '</div>';
-    var summCards = [
-        {l:'Credits Earned',v:totEarned,tot:totAtGle,bg:'#FFF4F1',tc:'#1d1d1f'},
-        {l:'Lexia Mastered',v:totLexia,tot:totLexiaAtGle,bg:'#FFE6E0',tc:'#1d1d1f'},
-        {l:'Both Confirmed',v:totBoth,bg:'#FFC8BB',tc:'#1d1d1f'}
-    ];
-    headerHtml += '<div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:1rem;">';
-    summCards.forEach(function(c){
-        headerHtml += '<div style="flex:1;min-width:120px;background:'+c.bg+';border-radius:10px;padding:0.6rem 0.9rem;">';
-        if(c.tot !== undefined){
-            headerHtml += '<div style="display:flex;align-items:baseline;gap:4px;">'
-                + '<span style="font-size:1.5rem;font-weight:700;color:'+c.tc+';">'+c.v+'</span>'
-                + '<span style="font-size:0.82rem;font-weight:600;color:'+c.tc+';opacity:0.65;">/ '+c.tot+'</span>'
-                + '</div>';
-        } else {
-            headerHtml += '<div style="font-size:1.5rem;font-weight:700;color:'+c.tc+';">'+c.v+'</div>';
-        }
-        headerHtml += '<div style="font-size:0.72rem;color:'+c.tc+';opacity:0.9;margin-top:2px;">'+c.l+'</div></div>';
-    });
+    headerHtml += '<span style="margin-left:auto;display:flex;align-items:center;gap:14px;flex-shrink:0;padding-left:1rem;">'
+        + [['#FFF4F1','Credits Earned'],['#FFE6E0','Lexia Mastered'],['#FFC8BB','Both Confirmed']].map(function(pair){
+            return '<span style="display:flex;align-items:center;gap:5px;font-size:.72rem;color:#3a3a3c;white-space:nowrap;">'
+                + '<span style="width:14px;height:14px;border-radius:3px;background:'+pair[0]+';border:1px solid #e5b8ac;display:inline-block;flex-shrink:0;"></span>'
+                + pair[1] + '</span>';
+        }).join('')
+        + '</span>';
     headerHtml += '</div></div>';
 
     var html = '<div style="overflow-y:auto;max-height:65vh;padding:0 1.25rem 1.5rem;">';
