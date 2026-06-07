@@ -9215,7 +9215,7 @@ function loadAllPromoData(cb) {
     if (promoAllData) { cb(); return; }
     var result = {}, pending = PROMO_YEARS.length;
     PROMO_YEARS.forEach(function(y) {
-        fetch(PROMO_BASE_URL.replace('{GID}', y.gid))
+        fetch(PROMO_BASE_URL.replace('{GID}', y.gid), { cache: 'no-store' })
             .then(function(r){ return r.text(); })
             .then(function(t){ result[y.label]=parsePromoCsv(t); if(--pending===0){promoAllData=result;cb();} })
             .catch(function(){  result[y.label]=[];              if(--pending===0){promoAllData=result;cb();} });
