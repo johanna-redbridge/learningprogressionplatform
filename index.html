@@ -3873,14 +3873,17 @@ function extractDocId(url) {
     return m ? m[1] : '';
 }
 
+var NARRATIVE_INDEX_OVERRIDES = { 'more_money_and_problems': 1 };
+
 function fetchPortfolioNarrative(creditId, docId) {
     if (!docId || !gDriveToken) return;
+    var narrativeIndex = NARRATIVE_INDEX_OVERRIDES[creditId] || 0;
     fetch('https://docs.googleapis.com/v1/documents/' + docId, {
         headers: { 'Authorization': 'Bearer ' + gDriveToken }
     })
     .then(function(r) { return r.json(); })
     .then(function(doc) {
-        portfolioNarratives[creditId] = extractNarrativeSectionText(doc) || { narrative: '(Narrative section not found in document.)', skill: '' };
+        portfolioNarratives[creditId] = extractNarrativeSectionText(doc, narrativeIndex) || { narrative: '(Narrative section not found in document.)', skill: '' };
         portfolioLoadingNarratives[creditId] = false;
         if (portfolioStudent) renderPortfolioStudent(portfolioStudent);
     })
@@ -4187,10 +4190,10 @@ function applyPronouns(text, pronoun) {
         .replace(/\[(himself|herself)\/(herself|himself)(\/themselves)?\]/gi,    repl(p.himself));
 }
 
-function extractNarrativeSectionText(doc) {
+function extractNarrativeSectionText(doc, index) {
     if (!doc || !doc.body || !doc.body.content) return null;
+    if (index === undefined) index = 0;
 
-    // Collect all text from a table row (across all cells)
     function rowText(row) {
         var text = '';
         (row.tableCells || []).forEach(function(cell) {
@@ -4205,44 +4208,35 @@ function extractNarrativeSectionText(doc) {
         return text;
     }
 
-    // Search every top-level table for one whose header row contains
-    // "Sample Digital Portfolio Narrative". The narrative content is in the
-    // rows that follow the header row.
+    // Collect ALL "Sample Digital Portfolio Narrative" sections across all tables
+    var found = [];
     var contentArr = doc.body.content;
     for (var i = 0; i < contentArr.length; i++) {
         if (!contentArr[i].table) continue;
         var rows = contentArr[i].table.tableRows || [];
-
-        // Find the header row
-        var headerIdx = -1;
         for (var r = 0; r < rows.length; r++) {
-            if (/sample digital portfolio narrative/i.test(rowText(rows[r]))) {
-                headerIdx = r;
-                break;
+            if (!/sample digital portfolio narrative/i.test(rowText(rows[r]))) continue;
+            // Collect rows after this header until the next header row or end of table
+            var parts = [];
+            for (var r2 = r + 1; r2 < rows.length; r2++) {
+                if (/sample digital portfolio narrative/i.test(rowText(rows[r2]))) break;
+                var t = rowText(rows[r2]).replace(/\n+$/, '').trim();
+                if (t) parts.push(t);
             }
+            found.push(parts.join('\n').trim());
         }
-        if (headerIdx === -1) continue;
-
-        // Collect text from all rows after the header
-        var parts = [];
-        for (var r2 = headerIdx + 1; r2 < rows.length; r2++) {
-            var t = rowText(rows[r2]).replace(/\n+$/, '').trim();
-            if (t) parts.push(t);
-        }
-        var fullText = parts.join('\n').trim();
-        if (!fullText) return null;
-
-        // Split at "Skill/concept:" to separate narrative from skill label
-        var skillIdx = fullText.search(/\bSkill\/concept\s*:/i);
-        var narrativeRaw = skillIdx !== -1 ? fullText.slice(0, skillIdx).trim() : fullText;
-        var skillRaw     = skillIdx !== -1
-            ? fullText.slice(skillIdx).replace(/^Skill\/concept\s*:\s*/i, '').trim()
-            : '';
-
-        return { narrative: narrativeRaw, skill: skillRaw };
     }
 
-    return null;
+    var fullText = (found[index] || found[0] || '').trim();
+    if (!fullText) return null;
+
+    var skillIdx = fullText.search(/\bSkill\/concept\s*:/i);
+    var narrativeRaw = skillIdx !== -1 ? fullText.slice(0, skillIdx).trim() : fullText;
+    var skillRaw     = skillIdx !== -1
+        ? fullText.slice(skillIdx).replace(/^Skill\/concept\s*:\s*/i, '').trim()
+        : '';
+
+    return { narrative: narrativeRaw, skill: skillRaw };
 }
 
 // ───────── GOAL TRACKER ─────────
