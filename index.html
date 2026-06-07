@@ -930,7 +930,7 @@
         .analytics-card-sub { font-size:0.78rem; color:#86868b; line-height:1.4; }
         .analytics-card-arrow { margin-top:1.1rem; font-size:0.78rem; color:#FF8200; font-weight:600; }
         /* ── Data sub-tabs ── */
-        .data-subtab-nav { display: flex; justify-content: flex-start; border-bottom: 2px solid #e8e8ed; padding: 0; background: #fff; position: sticky; top: var(--nav-h-1, 57px); z-index: 150; }
+        .data-subtab-nav { display: flex; justify-content: flex-start; border-bottom: 2px solid #e8e8ed; padding: 0 max(1.5rem, calc((100vw - 1400px) / 2 + 1.5in)); background: #fff; position: sticky; top: var(--nav-h-1, 57px); z-index: 150; }
         .data-subtab-btn { padding: 0.55rem 1rem; font-size: 0.82rem; font-weight: 500; border: none; background: none; cursor: pointer; color: #86868b; border-bottom: 2px solid transparent; margin-bottom: -2px; font-family: inherit; transition: color 0.15s; white-space: nowrap; }
         .data-subtab-btn:hover { color: #1d1d1f; }
         .data-subtab-btn.active { color: #FF8200; border-bottom-color: #FF8200; }
@@ -938,7 +938,8 @@
         .logo-tab-btn:hover { opacity:0.7; }
         .logo-tab-btn.active { opacity:1; }
         .panel-subnav { position: sticky; top: var(--nav-h-2, 100px); z-index: 120; }
-        .subpanel-toolbar { position: sticky; top: var(--nav-h-3, 144px); z-index: 90; background: #fff; }
+        .subpanel-toolbar { position: sticky; top: var(--nav-h-3, 144px); z-index: 90; background: #fff; padding-left: max(1.5rem, calc((100vw - 1400px) / 2 + 1.5in)); padding-right: max(1.5rem, calc((100vw - 1400px) / 2 + 1.5in)); }
+        #promo-xref-student-body { max-width: 1400px; margin: 0 auto; padding: 1.25rem max(1.5rem, calc((100vw - 1400px) / 2 + 1.5in)); }
         #xref-filter-bar { position: sticky; top: var(--nav-h-2, 100px); z-index: 120; }
         #xref-comp-header { position: sticky; top: var(--nav-h-3, 144px); z-index: 90; background: #fff; }
         #xref-read-header { position: sticky; top: var(--nav-h-3, 144px); z-index: 90; background: #fff; }
@@ -1350,7 +1351,7 @@
         <div class="data-subtab-panel" id="data-subtab-reading">
             <!-- CORE -->
             <div id="reading-panel-core">
-                <div class="subpanel-toolbar" style="display:flex;gap:0.75rem;align-items:center;padding:0.7rem 1.25rem;border-bottom:1px solid #e8e8ed;flex-wrap:wrap;">
+                <div class="subpanel-toolbar" style="display:flex;gap:0.75rem;align-items:center;padding-top:0.7rem;padding-bottom:0.7rem;border-bottom:1px solid #e8e8ed;flex-wrap:wrap;">
                     <div class="toggle-group">
                         <button class="toggle-btn core-al-btn active" data-al="all" onclick="setCoreAL('all')">All</button>
                         <button class="toggle-btn core-al-btn" data-al="al1" onclick="setCoreAL('al1')">AL1</button>
@@ -1375,7 +1376,7 @@
             </div>
             <!-- F&P -->
             <div id="reading-panel-fp" style="display:none;">
-                <div class="subpanel-toolbar" style="display:flex;gap:0.75rem;align-items:center;padding:0.7rem 1.25rem;border-bottom:1px solid #e8e8ed;flex-wrap:wrap;">
+                <div class="subpanel-toolbar" style="display:flex;gap:0.75rem;align-items:center;padding-top:0.7rem;padding-bottom:0.7rem;border-bottom:1px solid #e8e8ed;flex-wrap:wrap;">
                     <div class="toggle-group">
                         <button class="toggle-btn fp-al-btn active" data-al="all" onclick="setFpAL('all')">All</button>
                         <button class="toggle-btn fp-al-btn" data-al="1" onclick="setFpAL('1')">AL1</button>
@@ -1395,7 +1396,7 @@
             </div>
             <!-- Lexia -->
             <div id="reading-panel-lexia" style="display:none;">
-                <div class="subpanel-toolbar" style="display:flex;gap:0.75rem;align-items:center;padding:0.7rem 1.25rem;border-bottom:1px solid #e8e8ed;flex-wrap:wrap;">
+                <div class="subpanel-toolbar" style="display:flex;gap:0.75rem;align-items:center;padding-top:0.7rem;padding-bottom:0.7rem;border-bottom:1px solid #e8e8ed;flex-wrap:wrap;">
                     <div class="toggle-group">
                         <button class="toggle-btn lexia-view-btn active" data-view="progress" onclick="setLexiaView('progress')">Progress</button>
                         <button class="toggle-btn lexia-view-btn" data-view="standards" onclick="setLexiaView('standards')">Standards</button>
@@ -1421,7 +1422,7 @@
             </div>
             <!-- MAP ELA -->
             <div id="reading-panel-map-ela" style="display:none;">
-                <div class="subpanel-toolbar" style="display:flex;gap:0.75rem;align-items:center;padding:0.7rem 1.25rem;border-bottom:1px solid #e8e8ed;flex-wrap:wrap;">
+                <div class="subpanel-toolbar" style="display:flex;gap:0.75rem;align-items:center;padding-top:0.7rem;padding-bottom:0.7rem;border-bottom:1px solid #e8e8ed;flex-wrap:wrap;">
                     <div class="toggle-group">
                         <button class="toggle-btn map-ela-view-btn active" data-view="class" onclick="setMapElaView('class')">Class</button>
                         <button class="toggle-btn map-ela-view-btn" data-view="student" onclick="setMapElaView('student')">Student Growth</button>
@@ -1471,14 +1472,14 @@
                         <button class="toggle-btn bench-view-btn" data-view="student-growth" onclick="setBenchView('student-growth')">Student Growth</button>
                     </div>
                 </div>
-                <div id="comp-filters" style="display:none;gap:0.75rem;align-items:center;padding:0.7rem 1.25rem;border-bottom:1px solid #e8e8ed;flex-wrap:wrap;">
+                <div id="comp-filters" style="display:none;gap:0.75rem;align-items:center;padding-top:0.7rem;padding-bottom:0.7rem;border-bottom:1px solid #e8e8ed;flex-wrap:wrap;">
                     <span style="font-size:0.8rem;color:#86868b;">Loading…</span>
                 </div>
                 <div id="comp-content"></div>
             </div>
             <!-- MAP Math -->
             <div id="math-panel-map-math" style="display:none;">
-                <div class="subpanel-toolbar" style="display:flex;gap:0.75rem;align-items:center;padding:0.7rem 1.25rem;border-bottom:1px solid #e8e8ed;flex-wrap:wrap;">
+                <div class="subpanel-toolbar" style="display:flex;gap:0.75rem;align-items:center;padding-top:0.7rem;padding-bottom:0.7rem;border-bottom:1px solid #e8e8ed;flex-wrap:wrap;">
                     <div class="toggle-group">
                         <button class="toggle-btn map-math-view-btn active" data-view="class" onclick="setMapMathView('class')">Class</button>
                         <button class="toggle-btn map-math-view-btn" data-view="student" onclick="setMapMathView('student')">Student Growth</button>
@@ -1498,12 +1499,12 @@
             </div>
             <!-- Fact Fluency -->
             <div id="math-panel-fact-fluency" style="display:none;">
-                <div id="fact-fluency-toolbar" style="display:flex;gap:0.75rem;align-items:center;padding:0.7rem 1.25rem;border-bottom:1px solid #e8e8ed;flex-wrap:wrap;"></div>
+                <div id="fact-fluency-toolbar" style="display:flex;gap:0.75rem;align-items:center;padding-top:0.7rem;padding-bottom:0.7rem;border-bottom:1px solid #e8e8ed;flex-wrap:wrap;"></div>
                 <div id="fact-fluency-content"></div>
             </div>
             <!-- STmath -->
             <div id="math-panel-stmath" style="display:none;">
-                <div id="stmath-toolbar" style="display:flex;gap:0.75rem;align-items:center;padding:0.7rem 1.25rem;border-bottom:1px solid #e8e8ed;flex-wrap:wrap;"></div>
+                <div id="stmath-toolbar" style="display:flex;gap:0.75rem;align-items:center;padding-top:0.7rem;padding-bottom:0.7rem;border-bottom:1px solid #e8e8ed;flex-wrap:wrap;"></div>
                 <div id="stmath-content"></div>
             </div>
             <!-- Student Overview -->
@@ -1593,7 +1594,7 @@
                         <button class="toggle-btn wb-view-btn" data-view="analytics" onclick="setWbView('analytics')">Analytics</button>
                     </div>
                 </div>
-                <div id="wb-filters" style="display:none;gap:0.75rem;align-items:center;padding:0.7rem 1.25rem;border-bottom:1px solid #e8e8ed;flex-wrap:wrap;">
+                <div id="wb-filters" style="display:none;gap:0.75rem;align-items:center;padding-top:0.7rem;padding-bottom:0.7rem;border-bottom:1px solid #e8e8ed;flex-wrap:wrap;">
                     <span style="font-size:0.8rem;color:#86868b;">Loading…</span>
                 </div>
                 <div id="wb-content"></div>
@@ -9812,7 +9813,7 @@ function _drawPromoCrossRef() {
         +'<svg width="28" height="10" style="flex-shrink:0;"><line x1="0" y1="5" x2="28" y2="5" stroke="#86efac" stroke-width="1.5" stroke-dasharray="5,3"/></svg>'
         +'+1.0 Growth Goal</span>'
         +'</div>';
-    var selHtml = '<div style="padding:0.6rem 1.25rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-bottom:1px solid #e8e8ed;background:#f5f5f7;margin:'+_selM+';">'
+    var selHtml = '<div style="padding:0.6rem max(1.5rem,calc((100vw - 1400px)/2 + 1.5in));display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-bottom:1px solid #e8e8ed;background:#f5f5f7;margin:'+_selM+';">'
         +'<label style="font-size:.82rem;font-weight:600;color:#1d1d1f;">Student</label>'
         +'<select id="promo-xref-sel" onchange="promoXrefSel=this.value;_renderPromoXrefStudent();" style="padding:5px 10px;border-radius:8px;border:1px solid #d1d1d6;font-family:inherit;font-size:.82rem;">'
         +students.map(function(s){
