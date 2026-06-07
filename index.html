@@ -10654,7 +10654,20 @@ function xrefReadDetailHTML(){
         });
     }
 
-    function getLexiaPct(code){ var nk=normLexiaCode(code); return lexiaScores.hasOwnProperty(nk)?lexiaScores[nk]:null; }
+    function getLexiaPct(code){
+        var nk=normLexiaCode(code);
+        // Look for letter sub-standards (e.g. RF.K.1a, RF.K.1b for RF.K.1)
+        var subKeys=Object.keys(lexiaScores).filter(function(k){
+            return k.length===nk.length+1 && k.slice(0,nk.length)===nk && /[a-z]$/.test(k);
+        });
+        if(subKeys.length){
+            var vals=subKeys.map(function(k){return lexiaScores[k];}).filter(function(v){return v!==null;});
+            if(!vals.length) return null;
+            if(vals.length===subKeys.length && vals.every(function(v){return v===100;})) return 100;
+            return vals.reduce(function(s,v){return s+v;},0)/vals.length;
+        }
+        return lexiaScores.hasOwnProperty(nk)?lexiaScores[nk]:null;
+    }
 
     // Group by grade (already sorted from build step)
     var gradeGroups = {}, gradeOrder = [];
