@@ -1108,6 +1108,10 @@
                     <button class="toggle-btn" data-value="group" onclick="setToggle('earned-mode-toggle', 'group'); renderEarnedCredits()">Group</button>
                     <button class="toggle-btn" data-value="school" onclick="setToggle('earned-mode-toggle', 'school'); renderEarnedCredits()">All</button>
                 </div>
+                <select id="earned-student-sel" style="display:none;padding:0.3rem 0.6rem;border:1px solid #d2d2d7;border-radius:7px;font-size:0.82rem;background:#fff;cursor:pointer;font-family:inherit;" onchange="selectEarnedStudent(this.value, this.options[this.selectedIndex].text)">
+                    <option value="">— Select Student —</option>
+                </select>
+                <input type="hidden" id="st-student" value="">
                 <div id="earned-group-filter" style="flex-shrink:0;">
                     <select id="gp-group" onchange="renderEarnedCredits()" style="padding:0.4rem 0.6rem;border:1px solid #d2d2d7;border-radius:8px;font-size:0.82rem;font-family:inherit;"></select>
                 </div>
@@ -1122,15 +1126,6 @@
                     </div>
                 </div>
                 <div style="flex:1;"></div>
-                <div id="earned-student-filter" style="display:none;position:relative;flex-shrink:0;">
-                    <input type="text" id="st-student-search" placeholder="Search student..." autocomplete="off"
-                        oninput="showEarnedStudentSuggestions()"
-                        onfocus="showEarnedStudentSuggestions()"
-                        onkeydown="handleEarnedStudentKey(event)"
-                        style="padding:0.3rem 0.75rem;border:1.5px solid #d2d2d7;border-radius:20px;font-size:0.78rem;font-family:inherit;width:150px;outline:none;" onfocus="this.style.borderColor='#FF8200'" onblur="this.style.borderColor='#d2d2d7'">
-                    <div id="st-student-suggestions" style="display:none;position:absolute;top:100%;right:0;z-index:100;background:#fff;border:1px solid #d2d2d7;border-radius:8px;max-height:200px;overflow-y:auto;width:200px;box-shadow:0 4px 12px rgba(0,0,0,0.1);margin-top:2px;"></div>
-                    <input type="hidden" id="st-student" value="">
-                </div>
                 <input type="text" id="earned-search" placeholder="Search credits…" oninput="earnedCreditSearch=this.value.toLowerCase();renderEarnedCredits()" style="width:140px;padding:0.3rem 0.75rem;border:1.5px solid #d2d2d7;border-radius:20px;font-size:0.78rem;font-family:inherit;outline:none;box-sizing:border-box;flex-shrink:0;" onfocus="this.style.borderColor='#FF8200'" onblur="this.style.borderColor='#d2d2d7'">
             </div>
             <div id="earned-content"></div>
@@ -1955,8 +1950,10 @@ function toggleEarned(studentId, creditId) {
     var eidx = earned.findIndex(function(e) { return e.studentId === studentId && e.creditId === creditId; });
     var today = new Date().toISOString().substring(0, 10);
     if (eidx !== -1) {
-        // earned → not started
+        // earned → attempted (preserve date)
+        var eDate = earned[eidx].date;
         earned.splice(eidx, 1);
+        attempted.push({ studentId: studentId, creditId: creditId, date: eDate });
     } else if (aidx !== -1) {
         // attempted → earned
         attempted.splice(aidx, 1);
@@ -3510,7 +3507,8 @@ function populateDropdowns() {
     const stStudentVal = document.getElementById('st-student').value;
     if (stStudentVal && !students.find(s => s.id === stStudentVal)) {
         document.getElementById('st-student').value = '';
-        document.getElementById('st-student-search').value = '';
+        var _sel = document.getElementById('earned-student-sel');
+        if (_sel) _sel.value = '';
     }
 }
 
@@ -3568,8 +3566,8 @@ function handleEarnedStudentKey(e) {
 
 function selectEarnedStudent(id, name) {
     document.getElementById('st-student').value = id;
-    document.getElementById('st-student-search').value = name;
-    document.getElementById('st-student-suggestions').style.display = 'none';
+    var sel = document.getElementById('earned-student-sel');
+    if (sel) sel.value = id;
     renderEarnedCredits();
 }
 
@@ -4793,7 +4791,13 @@ function applyTabRender(tab) {
     });
     if (tab === 'available') { showLCLanding(); enhanceCreditsWithMetadata(); }
     if (tab === 'manage') renderManageCombined();
-    if (tab === 'portfolio') { renderPortfolio(); }
+    if (tab === 'portfolio') {
+        portfolioDriveArtifacts = {};
+        portfolioDriveArtifactsLoading = {};
+        portfolioNarratives = {};
+        portfolioLoadingNarratives = {};
+        renderPortfolio();
+    }
     if (tab === 'data') showAnalyticsLanding();
     requestAnimationFrame(alignSubtabNav);
 }
@@ -5354,8 +5358,23 @@ function renderEarnedCredits() {
     // Show/hide mode-specific filters
     document.getElementById('earned-group-filter').style.display = 'none'; // replaced by visual group selection grid
     document.getElementById('earned-subject-filter').style.display = 'none';
-    document.getElementById('earned-student-filter').style.display = mode === 'student' ? '' : 'none';
     document.getElementById('earned-period-toggle-wrap').style.display = (mode === 'student' || (mode === 'group' && !earnedGroupId)) ? 'none' : '';
+
+    // Student dropdown: show only in student mode, populate once
+    var earnedStudentSel = document.getElementById('earned-student-sel');
+    earnedStudentSel.style.display = mode === 'student' ? '' : 'none';
+    if (mode === 'student' && earnedStudentSel.options.length <= 1) {
+        var sorted = students.slice().sort(function(a, b) { return a.name.localeCompare(b.name); });
+        sorted.forEach(function(s) {
+            var opt = document.createElement('option');
+            opt.value = s.id;
+            opt.textContent = baseName(s.name);
+            earnedStudentSel.appendChild(opt);
+        });
+    }
+    // Keep select in sync with hidden input
+    var curStudentId = document.getElementById('st-student').value;
+    if (earnedStudentSel.value !== curStudentId) earnedStudentSel.value = curStudentId;
 
     if (mode === 'school') {
         renderEarnedWholeSchool(period, container);
@@ -5617,105 +5636,63 @@ function renderEarnedStudent(period, container) {
     var avatarHtml = earnedPortrait
         ? '<div class="student-portrait" style="width:60px;height:60px;border-radius:50%;overflow:hidden;background:#FF8200;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><img src="' + earnedPortrait + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.innerHTML=\'<span style=&quot;color:#fff;font-size:1.4rem;font-weight:700;&quot;>' + getInitials(student.name) + '</span>\'"></div>'
         : '<div class="student-avatar">' + getInitials(student.name) + '</div>';
-    let html = '<div class="student-header">' + avatarHtml + '<div class="student-info"><h2>' + baseName(student.name) + '</h2><p>' + studentGroups.map(function(g){return g.name;}).join(' &bull; ') + '</p></div></div>';
+    let html = '<div class="student-header">' + avatarHtml + '<div class="student-info"><h2>' + baseName(student.name) + '</h2></div></div>';
 
-    // Subject filter buttons
-    var usedSubjects = [];
-    var seenSubj = {};
-    credits.forEach(function(c) { if (!seenSubj[c.subject]) { seenSubj[c.subject] = true; usedSubjects.push(c.subject); } });
-    usedSubjects.sort(function(a, b) { return (subjects.indexOf(a) === -1 ? 999 : subjects.indexOf(a)) - (subjects.indexOf(b) === -1 ? 999 : subjects.indexOf(b)); });
+    var stageOrder = ['Emergent', 'Early', 'Middle', 'Late'];
 
-    // Subject / Stage / Period filters — all in one row, each column proportional
-    var stageList = ['Emergent', 'Early', 'Middle', 'Late'];
-    var periodVal = getToggleValue('earned-period-toggle');
-    var cpt = 'padding:0.2rem 0.35rem;font-size:0.68rem;'; // compact button style
+    // Apply credit search filter
+    var tableCredits = filteredCredits.slice();
+    if (earnedCreditSearch) tableCredits = tableCredits.filter(function(c) { return c.title.toLowerCase().indexOf(earnedCreditSearch) !== -1; });
 
-    html += '<div style="display:flex;gap:0.5rem;align-items:flex-start;margin-bottom:1rem;flex-wrap:nowrap;">';
-
-    // Subject filter bar
-    html += '<div class="toggle-group" style="flex:2;flex-wrap:nowrap;">';
-    html += '<button class="toggle-btn' + (earnedStudentSubject === 'all' ? ' active' : '') + '" style="' + cpt + '" onclick="setEarnedStudentFilter(\'subject\',\'all\')">All</button>';
-    usedSubjects.forEach(function(s) {
-        var sc = avSubjectColors[s] || { bg: '#86868b', letter: s[0] };
-        var active = earnedStudentSubject === s;
-        html += '<button class="toggle-btn" onclick="setEarnedStudentFilter(\'subject\',\'' + s.replace(/'/g, "\\'") + '\')" title="' + s + '" style="' + cpt + (active ? 'background:' + sc.bg + ';color:' + (sc.tc||'#fff') + ';box-shadow:0 1px 3px rgba(0,0,0,0.12);' : 'color:' + (sc.ic||sc.bg) + ';') + '">' + subjLabel(s) + '</button>';
-    });
-    html += '</div>';
-
-    // Stage filter bar
-    html += '<div class="toggle-group" style="flex:1;flex-wrap:nowrap;">';
-    html += '<button class="toggle-btn' + (earnedStudentStage === 'all' ? ' active' : '') + '" style="' + cpt + '" onclick="setEarnedStudentFilter(\'stage\',\'all\')">All</button>';
-    stageList.forEach(function(st) {
-        var key = st.toLowerCase();
-        var active = earnedStudentStage === key;
-        html += '<button class="toggle-btn' + (active ? ' active' : '') + '" style="' + cpt + '" onclick="setEarnedStudentFilter(\'stage\',\'' + key + '\')">' + st + '</button>';
-    });
-    html += '</div>';
-
-    // Period filter bar
-    html += '<div class="toggle-group" style="flex:1;flex-wrap:nowrap;">';
-    [['all','All Time'],['2026','This Year'],['previous','Previous Years']].forEach(function(p) {
-        html += '<button class="toggle-btn' + (periodVal === p[0] ? ' active' : '') + '" style="' + cpt + '" onclick="setToggle(\'earned-period-toggle\',\'' + p[0] + '\');renderEarnedCredits()">' + p[1] + '</button>';
-    });
-    html += '</div>';
-
-    html += '</div>';
-
-    // Group credits by stage
-    var stagesOrder = earnedStudentStage !== 'all' ? [earnedStudentStage.charAt(0).toUpperCase() + earnedStudentStage.slice(1)] : stageList;
-
-    stagesOrder.forEach(function(stageName) {
-        var stageCredits = filteredCredits.filter(function(c) { return c.stage === stageName; });
-        if (earnedCreditSearch) stageCredits = stageCredits.filter(function(c) { return c.title.toLowerCase().indexOf(earnedCreditSearch) !== -1; });
-        if (stageCredits.length === 0) return;
-
-        var stageEarnedCount = stageCredits.filter(function(c) { return earnedIds.has(c.id); }).length;
-
-        html += '<div style="margin-bottom:2rem;">';
-        html += '<h3 style="font-size:1rem;font-weight:600;margin-bottom:0.75rem;">' + stageName + '</h3>';
-        // Sort stageCredits by selected column
-        stageCredits.sort(function(a, b) {
-            var ae = hasEarned(studentId, a.id, period), be = hasEarned(studentId, b.id, period);
-            var aa = !ae && isAttempted(studentId, a.id), ba = !be && isAttempted(studentId, b.id);
-            var v = 0;
-            if (earnedStudentSortCol === 'credit') {
-                v = a.title.localeCompare(b.title);
-            } else if (earnedStudentSortCol === 'subject') {
-                v = (subjects.indexOf(a.subject) - subjects.indexOf(b.subject)) || a.subject.localeCompare(b.subject);
-            } else if (earnedStudentSortCol === 'status') {
-                var aVal = ae ? 0 : aa ? 1 : 2;
-                var bVal = be ? 0 : ba ? 1 : 2;
-                v = aVal - bVal;
-            } else if (earnedStudentSortCol === 'date') {
-                var ad = (ae && ae.date) ? ae.date : '', bd = (be && be.date) ? be.date : '';
-                v = ad < bd ? -1 : ad > bd ? 1 : 0;
-                if (!ad && bd) v = 1; if (ad && !bd) v = -1;
-            } else if (earnedStudentSortCol === 'artifact') {
-                var ahA = !!(portfolioDriveArtifacts[studentId] || []).find(function(f){return f.creditId===a.id;});
-                var bhA = !!(portfolioDriveArtifacts[studentId] || []).find(function(f){return f.creditId===b.id;});
-                v = (bhA ? 1 : 0) - (ahA ? 1 : 0);
-            }
-            return v * earnedStudentSortDir || a.title.localeCompare(b.title);
-        });
-
-        function _thSort(col, label, center) {
-            var active = earnedStudentSortCol === col;
-            var arrow = active ? (earnedStudentSortDir === 1 ? ' ↑' : ' ↓') : '';
-            var style = 'cursor:pointer;user-select:none;' + (center ? 'text-align:center;' : '');
-            var click = 'if(earnedStudentSortCol===\'' + col + '\'){earnedStudentSortDir*=-1;}else{earnedStudentSortCol=\'' + col + '\';earnedStudentSortDir=1;}renderEarnedCredits();';
-            return '<th style="' + style + '" onclick="' + click + '">' + label + arrow + '</th>';
+    // Sort all credits by selected column
+    tableCredits.sort(function(a, b) {
+        var ae = hasEarned(studentId, a.id, period), be = hasEarned(studentId, b.id, period);
+        var aa = !ae && isAttempted(studentId, a.id), ba = !be && isAttempted(studentId, b.id);
+        var v = 0;
+        if (earnedStudentSortCol === 'credit') {
+            v = a.title.localeCompare(b.title);
+        } else if (earnedStudentSortCol === 'subject') {
+            v = (subjects.indexOf(a.subject) - subjects.indexOf(b.subject)) || a.subject.localeCompare(b.subject);
+        } else if (earnedStudentSortCol === 'stage') {
+            v = (stageOrder.indexOf(a.stage) - stageOrder.indexOf(b.stage));
+        } else if (earnedStudentSortCol === 'status') {
+            var aVal = ae ? 0 : aa ? 1 : 2;
+            var bVal = be ? 0 : ba ? 1 : 2;
+            v = aVal - bVal;
+        } else if (earnedStudentSortCol === 'date') {
+            var ad = (ae && ae.date) ? ae.date : '', bd = (be && be.date) ? be.date : '';
+            v = ad < bd ? -1 : ad > bd ? 1 : 0;
+            if (!ad && bd) v = 1; if (ad && !bd) v = -1;
+        } else if (earnedStudentSortCol === 'artifact') {
+            var ahA = !!(portfolioDriveArtifacts[studentId] || []).find(function(f){return f.creditId===a.id;});
+            var bhA = !!(portfolioDriveArtifacts[studentId] || []).find(function(f){return f.creditId===b.id;});
+            v = (bhA ? 1 : 0) - (ahA ? 1 : 0);
         }
+        return v * earnedStudentSortDir || a.title.localeCompare(b.title);
+    });
 
+    function _thSort(col, label, center) {
+        var active = earnedStudentSortCol === col;
+        var arrow = active ? (earnedStudentSortDir === 1 ? ' ↑' : ' ↓') : '';
+        var style = 'cursor:pointer;user-select:none;' + (center ? 'text-align:center;' : '');
+        var click = 'if(earnedStudentSortCol===\'' + col + '\'){earnedStudentSortDir*=-1;}else{earnedStudentSortCol=\'' + col + '\';earnedStudentSortDir=1;}renderEarnedCredits();';
+        return '<th style="' + style + '" onclick="' + click + '">' + label + arrow + '</th>';
+    }
+
+    if (tableCredits.length === 0) {
+        html += '<p style="text-align:center;color:#86868b;padding:2rem;">No credits match the selected filters.</p>';
+    } else {
         html += '<div class="progress-table-wrapper"><table><thead><tr>';
-        html += _thSort('credit','Credit',false) + _thSort('subject','Subject',false) + _thSort('status','Status',true) + _thSort('date','Date',true) + _thSort('artifact','Artifact',true);
+        html += _thSort('credit','Credit',false) + _thSort('subject','Subject',false) + _thSort('stage','Stage',false) + _thSort('status','Status',true) + _thSort('date','Date',true) + _thSort('artifact','Artifact',true);
         html += '</tr></thead><tbody>';
 
-        stageCredits.forEach(function(c) {
+        tableCredits.forEach(function(c) {
             var e = hasEarned(studentId, c.id, period);
             var fd = e ? formatDate(e.date) : '';
             html += '<tr>';
             html += '<td style="font-weight:500;">' + c.title + '</td>';
             html += '<td><span class="tag ' + subjectTagClass(c.subject) + '" style="font-size:0.65rem;padding:0.1rem 0.4rem;">' + c.subject + '</span></td>';
+            html += '<td style="font-size:0.78rem;color:#555;">' + (c.stage || '') + '</td>';
             html += '<td style="text-align:center;">';
             var att = !e && isAttempted(studentId, c.id);
             if (e) {
@@ -5727,7 +5704,6 @@ function renderEarnedStudent(period, container) {
                 html += '<span class="earned-icon earned-no" style="cursor:pointer;" onclick="toggleEarned(\'' + studentId + '\',\'' + c.id + '\')"></span>';
             }
             html += '</td>';
-            // Date cell — try Drive artifacts (fuzzy title match), then in-session artifact, then earned date
             var aKey = artifactKey(studentId, c.id);
             var art = artifacts[aKey];
             var dateResult = driveArtifactDateFor(studentId, c.title)
@@ -5773,11 +5749,7 @@ function renderEarnedStudent(period, container) {
             html += '</tr>';
         });
 
-        html += '</tbody></table></div></div>';
-    });
-
-    if (filteredCredits.length === 0) {
-        html += '<p style="text-align:center;color:#86868b;padding:2rem;">No credits match the selected filters.</p>';
+        html += '</tbody></table></div>';
     }
 
     container.innerHTML = html;
