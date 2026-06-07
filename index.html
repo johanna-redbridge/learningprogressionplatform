@@ -5168,7 +5168,13 @@ function renderAvailable() {
                 html += '<td style="text-align:center;color:#d2d2d7;font-size:0.82rem;">&mdash;</td>';
             }
         }
-        html += '<td style="text-align:center;"><span style="font-size:0.78rem;font-weight:500;color:#0066cc;cursor:pointer;text-decoration:underline;text-underline-offset:2px;" onclick="showPracticeOptions(\'' + c.id.replace(/'/g,"\\'") + '\',\'' + c.title.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')">show</span></td>';
+        html += '<td style="text-align:center;"><div style="display:flex;gap:5px;align-items:center;justify-content:center;">'
+            + '<span style="font-size:0.78rem;font-weight:500;color:#0066cc;cursor:pointer;text-decoration:underline;text-underline-offset:2px;" onclick="showPracticeOptions(\'' + c.id.replace(/'/g,"\\'") + '\',\'' + c.title.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')">show</span>'
+            + '<div class="artifact-drop" style="min-width:unset;min-height:unset;padding:0.15rem 0.45rem;font-size:0.72rem;" title="Add practice option file" ondragover="event.preventDefault();this.classList.add(\'drag-over\')" ondragleave="this.classList.remove(\'drag-over\')" ondrop="event.preventDefault();this.classList.remove(\'drag-over\');addCatalogPracticeOption(event,\'' + c.id.replace(/'/g,"\\'") + '\',\'' + c.title.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')">'
+            + '<span style="pointer-events:none;">&#128206; add</span>'
+            + '<input type="file" accept="image/*,video/*,application/pdf" onchange="addCatalogPracticeOption(event,\'' + c.id.replace(/'/g,"\\'") + '\',\'' + c.title.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')" />'
+            + '</div>'
+            + '</div></td>';
         html += '</tr>';
     });
 
@@ -5181,6 +5187,44 @@ var PRACTICE_OPTIONS_FOLDER_ID = '1Og36LoWVp39WV4JxBw_qQK90LqCKtxxI';
 var practiceOptionsCache = null;
 var practiceOptionsCacheLoading = false;
 var practiceOptionsCacheCallbacks = [];
+
+function addCatalogPracticeOption(event, creditId, creditTitle) {
+    var file = (event.target && event.target.files && event.target.files[0])
+             || (event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]);
+    if (!file) return;
+    if (event.target && event.target.value !== undefined) event.target.value = '';
+    if (!gDriveToken || !PRACTICE_OPTIONS_FOLDER_ID) {
+        alert('Sign in with Google to upload practice options to Drive.'); return;
+    }
+    var ext = file.name.indexOf('.') > -1 ? file.name.slice(file.name.lastIndexOf('.')) : '';
+    var base = creditTitle + (ext ? file.name.slice(0, file.name.lastIndexOf('.')) ? ' — ' + file.name.slice(0, file.name.lastIndexOf('.')) : '' : ' — ' + file.name);
+    // Simpler: name is creditTitle + ' — ' + originalFilename
+    var desiredName = creditTitle + ' — ' + file.name;
+    // Check for existing files with same base name in folder
+    var q = encodeURIComponent('"' + PRACTICE_OPTIONS_FOLDER_ID + '" in parents and trashed=false and name contains "' + creditTitle.replace(/"/g,'') + '"');
+    fetch('https://www.googleapis.com/drive/v3/files?q=' + q + '&fields=files(name)&pageSize=100', {
+        headers: { Authorization: 'Bearer ' + gDriveToken }
+    }).then(function(r) { return r.json(); }).then(function(res) {
+        var existing = (res.files || []).map(function(f) { return f.name; });
+        var finalName = desiredName;
+        if (existing.indexOf(desiredName) > -1) {
+            var n = 2;
+            var baseName = desiredName.slice(0, desiredName.lastIndexOf('.') > -1 ? desiredName.lastIndexOf('.') : desiredName.length);
+            var fileExt = desiredName.lastIndexOf('.') > -1 ? desiredName.slice(desiredName.lastIndexOf('.')) : '';
+            while (existing.indexOf(baseName + ' ' + n + fileExt) > -1) n++;
+            finalName = baseName + ' ' + n + fileExt;
+        }
+        var meta = { name: finalName, parents: [PRACTICE_OPTIONS_FOLDER_ID] };
+        var form = new FormData();
+        form.append('metadata', new Blob([JSON.stringify(meta)], { type: 'application/json' }));
+        form.append('file', file);
+        return fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+            method: 'POST', headers: { Authorization: 'Bearer ' + gDriveToken }, body: form
+        });
+    }).then(function(r) { return r && r.json ? r.json() : null; }).then(function(f) {
+        if (f && f.id) { practiceOptionsCache = null; alert('Uploaded: ' + (f.name || file.name)); }
+    }).catch(function(e) { alert('Upload failed: ' + (e && e.message ? e.message : e)); });
+}
 
 function loadPracticeOptionsFolder(cb) {
     if (practiceOptionsCache) { cb(practiceOptionsCache); return; }
@@ -5679,11 +5723,11 @@ function renderEarnedStudent(period, container) {
             } else {
                 html += '<div style="display:flex;gap:4px;align-items:center;">';
                 html += '<div class="artifact-drop" ondragover="artifactDragOver(event)" ondragleave="artifactDragLeave(event)" ondrop="handleArtifactDrop(event,\'' + studentId + '\',\'' + c.id + '\')">';
-                html += '<span style="pointer-events:none;">&#128206; Drop</span>';
+                html += '<span style="pointer-events:none;">&#128206; drop</span>';
                 html += '<input type="file" accept="image/*,video/*,application/pdf" onchange="handleArtifactDrop(event,\'' + studentId + '\',\'' + c.id + '\')" />';
                 html += '</div>';
                 html += '<div class="artifact-drop">';
-                html += '<span style="pointer-events:none;">&#128247; Capture</span>';
+                html += '<span style="pointer-events:none;">&#128247; capture</span>';
                 html += '<input type="file" accept="image/*" capture="environment" onchange="handleArtifactDrop(event,\'' + studentId + '\',\'' + c.id + '\')" />';
                 html += '</div>';
                 html += '</div>';
