@@ -9226,6 +9226,7 @@ function renderPromotionDashboard() {
     var el = document.getElementById('promotion-content');
     if (!el) return;
     el.innerHTML = '<p style="padding:3rem;color:#aeaeb2;text-align:center;">Loading promotion data…</p>';
+    promoAllData = null;
     loadAllPromoData(function(){ _doRenderPromo(); });
 }
 
@@ -9234,6 +9235,7 @@ function renderStudentDashboard() {
     if (!el) return;
     el.innerHTML = '<p style="padding:3rem;color:#aeaeb2;text-align:center;">Loading student data…</p>';
     _xrefBodyId = 'student-dashboard-content';
+    promoAllData = null;
     loadAllPromoData(function(){ _renderPromoCrossRef(); });
 }
 
