@@ -1096,29 +1096,11 @@
     <div id="lc-subtab-earned" class="lc-subtab-panel" style="display:none;">
         <div class="view-container">
             <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;flex-wrap:nowrap;">
-                <div class="toggle-group" style="background:none;padding:0;gap:0;">
-                    <button class="toggle-btn active" id="earned-al-all" onclick="earnedAutonomyFilter='all';document.querySelectorAll('.earned-al-btn').forEach(function(b){b.classList.remove('active')});this.classList.add('active');renderEarnedCredits()">All</button>
-                    <button class="toggle-btn earned-al-btn" onclick="earnedAutonomyFilter='AL1';document.querySelectorAll('#earned-al-all,.earned-al-btn').forEach(function(b){b.classList.remove('active')});this.classList.add('active');renderEarnedCredits()">AL1</button>
-                    <button class="toggle-btn earned-al-btn" onclick="earnedAutonomyFilter='AL2';document.querySelectorAll('#earned-al-all,.earned-al-btn').forEach(function(b){b.classList.remove('active')});this.classList.add('active');renderEarnedCredits()">AL2</button>
-                    <button class="toggle-btn earned-al-btn" onclick="earnedAutonomyFilter='AL3';document.querySelectorAll('#earned-al-all,.earned-al-btn').forEach(function(b){b.classList.remove('active')});this.classList.add('active');renderEarnedCredits()">AL3</button>
-                    <button class="toggle-btn earned-al-btn" onclick="earnedAutonomyFilter='AL4';document.querySelectorAll('#earned-al-all,.earned-al-btn').forEach(function(b){b.classList.remove('active')});this.classList.add('active');renderEarnedCredits()">AL4</button>
-                </div>
-                <div class="toggle-group" id="earned-mode-toggle" style="flex-shrink:0;">
-                    <button class="toggle-btn active" data-value="student" onclick="setToggle('earned-mode-toggle', 'student'); renderEarnedCredits()">Student</button>
-                    <button class="toggle-btn" data-value="group" onclick="setToggle('earned-mode-toggle', 'group'); renderEarnedCredits()">Group</button>
-                    <button class="toggle-btn" data-value="school" onclick="setToggle('earned-mode-toggle', 'school'); renderEarnedCredits()">All</button>
-                </div>
-                <select id="earned-student-sel" style="display:none;padding:0.3rem 0.6rem;border:1px solid #d2d2d7;border-radius:7px;font-size:0.82rem;background:#fff;cursor:pointer;font-family:inherit;" onchange="selectEarnedStudent(this.value, this.options[this.selectedIndex].text)">
+                <select id="earned-student-sel" style="padding:0.3rem 0.6rem;border:1px solid #d2d2d7;border-radius:7px;font-size:0.82rem;background:#fff;cursor:pointer;font-family:inherit;" onchange="selectEarnedStudent(this.value, this.options[this.selectedIndex].text)">
                     <option value="">— Select Student —</option>
                 </select>
                 <input type="hidden" id="st-student" value="">
-                <div id="earned-group-filter" style="flex-shrink:0;">
-                    <select id="gp-group" onchange="renderEarnedCredits()" style="padding:0.4rem 0.6rem;border:1px solid #d2d2d7;border-radius:8px;font-size:0.82rem;font-family:inherit;"></select>
-                </div>
-                <div id="earned-subject-filter" style="display:none;">
-                    <select id="gp-subject" style="display:none;"><option value="all">All Subjects</option></select>
-                </div>
-                <div id="earned-period-toggle-wrap" style="flex-shrink:0;">
+                <div id="earned-period-toggle-wrap" style="flex-shrink:0;display:none;">
                     <div class="toggle-group" id="earned-period-toggle">
                         <button class="toggle-btn active" data-value="all" onclick="setToggle('earned-period-toggle', 'all'); renderEarnedCredits()">All time</button>
                         <button class="toggle-btn" data-value="2026" onclick="setToggle('earned-period-toggle', '2026'); renderEarnedCredits()">This Year</button>
@@ -5355,15 +5337,9 @@ function renderEarnedCredits() {
     const period = getToggleValue('earned-period-toggle');
     const container = document.getElementById('earned-content');
 
-    // Show/hide mode-specific filters
-    document.getElementById('earned-group-filter').style.display = 'none'; // replaced by visual group selection grid
-    document.getElementById('earned-subject-filter').style.display = 'none';
-    document.getElementById('earned-period-toggle-wrap').style.display = (mode === 'student' || (mode === 'group' && !earnedGroupId)) ? 'none' : '';
-
-    // Student dropdown: show only in student mode, populate once
+    // Populate student dropdown once
     var earnedStudentSel = document.getElementById('earned-student-sel');
-    earnedStudentSel.style.display = mode === 'student' ? '' : 'none';
-    if (mode === 'student' && earnedStudentSel.options.length <= 1) {
+    if (earnedStudentSel.options.length <= 1) {
         var sorted = students.slice().sort(function(a, b) { return a.name.localeCompare(b.name); });
         sorted.forEach(function(s) {
             var opt = document.createElement('option');
@@ -5376,13 +5352,7 @@ function renderEarnedCredits() {
     var curStudentId = document.getElementById('st-student').value;
     if (earnedStudentSel.value !== curStudentId) earnedStudentSel.value = curStudentId;
 
-    if (mode === 'school') {
-        renderEarnedWholeSchool(period, container);
-    } else if (mode === 'group') {
-        renderEarnedGroup(period, container);
-    } else {
-        renderEarnedStudent(period, container);
-    }
+    renderEarnedStudent(period, container);
 }
 
 function renderEarnedWholeSchool(period, container) {
@@ -5594,18 +5564,7 @@ function renderEarnedStudent(period, container) {
         loadPortfolioDriveArtifacts(studentId);
     }
     if (!student) {
-        var sorted = students.slice().sort(function(a, b) { return a.name.localeCompare(b.name); }).filter(function(s) {
-            if (earnedAutonomyFilter !== 'all' && studentAutonomyLevel[s.name] !== earnedAutonomyFilter) return false;
-            if (earnedStudentSearch && s.name.toLowerCase().indexOf(earnedStudentSearch) === -1) return false;
-            return true;
-        });
-        var gridHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:0.4rem;padding:0.5rem 0;">';
-        sorted.forEach(function(s) {
-            var count = earned.filter(function(e) { return e.studentId === s.id; }).length;
-            gridHtml += '<div onclick="selectEarnedStudent(\'' + s.id + '\',\'' + s.name.replace(/'/g, "\\'") + '\')" style="cursor:pointer;padding:0.9rem 0.5rem;border-radius:8px;background:#f5f5f7;border:1px solid #FF8200;font-size:0.82rem;font-weight:500;color:#1d1d1f;transition:all 0.15s;text-align:center;" onmouseover="this.style.background=\'#fff3ec\'" onmouseout="this.style.background=\'#f5f5f7\'">' + baseName(s.name) + '</div>';
-        });
-        gridHtml += '</div>';
-        container.innerHTML = gridHtml;
+        container.innerHTML = '<div style="text-align:center;padding:3rem;color:#86868b;">Select a student from the dropdown above.</div>';
         return;
     }
     const studentGroups = (student.groups || []).map(gid => groups.find(g => g.id === gid)).filter(Boolean);
@@ -5631,12 +5590,7 @@ function renderEarnedStudent(period, container) {
     const pctAll = totalAll > 0 ? Math.round(totalEarnedAll / totalAll * 100) : 0;
     const periodLabel = period === '2026' ? 'This Year' : period === 'previous' ? 'Previous Years' : 'All Time';
 
-    // Header
-    var earnedPortrait = studentPortraitBlobMap[student.name];
-    var avatarHtml = earnedPortrait
-        ? '<div class="student-portrait" style="width:60px;height:60px;border-radius:50%;overflow:hidden;background:#FF8200;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><img src="' + earnedPortrait + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.innerHTML=\'<span style=&quot;color:#fff;font-size:1.4rem;font-weight:700;&quot;>' + getInitials(student.name) + '</span>\'"></div>'
-        : '<div class="student-avatar">' + getInitials(student.name) + '</div>';
-    let html = '<div class="student-header">' + avatarHtml + '<div class="student-info"><h2>' + baseName(student.name) + '</h2></div></div>';
+    let html = '';
 
     var stageOrder = ['Emergent', 'Early', 'Middle', 'Late'];
 
@@ -5673,10 +5627,9 @@ function renderEarnedStudent(period, container) {
 
     function _thSort(col, label, center) {
         var active = earnedStudentSortCol === col;
-        var arrow = active ? (earnedStudentSortDir === 1 ? ' ↑' : ' ↓') : '';
-        var style = 'cursor:pointer;user-select:none;' + (center ? 'text-align:center;' : '');
+        var style = 'cursor:pointer;user-select:none;' + (active ? 'text-decoration:underline;' : '') + (center ? 'text-align:center;' : '');
         var click = 'if(earnedStudentSortCol===\'' + col + '\'){earnedStudentSortDir*=-1;}else{earnedStudentSortCol=\'' + col + '\';earnedStudentSortDir=1;}renderEarnedCredits();';
-        return '<th style="' + style + '" onclick="' + click + '">' + label + arrow + '</th>';
+        return '<th style="' + style + '" onclick="' + click + '">' + label + '</th>';
     }
 
     if (tableCredits.length === 0) {
