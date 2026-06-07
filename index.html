@@ -9868,7 +9868,7 @@ function _renderPromoXrefStudent() {
         BENCH_LONG_YEARS.forEach(function(y) {
             var yd = compLong.years[y.key]; if (!yd) return;
             if (yd.goal !== null) compGoalSegs.push({fromPeriod: xrefNormPeriod(y.label+' BOY'), toPeriod: xrefNormPeriod(y.label+' EOY'), value: yd.goal});
-            if (yd.eoy !== null) compGrowthGoalSegs.push({fromPeriod: xrefNormPeriod(y.label+' BOY'), toPeriod: xrefNormPeriod(y.label+' EOY'), value: Math.round((yd.eoy + 1.0) * 100) / 100});
+            if (yd.boy !== null) compGrowthGoalSegs.push({fromPeriod: xrefNormPeriod(y.label+' BOY'), toPeriod: xrefNormPeriod(y.label+' EOY'), value: Math.round((yd.boy + 1.0) * 100) / 100});
         });
     }
 
@@ -9883,7 +9883,7 @@ function _renderPromoXrefStudent() {
             if (d.moy !== null) { var _p={period:yr.label+' MOY',score:d.moy,pct:null}; wbLinePts.push(_p); segPts.push(_p); }
             if (d.eof !== null) { var _p={period:yr.label+' EOY',score:d.eof,pct:null}; wbLinePts.push(_p); segPts.push(_p); }
             if (segPts.length && d.eoyGle !== null) wbGoalSegs.push({fromPeriod:xrefNormPeriod(segPts[0].period), toPeriod:xrefNormPeriod(segPts[segPts.length-1].period), value:d.eoyGle});
-            if (segPts.length && d.eof !== null) wbGrowthGoalSegs.push({fromPeriod:xrefNormPeriod(segPts[0].period), toPeriod:xrefNormPeriod(segPts[segPts.length-1].period), value:Math.round((d.eof + 1.0) * 100) / 100});
+            if (segPts.length && d.boy !== null) wbGrowthGoalSegs.push({fromPeriod:xrefNormPeriod(segPts[0].period), toPeriod:xrefNormPeriod(segPts[segPts.length-1].period), value:Math.round((d.boy + 1.0) * 100) / 100});
         });
     }
 
