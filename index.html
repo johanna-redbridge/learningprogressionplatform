@@ -7973,6 +7973,8 @@ function loadReadingTierData(cb) {
                 grade: (r[3] || '').trim(),
                 boyTier: (r[5] || '').trim(),
                 moyTier: (r[7] || '').trim(),
+                growthGoal: (r[8] || '').trim(),
+                gleGoal: (r[9] || '').trim(),
                 interventionPlan: (r[12] || '').trim()
             });
         }
@@ -9829,16 +9831,33 @@ function _renderPromoXrefStudent() {
         });
     }
 
-    // F&P goal segments per year (from yearGoals in spreadsheet)
-    var fpGoalSegs = [];
-    if (fpLong && fpLong.yearGoals) {
+    // F&P goal segments: GLE goal (blue dashed) + growth goal (light green dashed)
+    // Current year (25-26) goals come from reading tier sheet (col J = GLE goal, col I = growth goal)
+    // Past years come from yearGoals in the longitudinal spreadsheet
+    var fpGoalSegs = [], fpGrowthGoalSegs = [];
+    var _rtRec = readingTierData ? readingTierData.find(function(r){ return _tierNorm(r.name) === _tierNorm(name); }) : null;
+    if (fpLong) {
         FP_YEAR_BANDS.forEach(function(band) {
-            var glLv = fpLong.yearGoals[band.label];
-            if (!glLv) return;
-            var sc = fpScore(glLv.toLowerCase());
-            if (!sc) return;
             var fp0 = FP_LONG_COLS[band.s], fpN = FP_LONG_COLS[band.e];
-            fpGoalSegs.push({fromPeriod: xrefNormPeriod(fp0.label), toPeriod: xrefNormPeriod(fpN.label), value: sc});
+            var fromP = xrefNormPeriod(fp0.label), toP = xrefNormPeriod(fpN.label);
+            if (band.label === '25-26' && _rtRec) {
+                // GLE goal from col J
+                if (_rtRec.gleGoal) {
+                    var sc = fpScore(_rtRec.gleGoal.toLowerCase());
+                    if (sc) fpGoalSegs.push({fromPeriod: fromP, toPeriod: toP, value: sc});
+                }
+                // Growth goal from col I
+                if (_rtRec.growthGoal) {
+                    var sc2 = fpScore(_rtRec.growthGoal.toLowerCase());
+                    if (sc2) fpGrowthGoalSegs.push({fromPeriod: fromP, toPeriod: toP, value: sc2});
+                }
+            } else if (fpLong.yearGoals) {
+                var glLv = fpLong.yearGoals[band.label];
+                if (glLv) {
+                    var sc = fpScore(glLv.toLowerCase());
+                    if (sc) fpGoalSegs.push({fromPeriod: fromP, toPeriod: toP, value: sc});
+                }
+            }
         });
     }
 
@@ -9991,7 +10010,7 @@ function _renderPromoXrefStudent() {
         var fpC = document.getElementById('promo-xref-fp-canvas');
         if (fpC && fpLong) {
             fpC.width = fpC.offsetWidth || 700; fpC.height = 220;
-            drawXrefAlignedFpGraph(fpC, fpLong.points, fpLong.gle, MP, {goalSegs: fpGoalSegs.length ? fpGoalSegs : null});
+            drawXrefAlignedFpGraph(fpC, fpLong.points, fpLong.gle, MP, {goalSegs: fpGoalSegs.length ? fpGoalSegs : null, growthGoalSegs: fpGrowthGoalSegs.length ? fpGrowthGoalSegs : null});
         }
         var mapElaC = document.getElementById('promo-xref-mapela-canvas');
         if (mapElaC && mapElaPts.length >= 2) {
@@ -10150,6 +10169,7 @@ function drawXrefAlignedFpGraph(canvas, points, gle, masterPeriods, opts) {
     if(gle){var gleLv=gleTargetLevel(gle);if(gleLv){gleScore=fpScore(gleLv.toLowerCase());gleLabel=gleLv.toUpperCase();}}
     if(opts.goalSegs) opts.goalSegs.forEach(function(g){if(g.value!==null)scores.push(g.value);});
     else if(gleScore!==null) scores.push(gleScore);
+    if(opts.growthGoalSegs) opts.growthGoalSegs.forEach(function(g){if(g.value!==null)scores.push(g.value);});
     var minS=Math.min.apply(null,scores),maxS=Math.max.apply(null,scores),rng=maxS-minS||0.5;
     var yMin=Math.max(0,minS-rng*0.25),yMax=maxS+rng*0.35;
     function yOf(s){return padT+plotH*(1-(s-yMin)/(yMax-yMin));}
@@ -10161,6 +10181,7 @@ function drawXrefAlignedFpGraph(canvas, points, gle, masterPeriods, opts) {
         var _fpStep=N>1?plotW/(N-1):plotW;
         opts.goalSegs.forEach(function(gs){if(gs.value===null)return;var i1=masterPeriods.indexOf(gs.fromPeriod),i2=masterPeriods.indexOf(gs.toPeriod);if(i1<0||i2<0)return;var gy=yOf(gs.value),x1=Math.max(padL,xOf(i1)-_fpStep*0.3),x2=Math.min(padL+plotW,xOf(i2)+_fpStep*0.3);ctx.save();ctx.strokeStyle='#3b82f6';ctx.lineWidth=1.5;ctx.setLineDash([5,3]);ctx.beginPath();ctx.moveTo(x1,gy);ctx.lineTo(x2,gy);ctx.stroke();ctx.setLineDash([]);ctx.restore();});
     } else if(gleScore!==null){var gleY=yOf(gleScore);ctx.save();ctx.strokeStyle='#16a34a';ctx.lineWidth=2;ctx.setLineDash([6,4]);ctx.beginPath();ctx.moveTo(padL,gleY);ctx.lineTo(padL+plotW,gleY);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#16a34a';ctx.font='bold 9px -apple-system,sans-serif';ctx.textAlign='right';ctx.fillText('EOY Target: '+gleLabel,padL+plotW-4,gleY-4);ctx.restore();}
+    if(opts.growthGoalSegs && opts.growthGoalSegs.length){var _fpStep2=N>1?plotW/(N-1):plotW;opts.growthGoalSegs.forEach(function(gs){if(gs.value===null)return;var i1=masterPeriods.indexOf(gs.fromPeriod),i2=masterPeriods.indexOf(gs.toPeriod);if(i1<0||i2<0)return;var gy=yOf(gs.value),x1=Math.max(padL,xOf(i1)-_fpStep2*0.3),x2=Math.min(padL+plotW,xOf(i2)+_fpStep2*0.3);ctx.save();ctx.strokeStyle='#86efac';ctx.lineWidth=1.5;ctx.setLineDash([5,3]);ctx.beginPath();ctx.moveTo(x1,gy);ctx.lineTo(x2,gy);ctx.stroke();ctx.setLineDash([]);ctx.restore();});}
     if(mapped.length>1){ctx.beginPath();mapped.forEach(function(p,i){i===0?ctx.moveTo(xOf(p.idx),yOf(p.score)):ctx.lineTo(xOf(p.idx),yOf(p.score));});ctx.lineTo(xOf(mapped[mapped.length-1].idx),padT+plotH);ctx.lineTo(xOf(mapped[0].idx),padT+plotH);ctx.closePath();ctx.fillStyle='rgba(255,200,187,0.2)';ctx.fill();}
     ctx.beginPath();ctx.strokeStyle='#FFC8BB';ctx.lineWidth=2.5;ctx.setLineDash([]);mapped.forEach(function(p,i){i===0?ctx.moveTo(xOf(p.idx),yOf(p.score)):ctx.lineTo(xOf(p.idx),yOf(p.score));});ctx.stroke();
     var SC={boy:'#d1d1d6',moy:'#8e8e93',eoy:'#1c1c1e'};
