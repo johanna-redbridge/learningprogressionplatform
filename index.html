@@ -3399,7 +3399,7 @@ function formatDate(d) {
     if (!d) return '';
     const dt = new Date(d + 'T00:00:00');
     if (isNaN(dt)) return '';
-    var m = dt.getMonth() + 1, d2 = dt.getDate(), y = String(dt.getFullYear()).slice(-2);
+    var m = dt.getMonth() + 1, d2 = dt.getDate(), y = dt.getFullYear();
     return (m < 10 ? '0' + m : m) + '/' + (d2 < 10 ? '0' + d2 : d2) + '/' + y;
 }
 
