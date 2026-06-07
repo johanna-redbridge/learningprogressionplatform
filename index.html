@@ -5568,6 +5568,8 @@ function setEarnedGroupStageFilter(stageName, value) {
 
 var earnedStudentSubject = 'all';
 var earnedStudentStage = 'all';
+var earnedStudentSortCol = 'status';
+var earnedStudentSortDir = 1;
 
 function setEarnedStudentFilter(key, value) {
     if (key === 'subject') earnedStudentSubject = (value === 'all' || earnedStudentSubject === value) ? 'all' : value;
@@ -5678,21 +5680,45 @@ function renderEarnedStudent(period, container) {
         if (earnedCreditSearch) stageCredits = stageCredits.filter(function(c) { return c.title.toLowerCase().indexOf(earnedCreditSearch) !== -1; });
         if (stageCredits.length === 0) return;
 
-        stageCredits.sort(function(a, b) {
-            var aEarned = earnedIds.has(a.id) ? 0 : 1;
-            var bEarned = earnedIds.has(b.id) ? 0 : 1;
-            if (aEarned !== bEarned) return aEarned - bEarned;
-            var si = subjects.indexOf(a.subject) - subjects.indexOf(b.subject);
-            if (si !== 0) return si;
-            return a.title.localeCompare(b.title);
-        });
-
         var stageEarnedCount = stageCredits.filter(function(c) { return earnedIds.has(c.id); }).length;
 
         html += '<div style="margin-bottom:2rem;">';
         html += '<h3 style="font-size:1rem;font-weight:600;margin-bottom:0.75rem;">' + stageName + '</h3>';
+        // Sort stageCredits by selected column
+        stageCredits.sort(function(a, b) {
+            var ae = hasEarned(studentId, a.id, period), be = hasEarned(studentId, b.id, period);
+            var aa = !ae && isAttempted(studentId, a.id), ba = !be && isAttempted(studentId, b.id);
+            var v = 0;
+            if (earnedStudentSortCol === 'credit') {
+                v = a.title.localeCompare(b.title);
+            } else if (earnedStudentSortCol === 'subject') {
+                v = (subjects.indexOf(a.subject) - subjects.indexOf(b.subject)) || a.subject.localeCompare(b.subject);
+            } else if (earnedStudentSortCol === 'status') {
+                var aVal = ae ? 0 : aa ? 1 : 2;
+                var bVal = be ? 0 : ba ? 1 : 2;
+                v = aVal - bVal;
+            } else if (earnedStudentSortCol === 'date') {
+                var ad = (ae && ae.date) ? ae.date : '', bd = (be && be.date) ? be.date : '';
+                v = ad < bd ? -1 : ad > bd ? 1 : 0;
+                if (!ad && bd) v = 1; if (ad && !bd) v = -1;
+            } else if (earnedStudentSortCol === 'artifact') {
+                var ahA = !!(portfolioDriveArtifacts[studentId] || []).find(function(f){return f.creditId===a.id;});
+                var bhA = !!(portfolioDriveArtifacts[studentId] || []).find(function(f){return f.creditId===b.id;});
+                v = (bhA ? 1 : 0) - (ahA ? 1 : 0);
+            }
+            return v * earnedStudentSortDir || a.title.localeCompare(b.title);
+        });
+
+        function _thSort(col, label, center) {
+            var active = earnedStudentSortCol === col;
+            var arrow = active ? (earnedStudentSortDir === 1 ? ' ↑' : ' ↓') : '';
+            var style = 'cursor:pointer;user-select:none;' + (center ? 'text-align:center;' : '');
+            var click = 'if(earnedStudentSortCol===\'' + col + '\'){earnedStudentSortDir*=-1;}else{earnedStudentSortCol=\'' + col + '\';earnedStudentSortDir=1;}renderEarnedCredits();';
+            return '<th style="' + style + '" onclick="' + click + '">' + label + arrow + '</th>';
+        }
+
         html += '<div class="progress-table-wrapper"><table><thead><tr>';
-        html += '<th>Credit</th><th>Subject</th><th style="text-align:center;">Status</th><th style="text-align:center;">Date</th><th style="text-align:center;">Artifact</th>';
+        html += _thSort('credit','Credit',false) + _thSort('subject','Subject',false) + _thSort('status','Status',true) + _thSort('date','Date',true) + _thSort('artifact','Artifact',true);
         html += '</tr></thead><tbody>';
 
         stageCredits.forEach(function(c) {
