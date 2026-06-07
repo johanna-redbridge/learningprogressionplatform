@@ -3073,7 +3073,7 @@ function parseCSV(text) {
 
 function loadEarnedFromSheet() {
     // Row 0 = subjects, Row 1 = credit titles + metadata, Row 2+ = student data
-    fetch(EARNED_CSV_URL)
+    fetch(EARNED_CSV_URL, { cache: 'no-store' })
     .then(function(r) { return r.text(); })
     .then(function(text) {
         var rows = parseCSV(text);
