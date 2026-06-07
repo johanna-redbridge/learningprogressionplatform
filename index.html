@@ -10915,7 +10915,6 @@ function xrefReadDetailHTML(){
         var gLabel = g==='K'?'Kindergarten':'Grade '+g;
         html += '<div style="margin-bottom:0.25rem;margin-top:1.25rem;display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">';
         html += '<div style="font-size:0.9rem;font-weight:700;color:#1d1d1f;">'+gLabel+'</div>';
-        html += '<span style="font-size:0.75rem;color:#6b7280;">'+stds.length+' standards</span>';
         html += '</div>';
 
         html += '<div style="border-radius:12px;border:1px solid #f0f0f0;margin-bottom:1rem;overflow:hidden;">';
@@ -11016,6 +11015,7 @@ function renderReadXref() {
     var el  = document.getElementById('read-xref-content');
     var hdr = document.getElementById('read-xref-header');
     if (!el) return;
+    xrefCCSCRows = null; xrefStudents = null; xrefReadStds = null; xrefElaStds = null;
     el.innerHTML = '<div style="padding:2rem;text-align:center;color:#86868b;"><div class="wd-spinner"></div><br>Loading reading data…</div>';
     xrefLoadReadDetail(function() {
         var sel = document.getElementById('read-xref-sel');
@@ -11042,6 +11042,7 @@ function renderCompXref() {
     var el  = document.getElementById('comp-xref-content');
     var hdr = document.getElementById('comp-xref-header');
     if (!el) return;
+    xrefCCSCRows = null; xrefStudents = null; xrefCompStds = null;
     el.innerHTML = '<div style="padding:2rem;text-align:center;color:#86868b;"><div class="wd-spinner"></div><br>Loading computation data…</div>';
     xrefLoadCompDetail(function() {
         var sel = document.getElementById('comp-xref-sel');
@@ -11401,7 +11402,6 @@ function xrefCompDetailHTML(){
         var gLabel = g==='K'?'Kindergarten':'Grade '+g;
         html += '<div style="margin-bottom:0.25rem;margin-top:1.25rem;display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">';
         html += '<div style="font-size:0.9rem;font-weight:700;color:#1d1d1f;">'+gLabel+'</div>';
-        html += '<span style="font-size:0.75rem;color:#6b7280;">'+stds.length+' standards</span>';
         html += '</div>';
 
         html += '<div style="border-radius:12px;border:1px solid #f0f0f0;overflow:hidden;margin-bottom:1rem;">';
@@ -14804,18 +14804,14 @@ function renderCompTable() {
         + '<thead>'
         + '<tr>'
         + cdTh('name', 'Student', 'text-align:left;vertical-align:bottom;position:sticky;left:0;z-index:3;');
-    // GLE pie headers (rowspan=2, all 8 groups)
+    // GLE pie headers
     gleGroups.forEach(function(grp, gi) {
         var gLabel = grp.gle === 'K' ? 'K' : grp.gle;
         html += cdTh('gle_' + gi, 'GLE&nbsp;' + gLabel, 'text-align:center;font-size:0.62rem;font-weight:600;padding:0.25rem 0.3rem;white-space:nowrap;min-width:50px;vertical-align:bottom;border-right:1px solid #e8e8ed;');
     });
     // Separator
     html += '<th style="width:8px;border-right:2px solid #d1d5db;"></th>';
-    html += '</tr><tr>';
-    html += '<th class="core-name-col" style="position:sticky;left:0;z-index:3;"></th>';
-    gleGroups.forEach(function() { html += '<th style="border-right:1px solid #e8e8ed;"></th>'; });
-    html += '<th style="border-right:2px solid #d1d5db;"></th>';
-    // Q# + CCSS standard sub-headers
+    // Q# + CCSS standard sub-headers (same row)
     gleGroups.forEach(function(grp) {
         grp.items.forEach(function(item) {
             html += '<th style="text-align:center;font-size:0.58rem;font-weight:500;padding:0.2rem 0.25rem;min-width:42px;max-width:68px;color:#d1d1d6;word-break:break-word;white-space:normal;vertical-align:bottom;">'
