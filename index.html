@@ -5109,7 +5109,7 @@ function renderAvailable() {
         return '<th onclick="avSortBy(\'' + col + '\')" style="cursor:pointer;user-select:none;' + (extraStyle||'') + '">' + label + arrow + '</th>';
     }
     var html = whPanel + '<table style="table-layout:fixed;width:100%;">';
-    html += '<colgroup><col style="width:36px"><col style="width:25%"><col style="width:5%"><col style="width:9%"><col style="width:8%"><col style="width:8%"><col style="width:11%"><col style="width:11%"><col style="width:13%"></colgroup>';
+    html += '<colgroup><col style="width:36px"><col style="width:25%"><col style="width:5%"><col style="width:12%"><col style="width:8%"><col style="width:8%"><col style="width:9%"><col style="width:9%"><col style="width:13%"></colgroup>';
     html += '<thead><tr>';
     html += '<th></th>';
     html += avSortTh('name', 'Credit Name');
@@ -5142,7 +5142,7 @@ function renderAvailable() {
         var stdTag = stdId ? '<br><span style="font-size:0.62rem;font-weight:500;color:#86868b;cursor:default;" title="' + (stdObj ? stdObj.description.replace(/"/g,'&quot;') : stdId) + '">' + stdId + '</span>' : '';
         html += '<td style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#1d1d1f;" title="' + c.title.replace(/"/g,'&amp;quot;') + '">' + c.title + stdTag + '</td>';
         if (docLink) {
-            html += '<td style="text-align:center;"><a href="' + docLink + '" target="_blank" style="color:#FF8200;text-decoration:none;font-size:0.78rem;font-weight:600;" title="Open Google Doc">Open</a></td>';
+            html += '<td style="text-align:center;"><a href="' + docLink + '" target="_blank" style="color:#1d1d1f;text-decoration:none;font-size:0.78rem;font-weight:600;" title="Open Google Doc">open</a></td>';
         } else {
             html += '<td style="text-align:center;color:#d2d2d7;font-size:0.82rem;">&mdash;</td>';
         }
@@ -5151,31 +5151,31 @@ function renderAvailable() {
         var subjBg = hexToRgba(subjSc.bg, 0.2);
         var subjTc = subjSc.ic || subjSc.bg;
         html += '<td><span style="display:inline-block;padding:0.15rem 0.45rem;border-radius:6px;font-size:0.7rem;font-weight:600;background:' + subjBg + ';color:' + subjTc + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">' + subjShort + '</span></td>';
-        html += '<td><span class="tag tag-stage">' + c.stage + '</span></td>';
+        html += '<td><span class="tag tag-stage">' + (c.stage||'').toLowerCase() + '</span></td>';
         var typeColor = c.type === 'concept' ? '#636363' : '#b0b0b0';
-        html += '<td><span style="display:inline-block;padding:0.15rem 0.5rem;border-radius:6px;font-size:0.72rem;font-weight:600;background:' + typeColor + ';color:#fff;">' + (c.type === 'concept' ? 'Concept' : 'Fluency') + '</span></td>';
+        html += '<td><span style="display:inline-block;padding:0.15rem 0.5rem;border-radius:6px;font-size:0.72rem;font-weight:600;background:' + typeColor + ';color:#fff;">' + (c.type||'').toLowerCase() + '</span></td>';
         var badgePath = getBadgePath(c.id, 'single');
         if (badgePath) {
             var isDriveUrl = badgePath.indexOf('http') === 0;
             if (isDriveUrl) {
-                html += '<td style="text-align:center;"><a href="' + badgePath + '" target="_blank" style="color:#FF4400;text-decoration:none;font-size:0.82rem;font-weight:500;" title="View badge">&#11015; Badge</a></td>';
+                html += '<td style="text-align:center;"><a href="' + badgePath + '" target="_blank" style="color:#1d1d1f;text-decoration:none;font-size:0.82rem;font-weight:500;" title="View badge">&#11015; badge</a></td>';
             } else {
-                html += '<td style="text-align:center;"><a href="' + badgePath + '" download style="color:#FF4400;text-decoration:none;font-size:0.82rem;font-weight:500;" title="Download badge">&#11015; Badge</a></td>';
+                html += '<td style="text-align:center;"><a href="' + badgePath + '" download style="color:#1d1d1f;text-decoration:none;font-size:0.82rem;font-weight:500;" title="Download badge">&#11015; badge</a></td>';
             }
         } else {
             html += '<td style="text-align:center;color:#d2d2d7;font-size:0.82rem;">&mdash;</td>';
         }
         if (c.type === 'fluency') {
-            html += '<td style="text-align:center;"><a href="#" onclick="event.preventDefault();generatePrintPage(\'' + c.title.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\',\'' + c.subject.replace(/'/g,"\\'") + '\',\'' + c.stage.replace(/'/g,"\\'") + '\')" style="color:#FF4400;text-decoration:none;font-size:0.82rem;font-weight:500;cursor:pointer;" title="Print badge page">&#128424; Print</a></td>';
+            html += '<td style="text-align:center;"><a href="#" onclick="event.preventDefault();generatePrintPage(\'' + c.title.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\',\'' + c.subject.replace(/'/g,"\\'") + '\',\'' + c.stage.replace(/'/g,"\\'") + '\')" style="color:#1d1d1f;text-decoration:none;font-size:0.82rem;font-weight:500;cursor:pointer;" title="Print badge page">&#128424; print</a></td>';
         } else {
             var conceptPrintLink = creditDocLinks[c.id] || getBadgePath(c.id, 'print');
             if (conceptPrintLink) {
-                html += '<td style="text-align:center;"><a href="' + conceptPrintLink + '" target="_blank" style="color:#FF4400;text-decoration:none;font-size:0.82rem;font-weight:500;cursor:pointer;" title="Open sticker page">&#128424; Print</a></td>';
+                html += '<td style="text-align:center;"><a href="' + conceptPrintLink + '" target="_blank" style="color:#1d1d1f;text-decoration:none;font-size:0.82rem;font-weight:500;cursor:pointer;" title="Open sticker page">&#128424; print</a></td>';
             } else {
                 html += '<td style="text-align:center;color:#d2d2d7;font-size:0.82rem;">&mdash;</td>';
             }
         }
-        html += '<td style="text-align:center;"><span style="font-size:0.78rem;font-weight:500;color:#FF8200;cursor:pointer;text-decoration:underline;text-underline-offset:2px;" onclick="showPracticeOptions(\'' + c.id.replace(/'/g,"\\'") + '\',\'' + c.title.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')">show</span></td>';
+        html += '<td style="text-align:center;"><span style="font-size:0.78rem;font-weight:500;color:#1d1d1f;cursor:pointer;text-decoration:underline;text-underline-offset:2px;" onclick="showPracticeOptions(\'' + c.id.replace(/'/g,"\\'") + '\',\'' + c.title.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')">show</span></td>';
         html += '</tr>';
     });
 
