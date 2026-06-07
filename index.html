@@ -8321,11 +8321,11 @@ function drawMapLineGraph(canvas, pts, lineColor, goalSegs, opts) {
             var x2 = xOf(g.to)   + stepW * 0.3;
             x1 = Math.max(padL, x1); x2 = Math.min(padL + plotW, x2);
             ctx.save();
-            ctx.strokeStyle = '#34c759'; ctx.lineWidth = 1.5;
+            ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 1.5;
             ctx.setLineDash([5, 3]);
             ctx.beginPath(); ctx.moveTo(x1, gy); ctx.lineTo(x2, gy); ctx.stroke();
             ctx.setLineDash([]);
-            ctx.fillStyle = '#34c759'; ctx.font = 'bold 8px -apple-system,sans-serif'; ctx.textAlign = 'left';
+            ctx.fillStyle = '#3b82f6'; ctx.font = 'bold 8px -apple-system,sans-serif'; ctx.textAlign = 'left';
             ctx.fillText('GLE', x2 + 3, gy + 3);
             ctx.restore();
         });
@@ -9749,7 +9749,7 @@ function _drawPromoCrossRef() {
     var _selM = (_xrefBodyId === 'promo-body') ? '-1.25rem -1.25rem 1.25rem' : '0 0 1.25rem';
     var _legend = '<div style="margin-left:auto;display:flex;align-items:center;gap:14px;flex-shrink:0;">'
         +'<span style="display:flex;align-items:center;gap:6px;font-size:.72rem;color:#3a3a3c;white-space:nowrap;">'
-        +'<svg width="28" height="10" style="flex-shrink:0;"><line x1="0" y1="5" x2="28" y2="5" stroke="#34c759" stroke-width="1.5" stroke-dasharray="5,3"/></svg>'
+        +'<svg width="28" height="10" style="flex-shrink:0;"><line x1="0" y1="5" x2="28" y2="5" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="5,3"/></svg>'
         +'Grade Level Equivalent Goal</span>'
         +'<span style="display:flex;align-items:center;gap:6px;font-size:.72rem;color:#3a3a3c;white-space:nowrap;">'
         +'<svg width="28" height="10" style="flex-shrink:0;"><line x1="0" y1="5" x2="28" y2="5" stroke="#86efac" stroke-width="1.5" stroke-dasharray="5,3"/></svg>'
@@ -10099,7 +10099,7 @@ function drawXrefAlignedGraph(canvas, pts, lineColor, masterPeriods, opts) {
         var i1=masterPeriods.indexOf(gs.fromPeriod),i2=masterPeriods.indexOf(gs.toPeriod);if(i1<0||i2<0)return;
         var gy=yOf(gs.value),step=N>1?plotW/(N-1):plotW;
         var x1=Math.max(padL,xOf(i1)-step*0.3),x2=Math.min(padL+plotW,xOf(i2)+step*0.3);
-        ctx.save();ctx.strokeStyle='#34c759';ctx.lineWidth=1.5;ctx.setLineDash([5,3]);ctx.beginPath();ctx.moveTo(x1,gy);ctx.lineTo(x2,gy);ctx.stroke();ctx.setLineDash([]);ctx.restore();
+        ctx.save();ctx.strokeStyle='#3b82f6';ctx.lineWidth=1.5;ctx.setLineDash([5,3]);ctx.beginPath();ctx.moveTo(x1,gy);ctx.lineTo(x2,gy);ctx.stroke();ctx.setLineDash([]);ctx.restore();
     });
     if(opts.growthGoalSegs) opts.growthGoalSegs.forEach(function(gs){
         if(gs.value===null)return;
@@ -10140,7 +10140,7 @@ function drawXrefAlignedFpGraph(canvas, points, gle, masterPeriods, opts) {
     for(var _iv=Math.ceil(yMin);_iv<=Math.floor(yMax);_iv++){var _gy=yOf(_iv);ctx.strokeStyle='#ebebf0';ctx.lineWidth=1;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(padL,_gy);ctx.lineTo(padL+plotW,_gy);ctx.stroke();ctx.fillStyle='#8e8e93';ctx.font='9px -apple-system,sans-serif';ctx.textAlign='right';ctx.fillText(_iv,padL-4,_gy+3);}
     if(opts.goalSegs && opts.goalSegs.length){
         var _fpStep=N>1?plotW/(N-1):plotW;
-        opts.goalSegs.forEach(function(gs){if(gs.value===null)return;var i1=masterPeriods.indexOf(gs.fromPeriod),i2=masterPeriods.indexOf(gs.toPeriod);if(i1<0||i2<0)return;var gy=yOf(gs.value),x1=Math.max(padL,xOf(i1)-_fpStep*0.3),x2=Math.min(padL+plotW,xOf(i2)+_fpStep*0.3);ctx.save();ctx.strokeStyle='#34c759';ctx.lineWidth=1.5;ctx.setLineDash([5,3]);ctx.beginPath();ctx.moveTo(x1,gy);ctx.lineTo(x2,gy);ctx.stroke();ctx.setLineDash([]);ctx.restore();});
+        opts.goalSegs.forEach(function(gs){if(gs.value===null)return;var i1=masterPeriods.indexOf(gs.fromPeriod),i2=masterPeriods.indexOf(gs.toPeriod);if(i1<0||i2<0)return;var gy=yOf(gs.value),x1=Math.max(padL,xOf(i1)-_fpStep*0.3),x2=Math.min(padL+plotW,xOf(i2)+_fpStep*0.3);ctx.save();ctx.strokeStyle='#3b82f6';ctx.lineWidth=1.5;ctx.setLineDash([5,3]);ctx.beginPath();ctx.moveTo(x1,gy);ctx.lineTo(x2,gy);ctx.stroke();ctx.setLineDash([]);ctx.restore();});
     } else if(gleScore!==null){var gleY=yOf(gleScore);ctx.save();ctx.strokeStyle='#16a34a';ctx.lineWidth=2;ctx.setLineDash([6,4]);ctx.beginPath();ctx.moveTo(padL,gleY);ctx.lineTo(padL+plotW,gleY);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#16a34a';ctx.font='bold 9px -apple-system,sans-serif';ctx.textAlign='right';ctx.fillText('EOY Target: '+gleLabel,padL+plotW-4,gleY-4);ctx.restore();}
     if(mapped.length>1){ctx.beginPath();mapped.forEach(function(p,i){i===0?ctx.moveTo(xOf(p.idx),yOf(p.score)):ctx.lineTo(xOf(p.idx),yOf(p.score));});ctx.lineTo(xOf(mapped[mapped.length-1].idx),padT+plotH);ctx.lineTo(xOf(mapped[0].idx),padT+plotH);ctx.closePath();ctx.fillStyle='rgba(255,200,187,0.2)';ctx.fill();}
     ctx.beginPath();ctx.strokeStyle='#FFC8BB';ctx.lineWidth=2.5;ctx.setLineDash([]);mapped.forEach(function(p,i){i===0?ctx.moveTo(xOf(p.idx),yOf(p.score)):ctx.lineTo(xOf(p.idx),yOf(p.score));});ctx.stroke();
