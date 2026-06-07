@@ -3146,34 +3146,18 @@ function buildCreditsAndEarned(rows, headerRow) {
         subjectAtCol[si] = currentSubject;
     }
 
-    // Build credits and column→creditId map directly from sheet headers
+    // Build column→creditId map from sheet headers (for earned record processing)
     var colMap = {};
-    var newCredits = [];
-    var idSeen = {};
     for (var col = 1; col < titleRow.length; col++) {
         var title = (titleRow[col] || '').trim().replace(/\s+/g, ' ');
         if (!title || title.length < 2) continue;
         if (SKIP_COLS[title.toLowerCase()]) continue;
-        var subject = subjectAtCol[col] || '';
-        if (subject.toLowerCase() === 'communication') subject = '';
-        if (/^communication\s*[-–]\s*reading$/i.test(subject)) subject = 'Reading';
-        if (/^communication\s*[-–]\s*writing$/i.test(subject)) subject = 'Writing';
         var id = title.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
         colMap[col] = id;
-        if (!idSeen[id]) {
-            idSeen[id] = true;
-            // Stage defaults to 'Other'; enhanceCreditsWithMetadata() will replace it with the real stage
-            newCredits.push({ id: id, title: title, subject: subject, type: '', stage: 'Other', groups: G, link: '' });
-        }
     }
 
-    if (newCredits.length > 0) {
-        credits = newCredits;
-        console.log('[Sheet] loaded ' + credits.length + ' credits from earned sheet');
-        enhanceCreditsWithMetadata();
-        loadCreditDocs();
-        if (typeof renderAvailable === 'function') renderAvailable();
-    }
+    // Credits come solely from the catalog sheet — refresh it now
+    enhanceCreditsWithMetadata();
 
     // Process earned records
     var newEarned = [], seen = {}, studentCounts = {}, unmatchedNames = [];
@@ -3212,54 +3196,38 @@ async function enhanceCreditsWithMetadata() {
         var resp = await fetch(CREDITS_CSV_URL, { cache: 'no-store' });
         var text = await resp.text();
         var rows = parseCSV(text);
-        // Row 0 is the header ("Learning Credit Title", "Please keep...", etc.) — skip it
-        var lookup = {}; // sheetNorm(title) → metadata
+        // Row 0 is the header row — skip it. Rows 1+ are credits.
+        var newCredits = [], idSeen = {};
         for (var i = 1; i < rows.length; i++) {
             var row = rows[i];
             var title = (row[0] || '').trim();
             if (!title) continue;
             var rawStage = (row[6] || '').trim();
-            // Stage format is "emergent/AL1", "early/AL2", etc. — take the part before "/" and capitalise
             var stagePart = rawStage.split('/')[0].trim();
-            var stage = stagePart.charAt(0).toUpperCase() + stagePart.slice(1).toLowerCase();
-            lookup[sheetNorm(title)] = {
-                subject: (row[4] || '').trim(),
-                type:    (row[5] || '').trim().toLowerCase(),
-                stage:   stage,
-                link:    (row[1] || '').trim()
-            };
+            var stage = stagePart ? stagePart.charAt(0).toUpperCase() + stagePart.slice(1).toLowerCase() : 'Other';
+            var subject = (row[4] || '').trim();
+            if (/^communication\s*[-–]\s*reading$/i.test(subject)) subject = 'Reading';
+            else if (/^communication\s*[-–]\s*writing$/i.test(subject)) subject = 'Writing';
+            else if (subject.toLowerCase() === 'communication') subject = '';
+            var cid = title.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+            if (!idSeen[cid]) {
+                idSeen[cid] = true;
+                newCredits.push({ id: cid, title: title, subject: subject,
+                    type: (row[5] || '').trim().toLowerCase(),
+                    stage: stage || 'Other', groups: G, link: (row[1] || '').trim() });
+            }
         }
-        var enhanced = 0;
-        credits.forEach(function(c) {
-            var norm = sheetNorm(c.title);
-            // Exact match first, then substring
-            var meta = lookup[norm];
-            if (!meta) {
-                var keys = Object.keys(lookup);
-                for (var k = 0; k < keys.length; k++) {
-                    if (keys[k] && (keys[k].indexOf(norm) !== -1 || norm.indexOf(keys[k]) !== -1)) {
-                        meta = lookup[keys[k]]; break;
-                    }
-                }
-            }
-            if (meta) {
-                if (meta.stage)   c.stage   = meta.stage;
-                if (meta.type)    c.type    = meta.type;
-                if (meta.link)    c.link    = meta.link;
-                var _ms = meta.subject || '';
-                if (/^communication\s*[-–]\s*reading$/i.test(_ms)) _ms = 'Reading';
-                else if (/^communication\s*[-–]\s*writing$/i.test(_ms)) _ms = 'Writing';
-                if (_ms && _ms.toLowerCase() !== 'communication' && (!c.subject || c.subject.toLowerCase() === 'communication')) c.subject = _ms;
-                enhanced++;
-            }
-        });
+        if (newCredits.length > 0) {
+            credits = newCredits;
+            console.log('[Credits] loaded ' + credits.length + ' credits from catalog sheet');
+        }
         var creditSubjectOverrides = {
             'first_31_sounds_part_a': 'Reading',
             'my_first_words': 'Reading',
             'letter_writer_a_z': 'Writing'
         };
         credits.forEach(function(c) { if (creditSubjectOverrides[c.id]) c.subject = creditSubjectOverrides[c.id]; });
-        console.log('[Credits] enhanced ' + enhanced + '/' + credits.length + ' credits with stage/type/link');
+        loadCreditDocs();
         if (typeof renderAvailable === 'function') renderAvailable();
         if (currentTab === 'student' && studentTabStudentId) renderStudentTab();
         if (currentTab === 'earned') renderEarnedCredits();
