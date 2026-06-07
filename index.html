@@ -9700,8 +9700,7 @@ function _tierNorm(name) {
 
 function _sdTierHtml(tierArray, studentName) {
     if (!tierArray || !tierArray.length) return '';
-    var norm = _tierNorm(studentName);
-    var rec = tierArray.find(function(r) { return _tierNorm(r.name) === norm; });
+    var rec = xrefFindStudent(tierArray, studentName);
     if (!rec) return '';
     var parts = _sdTierBadge('BOY', rec.boyTier) + (rec.moyTier ? ' ' + _sdTierBadge('MOY', rec.moyTier) : '');
     if (!parts.trim()) return '';
