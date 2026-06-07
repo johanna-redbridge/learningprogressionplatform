@@ -362,8 +362,8 @@
         }
 
         .earned-no {
-            background: #f0f0f0;
-            color: #86868b;
+            background: transparent;
+            border: 2px solid #d2d2d7;
         }
 
         .attempted-icon {
@@ -3140,6 +3140,13 @@ function parseCellDate(str) {
     // MM-DD-YYYY
     var m3 = str.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
     if (m3) return m3[3] + '-' + String(m3[1]).padStart(2,'0') + '-' + String(m3[2]).padStart(2,'0');
+    // Month name formats: "Mar 11, 2026" / "March 11, 2026" / "Mar 11 2026"
+    var _MN = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+    var mn = str.match(/^([A-Za-z]+)\s+(\d{1,2})[,\s]+(\d{4})$/);
+    if (mn) { var mo = _MN[mn[1].toLowerCase().substring(0,3)]; if (mo) return mn[3] + '-' + String(mo).padStart(2,'0') + '-' + String(parseInt(mn[2])).padStart(2,'0'); }
+    // Month name + year only: "Mar 2026" / "March 2026"
+    var mn2 = str.match(/^([A-Za-z]+)\s+(\d{4})$/);
+    if (mn2) { var mo2 = _MN[mn2[1].toLowerCase().substring(0,3)]; if (mo2) return mn2[2] + '-' + String(mo2).padStart(2,'0') + '-01'; }
     return '';
 }
 
@@ -3380,7 +3387,8 @@ function groupLabel(g) {
 
 function formatDate(d) {
     if (!d) return '';
-    const dt = new Date(d + 'T00:00:00');
+    var iso = parseCellDate(d);
+    const dt = new Date((iso || d) + 'T00:00:00');
     if (isNaN(dt)) return '';
     var m = dt.getMonth() + 1, d2 = dt.getDate(), y = dt.getFullYear();
     return (m < 10 ? '0' + m : m) + '/' + (d2 < 10 ? '0' + d2 : d2) + '/' + y;
@@ -5393,7 +5401,7 @@ function renderEarnedWholeSchool(period, container) {
                 var afd = formatDate(att.date);
                 html += `<td style="text-align:center;"><span class="earned-icon attempted-icon" style="cursor:pointer;" onclick="toggleEarned('${s.id}','${c.id}')"${afd ? ' title="Attempted ' + afd + '"' : ''}>a</span>${afd ? '<span class="earned-date" style="cursor:pointer;" onclick="event.stopPropagation();editAttemptedDate(\'' + s.id + '\',\'' + c.id + '\')">'+afd+'</span>' : ''}</td>`;
             } else {
-                html += `<td style="text-align:center;"><span class="earned-icon earned-no" style="cursor:pointer;" onclick="toggleEarned('${s.id}','${c.id}')">&#10007;</span></td>`;
+                html += `<td style="text-align:center;"><span class="earned-icon earned-no" style="cursor:pointer;" onclick="toggleEarned('${s.id}','${c.id}')"></span></td>`;
             }
         });
         html += `<td style="text-align:center;font-weight:600;">${studentTotal} / ${allCredits.length}</td>`;
@@ -5527,7 +5535,7 @@ function renderEarnedGroup(period, container) {
                     var afd = formatDate(att.date);
                     html += `<td style="text-align:center;"><span class="earned-icon attempted-icon" style="cursor:pointer;" onclick="toggleEarned('${s.id}','${c.id}')"${afd ? ' title="Attempted ' + afd + '"' : ''}>a</span>${afd ? '<br><span style="font-size:0.62rem;color:#86868b;white-space:nowrap;">'+afd+'</span>' : ''}</td>`;
                 } else {
-                    html += `<td style="text-align:center;"><span class="earned-icon earned-no" style="cursor:pointer;" onclick="toggleEarned('${s.id}','${c.id}')">&#10007;</span></td>`;
+                    html += `<td style="text-align:center;"><span class="earned-icon earned-no" style="cursor:pointer;" onclick="toggleEarned('${s.id}','${c.id}')"></span></td>`;
                 }
             });
             html += `<td style="text-align:center;font-weight:600;">${studentTotal} / ${displayCredits.length}</td>`;
@@ -5716,7 +5724,7 @@ function renderEarnedStudent(period, container) {
                 var afd = formatDate(att.date);
                 html += '<span class="earned-icon attempted-icon" style="cursor:pointer;" onclick="toggleEarned(\'' + studentId + '\',\'' + c.id + '\')"' + (afd ? ' title="Attempted ' + afd + '"' : '') + '>a</span>';
             } else {
-                html += '<span class="earned-icon earned-no" style="cursor:pointer;" onclick="toggleEarned(\'' + studentId + '\',\'' + c.id + '\')">&#10007;</span>';
+                html += '<span class="earned-icon earned-no" style="cursor:pointer;" onclick="toggleEarned(\'' + studentId + '\',\'' + c.id + '\')"></span>';
             }
             html += '</td>';
             // Date cell — try Drive artifacts (fuzzy title match), then in-session artifact, then earned date
