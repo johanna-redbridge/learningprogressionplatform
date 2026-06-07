@@ -3475,20 +3475,24 @@ function populateDropdowns() {
 
     // Group Progress
     const gpGroup = document.getElementById('gp-group');
-    const gpGroupVal = gpGroup.value;
-    gpGroup.innerHTML = '';
-    groups.forEach(g => {
-        gpGroup.innerHTML += `<option value="${g.id}">${groupLabel(g)}</option>`;
-    });
-    if (groups.find(g => g.id === gpGroupVal)) gpGroup.value = gpGroupVal;
+    if (gpGroup) {
+        const gpGroupVal = gpGroup.value;
+        gpGroup.innerHTML = '';
+        groups.forEach(g => {
+            gpGroup.innerHTML += `<option value="${g.id}">${groupLabel(g)}</option>`;
+        });
+        if (groups.find(g => g.id === gpGroupVal)) gpGroup.value = gpGroupVal;
+    }
 
     const gpSubject = document.getElementById('gp-subject');
-    const gpSubjectVal = gpSubject.value;
-    gpSubject.innerHTML = '<option value="all">All Subjects</option>';
-    usedSubjects.forEach(s => {
-        gpSubject.innerHTML += `<option value="${s}">${s}</option>`;
-    });
-    if (gpSubjectVal !== 'all') gpSubject.value = gpSubjectVal;
+    if (gpSubject) {
+        const gpSubjectVal = gpSubject.value;
+        gpSubject.innerHTML = '<option value="all">All Subjects</option>';
+        usedSubjects.forEach(s => {
+            gpSubject.innerHTML += `<option value="${s}">${s}</option>`;
+        });
+        if (gpSubjectVal !== 'all') gpSubject.value = gpSubjectVal;
+    }
 
     // Earned Credits — student: keep hidden input in sync
     const stStudentVal = document.getElementById('st-student').value;
