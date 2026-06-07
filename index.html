@@ -9809,11 +9809,39 @@ function _renderPromoXrefStudent() {
         }).filter(function(x){ return x.score!==null; });
     }
 
-    function xrefChartWrap(id, title, colorSwatch, height) {
+    // Returns "BOY: X · EOY: Y" header span for the most recent year with data
+    function sdBoyEoy(pts, periodKey, fmtFn) {
+        var byYear = {};
+        pts.forEach(function(pt) {
+            var raw = pt[periodKey] || '';
+            var norm = xrefNormPeriod(raw);
+            var m = norm.match(/^(\d{2}-\d{2})\s+(BOY|MOY|EOY)$/);
+            if (!m) return;
+            if (!byYear[m[1]]) byYear[m[1]] = {};
+            byYear[m[1]][m[2]] = pt;
+        });
+        var years = Object.keys(byYear).sort();
+        for (var yi = years.length - 1; yi >= 0; yi--) {
+            var yd = byYear[years[yi]];
+            var bv = yd.BOY ? fmtFn(yd.BOY) : null;
+            var ev = yd.EOY ? fmtFn(yd.EOY) : null;
+            if (!bv && !ev) continue;
+            var parts = [];
+            if (bv) parts.push('BOY: ' + bv);
+            if (ev) parts.push('EOY: ' + ev);
+            return '<span style="margin-left:auto;font-size:.72rem;font-weight:400;opacity:0.8;white-space:nowrap;">' + parts.join(' &nbsp;·&nbsp; ') + '</span>';
+        }
+        return '';
+    }
+    function fmtNum(pt) { var v = pt.score; return v !== null && !isNaN(v) ? String(Math.round(v * 100) / 100) : null; }
+    function fmtInt(pt) { var v = pt.score; return v !== null && !isNaN(v) ? String(Math.round(v)) : null; }
+    function fmtFp(pt)  { return pt.level ? pt.level.toUpperCase() : null; }
+
+    function xrefChartWrap(id, title, colorSwatch, height, rightHtml) {
         return '<div style="background:#fff;border-radius:14px;border:1px solid #e8e8ed;overflow:hidden;margin-bottom:1rem;">'
             +'<div style="background:#5c5b5a;color:#fff;padding:0.55rem 1rem;font-size:.8rem;font-weight:700;display:flex;align-items:center;gap:8px;">'
             +'<span style="width:12px;height:12px;border-radius:3px;display:inline-block;flex-shrink:0;background:'+colorSwatch+';"></span>'
-            +'<span>'+title+'</span></div>'
+            +'<span>'+title+'</span>'+(rightHtml||'')+'</div>'
             +'<canvas id="'+id+'" style="width:100%;height:'+height+'px;display:block;"></canvas>'
             +'</div>';
     }
@@ -9823,19 +9851,30 @@ function _renderPromoXrefStudent() {
 
     var MP = XREF_MASTER_PERIODS;
     if (alPts.length) {
+        // AL BOY/EOY from most recent promo year
+        var _alRight = '';
+        if (promoYears.length) {
+            var _ly = promoYears[promoYears.length - 1].r;
+            var _boy = _ly.boyAL, _eoy = (_ly.eoySuccess === true) ? Math.min((_ly.moyAL || _boy) + 1, 4) : (_ly.moyAL || _boy);
+            var _alParts = [];
+            if (_boy) _alParts.push('BOY: AL' + _boy);
+            if (_eoy) _alParts.push('EOY: AL' + _eoy);
+            if (_alParts.length) _alRight = '<span style="margin-left:auto;font-size:.72rem;font-weight:400;opacity:0.8;white-space:nowrap;">' + _alParts.join(' &nbsp;·&nbsp; ') + '</span>';
+        }
         html += '<div style="background:#fff;border-radius:14px;border:1px solid #e8e8ed;overflow:hidden;margin-bottom:1rem;">'
-            +'<div style="background:#5c5b5a;color:#fff;padding:0.55rem 1rem;font-size:.8rem;font-weight:700;">AL Progression &amp; Promotion Outcomes</div>'
+            +'<div style="background:#5c5b5a;color:#fff;padding:0.55rem 1rem;font-size:.8rem;font-weight:700;display:flex;align-items:center;gap:8px;">AL Progression &amp; Promotion Outcomes' + _alRight + '</div>'
             +'<canvas id="promo-xref-al-canvas" style="width:100%;height:210px;display:block;"></canvas>'
             +'</div>';
     }
     if (compLinePts.length >= 2) {
-        html += xrefChartWrap('promo-xref-comp-canvas', 'Computation Benchmark', '#00E3FF', 200);
+        html += xrefChartWrap('promo-xref-comp-canvas', 'Computation Benchmark', '#00E3FF', 200, sdBoyEoy(compLinePts, 'period', fmtNum));
     }
     function mapXrefBox(canvasId, title, color, pts) {
+        var right = pts.length >= 2 ? sdBoyEoy(pts, 'period', fmtInt) : '';
         var hdr = '<div style="background:#fff;border-radius:14px;border:1px solid #e8e8ed;overflow:hidden;margin-bottom:1rem;">'
             +'<div style="background:#5c5b5a;color:#fff;padding:0.55rem 1rem;font-size:.8rem;font-weight:700;display:flex;align-items:center;gap:8px;">'
             +'<span style="width:12px;height:12px;border-radius:3px;display:inline-block;flex-shrink:0;background:'+color+';"></span>'
-            +'<span>'+title+'</span></div>';
+            +'<span>'+title+'</span>'+right+'</div>';
         if (pts.length >= 2) {
             return hdr+'<canvas id="'+canvasId+'" style="width:100%;height:200px;display:block;"></canvas></div>';
         }
@@ -9846,11 +9885,11 @@ function _renderPromoXrefStudent() {
     }
     html += mapXrefBox('promo-xref-mapmath-canvas', 'MAP Math', '#60a5fa', mapMathPts);
     if (fpLong) {
-        html += xrefChartWrap('promo-xref-fp-canvas', 'F&amp;P Reading Level', '#FFC8BB', 220);
+        html += xrefChartWrap('promo-xref-fp-canvas', 'F&amp;P Reading Level', '#FFC8BB', 220, sdBoyEoy(fpLong.points, 'label', fmtFp));
     }
     html += mapXrefBox('promo-xref-mapela-canvas', 'MAP ELA', '#f97316', mapElaPts);
     if (wbLinePts.length >= 2) {
-        html += xrefChartWrap('promo-xref-wb-canvas', 'Writing Benchmark', '#E87BB0', 200);
+        html += xrefChartWrap('promo-xref-wb-canvas', 'Writing Benchmark', '#E87BB0', 200, sdBoyEoy(wbLinePts, 'period', fmtNum));
     }
     el.innerHTML = html;
 
