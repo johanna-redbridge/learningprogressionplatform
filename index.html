@@ -3209,7 +3209,7 @@ function buildCreditsAndEarned(rows, headerRow) {
 
 async function enhanceCreditsWithMetadata() {
     try {
-        var resp = await fetch(CREDITS_CSV_URL);
+        var resp = await fetch(CREDITS_CSV_URL, { cache: 'no-store' });
         var text = await resp.text();
         var rows = parseCSV(text);
         // Row 0 is the header ("Learning Credit Title", "Please keep...", etc.) — skip it
@@ -4740,6 +4740,7 @@ function openLCSubtab(name) {
     var backTitle = document.getElementById('lc-back-nav-title');
     if (backNav) backNav.style.display = '';
     if (backTitle) backTitle.textContent = labels[name] || name;
+    if (name === 'available') { loadEarnedFromSheet(); enhanceCreditsWithMetadata(); }
     switchLCSubtab(name);
 }
 
