@@ -5111,7 +5111,7 @@ function renderAvailable() {
     filtered.forEach(function(c) {
         html += '<tr>';
         var sc = avSubjectColors[c.subject] || { bg: '#1d1d1f' };
-        var docLink = creditDocLinks[c.id] || null;
+        var docLink = creditDocLinks[c.id] || c.link || null;
         // Badge image cell
         var badgeSrc = getBadgePath(c.id, 'single');
         html += '<td style="padding:0.2rem 0.1rem;text-align:center;vertical-align:middle;">';
@@ -9767,16 +9767,18 @@ function _renderPromoXrefStudent() {
 
     // Computation goal segments per year (from goal col in spreadsheet)
     var compGoalSegs = [];
+    var compGrowthGoalSegs = [];
     if (compLong) {
         BENCH_LONG_YEARS.forEach(function(y) {
-            var yd = compLong.years[y.key]; if (!yd || yd.goal === null) return;
-            compGoalSegs.push({fromPeriod: xrefNormPeriod(y.label+' BOY'), toPeriod: xrefNormPeriod(y.label+' EOY'), value: yd.goal});
+            var yd = compLong.years[y.key]; if (!yd) return;
+            if (yd.goal !== null) compGoalSegs.push({fromPeriod: xrefNormPeriod(y.label+' BOY'), toPeriod: xrefNormPeriod(y.label+' EOY'), value: yd.goal});
+            if (yd.eoy !== null) compGrowthGoalSegs.push({fromPeriod: xrefNormPeriod(y.label+' BOY'), toPeriod: xrefNormPeriod(y.label+' EOY'), value: Math.round((yd.eoy + 1.0) * 100) / 100});
         });
     }
 
     // --- Writing data ---
     var wbLong = xrefFindStudent(wbLongData, name);
-    var wbLinePts = [], wbGoalSegs = [];
+    var wbLinePts = [], wbGoalSegs = [], wbGrowthGoalSegs = [];
     if (wbLong) {
         WB_LONG_YEARS.forEach(function(yr){
             var d = wbLong.years[yr.key]; if (!d) return;
@@ -9785,6 +9787,7 @@ function _renderPromoXrefStudent() {
             if (d.moy !== null) { var _p={period:yr.label+' MOY',score:d.moy,pct:null}; wbLinePts.push(_p); segPts.push(_p); }
             if (d.eof !== null) { var _p={period:yr.label+' EOY',score:d.eof,pct:null}; wbLinePts.push(_p); segPts.push(_p); }
             if (segPts.length && d.eoyGle !== null) wbGoalSegs.push({fromPeriod:xrefNormPeriod(segPts[0].period), toPeriod:xrefNormPeriod(segPts[segPts.length-1].period), value:d.eoyGle});
+            if (segPts.length && d.eof !== null) wbGrowthGoalSegs.push({fromPeriod:xrefNormPeriod(segPts[0].period), toPeriod:xrefNormPeriod(segPts[segPts.length-1].period), value:Math.round((d.eof + 1.0) * 100) / 100});
         });
     }
 
@@ -9901,7 +9904,7 @@ function _renderPromoXrefStudent() {
         var compC = document.getElementById('promo-xref-comp-canvas');
         if (compC && compLinePts.length >= 2) {
             compC.width = compC.offsetWidth || 700; compC.height = 200;
-            drawXrefAlignedGraph(compC, compLinePts, '#00E3FF', MP, {intY: true, goalSegs: compGoalSegs.length ? compGoalSegs : null});
+            drawXrefAlignedGraph(compC, compLinePts, '#00E3FF', MP, {intY: true, goalSegs: compGoalSegs.length ? compGoalSegs : null, growthGoalSegs: compGrowthGoalSegs.length ? compGrowthGoalSegs : null});
         }
         var mapMathC = document.getElementById('promo-xref-mapmath-canvas');
         if (mapMathC && mapMathPts.length >= 2) {
@@ -9921,7 +9924,7 @@ function _renderPromoXrefStudent() {
         var wbC = document.getElementById('promo-xref-wb-canvas');
         if (wbC && wbLinePts.length >= 2) {
             wbC.width = wbC.offsetWidth || 700; wbC.height = 200;
-            drawXrefAlignedGraph(wbC, wbLinePts, '#E87BB0', MP, {goalSegs: wbGoalSegs.length ? wbGoalSegs : null, intY: true});
+            drawXrefAlignedGraph(wbC, wbLinePts, '#E87BB0', MP, {goalSegs: wbGoalSegs.length ? wbGoalSegs : null, intY: true, growthGoalSegs: wbGrowthGoalSegs.length ? wbGrowthGoalSegs : null});
         }
     });
 }
@@ -10024,6 +10027,7 @@ function drawXrefAlignedGraph(canvas, pts, lineColor, masterPeriods, opts) {
     if(!mapped.length) return;
     var allV=mapped.map(function(p){return p.score;});
     if(opts.goalSegs) opts.goalSegs.forEach(function(g){if(g.value!==null)allV.push(g.value);});
+    if(opts.growthGoalSegs) opts.growthGoalSegs.forEach(function(g){if(g.value!==null)allV.push(g.value);});
     var minS=Math.min.apply(null,allV),maxS=Math.max.apply(null,allV),rng=maxS-minS||10;
     var yMin=minS-rng*0.18,yMax=maxS+rng*0.22;
     function yOf(s){return padT+plotH*(1-(s-yMin)/(yMax-yMin));}
@@ -10038,6 +10042,13 @@ function drawXrefAlignedGraph(canvas, pts, lineColor, masterPeriods, opts) {
         var gy=yOf(gs.value),step=N>1?plotW/(N-1):plotW;
         var x1=Math.max(padL,xOf(i1)-step*0.3),x2=Math.min(padL+plotW,xOf(i2)+step*0.3);
         ctx.save();ctx.strokeStyle='#34c759';ctx.lineWidth=1.5;ctx.setLineDash([5,3]);ctx.beginPath();ctx.moveTo(x1,gy);ctx.lineTo(x2,gy);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#34c759';ctx.font='bold 8px -apple-system,sans-serif';ctx.textAlign='left';ctx.fillText('GLE',x2+3,gy+3);ctx.restore();
+    });
+    if(opts.growthGoalSegs) opts.growthGoalSegs.forEach(function(gs){
+        if(gs.value===null)return;
+        var i1=masterPeriods.indexOf(gs.fromPeriod),i2=masterPeriods.indexOf(gs.toPeriod);if(i1<0||i2<0)return;
+        var gy=yOf(gs.value),step=N>1?plotW/(N-1):plotW;
+        var x1=Math.max(padL,xOf(i1)-step*0.3),x2=Math.min(padL+plotW,xOf(i2)+step*0.3);
+        ctx.save();ctx.strokeStyle='#86efac';ctx.lineWidth=1.5;ctx.setLineDash([5,3]);ctx.beginPath();ctx.moveTo(x1,gy);ctx.lineTo(x2,gy);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#86efac';ctx.font='bold 8px -apple-system,sans-serif';ctx.textAlign='left';ctx.fillText('+1',x2+3,gy+3);ctx.restore();
     });
     var rc=parseInt(lineColor.slice(1,3),16)||0,gc=parseInt(lineColor.slice(3,5),16)||0,bc=parseInt(lineColor.slice(5,7),16)||0;
     if(mapped.length>1){ctx.beginPath();mapped.forEach(function(p,i){i===0?ctx.moveTo(xOf(p.idx),yOf(p.score)):ctx.lineTo(xOf(p.idx),yOf(p.score));});ctx.lineTo(xOf(mapped[mapped.length-1].idx),padT+plotH);ctx.lineTo(xOf(mapped[0].idx),padT+plotH);ctx.closePath();ctx.fillStyle='rgba('+rc+','+gc+','+bc+',0.12)';ctx.fill();}
