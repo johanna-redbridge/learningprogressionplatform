@@ -3873,7 +3873,7 @@ function extractDocId(url) {
     return m ? m[1] : '';
 }
 
-var NARRATIVE_INDEX_OVERRIDES = { 'more_money_and_problems': 1 };
+var NARRATIVE_INDEX_OVERRIDES = { 'more_money': 1, 'more_money_and_problems': 2 };
 
 function fetchPortfolioNarrative(creditId, docId) {
     if (!docId || !gDriveToken) return;
