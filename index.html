@@ -3701,25 +3701,13 @@ function renderPortfolioStudent(studentId) {
     if (_pNav) _pNav.style.display = '';
     if (_pNavName) _pNavName.textContent = nickName(s.name);
 
-    var html = '<div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">';
-    html += '<span style="font-size:0.8rem;color:#86868b;">' + studentEarned.length + ' earned credit' + (studentEarned.length !== 1 ? 's' : '') + '</span>';
-    html += '</div>';
+    var html = '';
 
     if (studentEarned.length === 0) {
         html += '<div style="text-align:center;padding:3rem;color:#86868b;">No earned credits yet.</div>';
         el.innerHTML = html;
         return;
     }
-
-    // Subject filter toggle bar
-    html += '<div class="toggle-group" style="margin-bottom:1.25rem;flex-wrap:wrap;">';
-    html += '<button class="toggle-btn' + (portfolioSubjectFilter === 'all' ? ' active' : '') + '" onclick="portfolioSubjectFilter=\'all\';renderPortfolioStudent(\'' + studentId + '\')">All</button>';
-    presentSubjects.forEach(function(subj) {
-        var sc = avSubjectColors[subj] || { bg: '#86868b', ic: '#86868b' };
-        var active = portfolioSubjectFilter === subj;
-        html += '<button class="toggle-btn" onclick="portfolioSubjectFilter=\'' + subj.replace(/'/g,"\\'") + '\';renderPortfolioStudent(\'' + studentId + '\')" style="' + (active ? 'background:' + sc.bg + ';color:' + (sc.tc || '#fff') + ';box-shadow:0 1px 3px rgba(0,0,0,0.12);' : 'color:' + (sc.ic || sc.bg) + ';') + '">' + subj + '</button>';
-    });
-    html += '</div>';
 
     html += '<div style="display:flex;flex-direction:column;gap:1.25rem;">';
 
