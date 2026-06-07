@@ -5099,7 +5099,7 @@ function renderAvailable() {
         return '<th onclick="avSortBy(\'' + col + '\')" style="cursor:pointer;user-select:none;' + (extraStyle||'') + '">' + label + arrow + '</th>';
     }
     var html = whPanel + '<table style="table-layout:fixed;width:100%;">';
-    html += '<colgroup><col style="width:36px"><col style="width:25%"><col style="width:5%"><col style="width:12%"><col style="width:8%"><col style="width:8%"><col style="width:9%"><col style="width:9%"><col style="width:13%"></colgroup>';
+    html += '<colgroup><col style="width:32px"><col style="width:26%"><col style="width:5%"><col style="width:12%"><col style="width:8%"><col style="width:8%"><col style="width:9%"><col style="width:9%"><col style="width:13%"></colgroup>';
     html += '<thead><tr>';
     html += '<th></th>';
     var _nArrow = avSortCol === 'name' ? (avSortDir === 1 ? ' ↑' : ' ↓') : ' <span style="opacity:.3;font-size:0.6em;">↕</span>';
@@ -5125,7 +5125,7 @@ function renderAvailable() {
         var docLink = creditDocLinks[c.id] || null;
         // Badge image cell
         var badgeSrc = getBadgePath(c.id, 'single');
-        html += '<td style="padding:0.2rem 0.3rem;text-align:center;vertical-align:middle;">';
+        html += '<td style="padding:0.2rem 0.1rem;text-align:center;vertical-align:middle;">';
         if (badgeSrc) {
             html += '<img src="' + badgeSrc + '" style="width:28px;height:28px;object-fit:contain;display:block;margin:0 auto;" onerror="this.style.display=\'none\'">';
         }
