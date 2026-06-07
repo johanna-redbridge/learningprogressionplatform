@@ -1154,6 +1154,7 @@
                 <button class="toggle-btn" data-value="creditoverview" onclick="setToggle('manage-mode-toggle', 'creditoverview'); renderManageCombined()">Credit Overview</button>
                 <button class="toggle-btn" data-value="goaltracker" onclick="setToggle('manage-mode-toggle', 'goaltracker'); renderManageCombined()">Goal Tracker</button>
                 <button class="toggle-btn" data-value="worktracker" onclick="setToggle('manage-mode-toggle', 'worktracker'); renderManageCombined()">Work Tracker</button>
+                <button class="toggle-btn" data-value="averageearnings" onclick="setToggle('manage-mode-toggle', 'averageearnings'); renderManageCombined()">Average Earnings</button>
             </div>
             <div id="manage-subject-btns" class="toggle-group"></div>
             <div id="manage-student-search" style="display:none;align-items:center;gap:0.6rem;flex-wrap:wrap;">
@@ -1191,6 +1192,11 @@
         <div id="manage-worktracker-section" style="display:none;">
             <div class="view-container">
                 <div id="worktracker-content"></div>
+            </div>
+        </div>
+        <div id="manage-averageearnings-section" style="display:none;">
+            <div id="lc-analytics-panel">
+                <div id="lc-analytics-content" style="padding:0;"></div>
             </div>
         </div>
     </div>
@@ -1313,7 +1319,6 @@
             <span style="padding:0.55rem 0.5rem;font-size:0.82rem;font-weight:600;color:#1d1d1f;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-2px;">Credit</span>
             <span style="width:1px;background:#e8e8ed;margin:4px 8px;align-self:stretch;"></span>
             <button class="data-subtab-btn lc-analytics-sub-btn active" data-lcsub="ccss" onclick="switchLCAnalyticsSubtab('ccss')">CCSS Overview</button>
-            <button class="data-subtab-btn lc-analytics-sub-btn" data-lcsub="earnings" onclick="switchLCAnalyticsSubtab('earnings')">Average Earnings</button>
         </div>
         <!-- Nav bar for Promotion dashboard -->
         <div class="data-subtab-nav" id="promotion-nav" style="display:none;">
@@ -1530,10 +1535,6 @@
 
         <!-- ── Learning Credits sub-tab ── -->
         <div class="data-subtab-panel" id="data-subtab-lc" style="display:none;">
-            <!-- Average Earnings panel -->
-            <div id="lc-analytics-panel" style="display:none;">
-                <div id="lc-analytics-content" style="padding:0;"></div>
-            </div>
             <!-- CCSS panel -->
             <div id="lc-ccss-panel">
             <!-- filter bar -->
@@ -4725,10 +4726,7 @@ function switchLCAnalyticsSubtab(sub) {
         b.classList.toggle('active', b.dataset.lcsub === sub);
     });
     var ccssPanel = document.getElementById('lc-ccss-panel');
-    var earningsPanel = document.getElementById('lc-analytics-panel');
-    if (ccssPanel) ccssPanel.style.display = sub === 'ccss' ? '' : 'none';
-    if (earningsPanel) earningsPanel.style.display = sub === 'earnings' ? '' : 'none';
-    if (sub === 'earnings') { loadEarnedFromSheet(); renderLCAnalytics(); }
+    if (ccssPanel) ccssPanel.style.display = '';
 }
 
 // ── Browser history helpers ──────────────────────────────────────────────────
@@ -5794,6 +5792,7 @@ function renderManageCombined() {
     document.getElementById('manage-creditoverview-section').style.display = mode === 'creditoverview' ? '' : 'none';
     document.getElementById('manage-goaltracker-section').style.display = mode === 'goaltracker' ? '' : 'none';
     document.getElementById('manage-worktracker-section').style.display = mode === 'worktracker' ? '' : 'none';
+    document.getElementById('manage-averageearnings-section').style.display = mode === 'averageearnings' ? '' : 'none';
     if (mode === 'groups') {
         renderManageLeft();
         renderManageRight();
@@ -5806,6 +5805,9 @@ function renderManageCombined() {
         renderGoalTracker();
     } else if (mode === 'worktracker') {
         renderWorkTracker();
+    } else if (mode === 'averageearnings') {
+        loadEarnedFromSheet();
+        renderLCAnalytics();
     }
 }
 
