@@ -1033,14 +1033,40 @@
 
 <!-- TAB 1: Learning Credits (Available / Earned / Draft sub-tabs) -->
 <div class="tab-content active" id="tab-available">
-    <div class="data-subtab-nav" id="lc-subtab-nav">
-        <button class="data-subtab-btn active" data-subtab="available" onclick="switchLCSubtab('available')">Catalog</button>
-        <button class="data-subtab-btn" data-subtab="earned" onclick="switchLCSubtab('earned')">Attainment</button>
-        <button class="data-subtab-btn" data-subtab="drafting" onclick="switchLCSubtab('drafting')">Draft</button>
+
+    <!-- LC landing page -->
+    <div id="lc-landing">
+        <div class="view-container" style="padding-top:2rem;padding-bottom:2rem;">
+            <h2 style="font-size:1.4rem;font-weight:700;color:#1d1d1f;margin:0 0 0.4rem;">Learning Credits</h2>
+            <p style="font-size:0.85rem;color:#86868b;margin:0 0 2rem;">Select a section to explore.</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem;max-width:860px;">
+                <div onclick="openLCSubtab('available')" class="analytics-card">
+                    <div class="analytics-card-title">Catalog</div>
+                    <div class="analytics-card-sub">Browse all learning credits</div>
+                    <div class="analytics-card-arrow">Open &rarr;</div>
+                </div>
+                <div onclick="openLCSubtab('earned')" class="analytics-card">
+                    <div class="analytics-card-title">Attainment</div>
+                    <div class="analytics-card-sub">Student credit attainment</div>
+                    <div class="analytics-card-arrow">Open &rarr;</div>
+                </div>
+                <div onclick="openLCSubtab('drafting')" class="analytics-card">
+                    <div class="analytics-card-title">Draft</div>
+                    <div class="analytics-card-sub">Draft learning credits</div>
+                    <div class="analytics-card-arrow">Open &rarr;</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Back nav (shown when a subtab is open) -->
+    <div class="data-subtab-nav" id="lc-back-nav" style="display:none;padding-left:max(1.5in, calc((100vw - 1400px) / 2 + 1.5in));padding-right:max(1.5in, calc((100vw - 1400px) / 2 + 1.5in));">
+        <button onclick="showLCLanding()" style="padding:0.55rem 0.9rem;border:none;background:none;cursor:pointer;font-size:0.82rem;font-family:inherit;color:#86868b;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;" onmouseover="this.style.color='#1d1d1f'" onmouseout="this.style.color='#86868b'">&larr; Back</button>
+        <span id="lc-back-nav-title" style="padding:0.55rem 0.5rem;font-size:0.82rem;font-weight:600;color:#1d1d1f;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-2px;"></span>
     </div>
 
     <!-- Available sub-panel -->
-    <div id="lc-subtab-available" class="lc-subtab-panel">
+    <div id="lc-subtab-available" class="lc-subtab-panel" style="display:none;">
         <div class="view-container">
             <div class="progress-table-wrapper" id="available-grid"></div>
         </div>
@@ -4704,17 +4730,31 @@ function switchDPSubtab(name) {
 
 function switchLCSubtab(name) {
     currentLCSubtab = name;
-    document.querySelectorAll('#lc-subtab-nav .data-subtab-btn').forEach(function(b) {
-        b.classList.toggle('active', b.dataset.subtab === name);
-    });
-    document.querySelectorAll('.lc-subtab-panel').forEach(function(p) {
-        p.style.display = 'none';
-    });
+    document.querySelectorAll('.lc-subtab-panel').forEach(function(p) { p.style.display = 'none'; });
     var panel = document.getElementById('lc-subtab-' + name);
     if (panel) panel.style.display = '';
     if (name === 'available') renderAvailable();
     if (name === 'earned') { loadEarnedFromSheet(); renderEarnedCredits(); }
     if (name === 'drafting') { loadDraftingFromSheet(); renderDrafting(); }
+}
+
+function openLCSubtab(name) {
+    var landing = document.getElementById('lc-landing');
+    if (landing) landing.style.display = 'none';
+    var labels = { available: 'Catalog', earned: 'Attainment', drafting: 'Draft' };
+    var backNav = document.getElementById('lc-back-nav');
+    var backTitle = document.getElementById('lc-back-nav-title');
+    if (backNav) backNav.style.display = '';
+    if (backTitle) backTitle.textContent = labels[name] || name;
+    switchLCSubtab(name);
+}
+
+function showLCLanding() {
+    var landing = document.getElementById('lc-landing');
+    if (landing) landing.style.display = '';
+    var backNav = document.getElementById('lc-back-nav');
+    if (backNav) backNav.style.display = 'none';
+    document.querySelectorAll('.lc-subtab-panel').forEach(function(p) { p.style.display = 'none'; });
 }
 
 function switchLCAnalyticsSubtab(sub) {
@@ -4754,7 +4794,7 @@ function applyTabRender(tab) {
     // Earned and Draft are sub-tabs of Learning Credits
     if (tab === 'earned' || tab === 'drafting') {
         applyTabRender('available');
-        switchLCSubtab(tab);
+        openLCSubtab(tab);
         return;
     }
     // Credit Overview is now under Manage
@@ -4768,7 +4808,7 @@ function applyTabRender(tab) {
     document.querySelectorAll('.tab-btn').forEach(function(b) {
         if (b.textContent === tabLabels[tab]) b.classList.add('active');
     });
-    if (tab === 'available') { renderAvailable(); }
+    if (tab === 'available') { showLCLanding(); }
     if (tab === 'manage') renderManageCombined();
     if (tab === 'portfolio') { renderPortfolio(); }
     if (tab === 'data') showAnalyticsLanding();
