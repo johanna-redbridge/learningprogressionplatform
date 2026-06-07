@@ -7943,8 +7943,8 @@ function renderReadingSubtab() {
 var readingOverviewStudent = '';
 var readingTierData = null;
 
-function loadReadingTierData() {
-    if (readingTierData !== null) return;
+function loadReadingTierData(cb) {
+    if (readingTierData !== null) { if (cb) cb(); return; }
     readingTierData = [];
     fetch(READING_TIER_CSV_URL)
     .then(function(r){ return r.text(); })
@@ -7964,8 +7964,9 @@ function loadReadingTierData() {
             });
         }
         if (readingSubtab === 'student-overview') renderReadingStudentOverview();
+        if (cb) cb();
     })
-    .catch(function() { readingTierData = []; });
+    .catch(function() { readingTierData = []; if (cb) cb(); });
 }
 
 function renderReadingStudentOverview() {
@@ -8446,9 +8447,11 @@ function renderMathSubtab() {
 // ── Computation Student Overview ──────────────────────────────────────────────
 var COMP_TIER_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRvA3HUXEnfrsThbgpHRNPiZs4-L5lRFT8wSuqjsFGAJV_2kEGQW9wJAJazlDFJuQ/pub?gid=72030747&single=true&output=csv';
 var compTierData = null;
+var WRITING_TIER_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRvA3HUXEnfrsThbgpHRNPiZs4-L5lRFT8wSuqjsFGAJV_2kEGQW9wJAJazlDFJuQ/pub?gid=1472378993&single=true&output=csv';
+var writingTierData = null;
 
-function loadCompTierData() {
-    if (compTierData !== null) return;
+function loadCompTierData(cb) {
+    if (compTierData !== null) { if (cb) cb(); return; }
     compTierData = [];
     fetch(COMP_TIER_CSV_URL)
     .then(function(r){ return r.text(); })
@@ -8467,8 +8470,32 @@ function loadCompTierData() {
             });
         }
         if (mathSubtab === 'student-overview') renderCompStudentOverview();
+        if (cb) cb();
     })
-    .catch(function() { compTierData = []; });
+    .catch(function() { compTierData = []; if (cb) cb(); });
+}
+
+function loadWritingTierData(cb) {
+    if (writingTierData !== null) { if (cb) cb(); return; }
+    writingTierData = [];
+    fetch(WRITING_TIER_CSV_URL)
+    .then(function(r){ return r.text(); })
+    .then(function(text) {
+        var rows = parseCSV(text);
+        for (var i = 3; i < rows.length; i++) {
+            var r = rows[i];
+            var name = (r[1] || '').trim();
+            if (!name) continue;
+            writingTierData.push({
+                name: name,
+                grade: (r[3] || '').trim(),
+                boyTier: (r[5] || '').trim(),
+                moyTier: (r[7] || '').trim()
+            });
+        }
+        if (cb) cb();
+    })
+    .catch(function() { writingTierData = []; if (cb) cb(); });
 }
 
 var compStudOverviewName = '';
@@ -9642,13 +9669,35 @@ function _drawPromoStuChart(canvas, sy) {
 
 // ── Promotion Cross-Reference (per-student) ──
 
+function _sdTierBadge(label, t) {
+    if (!t) return '';
+    var bg = t === '1' ? '#34c759' : t === '2' ? '#ffcc00' : t === '3' ? '#ff3b30' : '#86868b';
+    var tc = t === '2' ? '#1d1d1f' : '#fff';
+    return '<span style="background:' + bg + ';color:' + tc + ';border-radius:5px;padding:2px 7px;font-size:.7rem;font-weight:700;white-space:nowrap;">' + label + ' T' + t + '</span>';
+}
+
+function _sdTierHtml(tierArray, studentName) {
+    if (!tierArray || !tierArray.length) return '';
+    var norm = xrefNorm(studentName);
+    var rec = tierArray.find(function(r) { return xrefNorm(r.name) === norm; });
+    if (!rec) return '';
+    var parts = _sdTierBadge('BOY', rec.boyTier) + (rec.moyTier ? ' ' + _sdTierBadge('MOY', rec.moyTier) : '');
+    if (!parts.trim()) return '';
+    return '<span style="margin-left:auto;display:flex;gap:5px;align-items:center;">' + parts + '</span>';
+}
+
 function _renderPromoCrossRef() {
     var body = document.getElementById(_xrefBodyId);
     if (!body) return;
     body.innerHTML = '<div style="padding:3rem;text-align:center;color:#aeaeb2;font-size:.88rem;">Loading cross-reference data…</div>';
 
-    var tasks = 4;
+    var tasks = 7;
     function tick() { if (--tasks <= 0) _drawPromoCrossRef(); }
+
+    // Tier data (cached after first load)
+    loadReadingTierData(tick);
+    loadCompTierData(tick);
+    loadWritingTierData(tick);
 
     // FP longitudinal data
     if (fpLongData) { tick(); }
@@ -9878,7 +9927,7 @@ function _renderPromoXrefStudent() {
             +'</div>';
     }
     if (compLinePts.length >= 2) {
-        html += xrefChartWrap('promo-xref-comp-canvas', 'Computation Benchmark', '#00E3FF', 200, '');
+        html += xrefChartWrap('promo-xref-comp-canvas', 'Computation Benchmark', '#00E3FF', 200, _sdTierHtml(compTierData, name));
     }
     function mapXrefBox(canvasId, title, color, pts) {
         var right = '';
@@ -9896,11 +9945,11 @@ function _renderPromoXrefStudent() {
     }
     html += mapXrefBox('promo-xref-mapmath-canvas', 'MAP Math', '#60a5fa', mapMathPts);
     if (fpLong) {
-        html += xrefChartWrap('promo-xref-fp-canvas', 'F&amp;P Reading Level', '#FFC8BB', 220, '');
+        html += xrefChartWrap('promo-xref-fp-canvas', 'F&amp;P Reading Level', '#FFC8BB', 220, _sdTierHtml(readingTierData, name));
     }
     html += mapXrefBox('promo-xref-mapela-canvas', 'MAP ELA', '#f97316', mapElaPts);
     if (wbLinePts.length >= 2) {
-        html += xrefChartWrap('promo-xref-wb-canvas', 'Writing Benchmark', '#E87BB0', 200, '');
+        html += xrefChartWrap('promo-xref-wb-canvas', 'Writing Benchmark', '#E87BB0', 200, _sdTierHtml(writingTierData, name));
     }
     el.innerHTML = html;
 
@@ -16800,6 +16849,7 @@ function doRenderSurvey() {
    ═══════════════════════════════════════════════════════════════ */
 var WB_LONG_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQLiHMlbP5cDwnbNqYFilbU2gKYOwLkGF1dJAUScpnBhh7wjJWUAp3Z4xX9Bt1pLZb0pLMlBBJUAKxi/pub?gid=1136667408&single=true&output=csv';
 var wbLongData  = null;
+
 var wbViewMode  = 'overview';
 var wbAvgGrowthMode = false;
 var wbSgSelectedStudent = '';
