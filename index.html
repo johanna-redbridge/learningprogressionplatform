@@ -9669,17 +9669,23 @@ function _drawPromoStuChart(canvas, sy) {
 
 // ── Promotion Cross-Reference (per-student) ──
 
-function _sdTierBadge(label, t) {
-    if (!t) return '';
+function _sdTierBadge(label, raw) {
+    if (!raw) return '';
+    var t = String(raw).replace(/tier\s*/i, '').trim(); // "Tier 3" → "3"
     var bg = t === '1' ? '#34c759' : t === '2' ? '#ffcc00' : t === '3' ? '#ff3b30' : '#86868b';
     var tc = t === '2' ? '#1d1d1f' : '#fff';
     return '<span style="background:' + bg + ';color:' + tc + ';border-radius:5px;padding:2px 7px;font-size:.7rem;font-weight:700;white-space:nowrap;">' + label + ' T' + t + '</span>';
 }
 
+function _tierNorm(name) {
+    // strip parenthetical nicknames: "Abigail (Abby) Martinez" → "Abigail Martinez"
+    return xrefNorm((name || '').replace(/\([^)]*\)/g, ''));
+}
+
 function _sdTierHtml(tierArray, studentName) {
     if (!tierArray || !tierArray.length) return '';
-    var norm = xrefNorm(studentName);
-    var rec = tierArray.find(function(r) { return xrefNorm(r.name) === norm; });
+    var norm = _tierNorm(studentName);
+    var rec = tierArray.find(function(r) { return _tierNorm(r.name) === norm; });
     if (!rec) return '';
     var parts = _sdTierBadge('BOY', rec.boyTier) + (rec.moyTier ? ' ' + _sdTierBadge('MOY', rec.moyTier) : '');
     if (!parts.trim()) return '';
