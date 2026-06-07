@@ -2771,6 +2771,7 @@ function loadDriveAssets() {
 // List Google Docs from each subject folder and match them to credits by filename
 function loadCreditDocs() {
     if (!gDriveToken) return;
+    creditDocLinks = {};
     Object.keys(CREDIT_DOC_FOLDERS).forEach(function(subject) {
         var folderId = CREDIT_DOC_FOLDERS[subject];
         var q = "'" + folderId + "' in parents and mimeType='application/vnd.google-apps.document' and trashed=false";
@@ -4769,7 +4770,7 @@ function applyTabRender(tab) {
     document.querySelectorAll('.tab-btn').forEach(function(b) {
         if (b.textContent === tabLabels[tab]) b.classList.add('active');
     });
-    if (tab === 'available') { showLCLanding(); }
+    if (tab === 'available') { showLCLanding(); enhanceCreditsWithMetadata(); }
     if (tab === 'manage') renderManageCombined();
     if (tab === 'portfolio') { renderPortfolio(); }
     if (tab === 'data') showAnalyticsLanding();
@@ -5126,7 +5127,7 @@ function renderAvailable() {
         if (docLink) {
             html += '<td style="text-align:center;"><a href="' + docLink + '" target="_blank" style="color:#0066cc;text-decoration:underline;text-underline-offset:2px;font-size:0.78rem;font-weight:600;" title="Open Google Doc">open</a></td>';
         } else {
-            html += '<td style="text-align:center;color:#d2d2d7;font-size:0.82rem;">&mdash;</td>';
+            html += '<td style="text-align:center;"><span style="color:#0066cc;text-decoration:underline;text-underline-offset:2px;font-size:0.78rem;font-weight:600;cursor:default;" title="No document linked">open</span></td>';
         }
         var subjShort = avSubjectShort(c.subject);
         var subjSc = avSubjectColors[c.subject] || { bg: '#86868b', ic: '#555' };
