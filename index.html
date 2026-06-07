@@ -1023,7 +1023,7 @@
         <button class="tab-btn" onclick="switchTab('portfolio')">Digital Portfolio</button>
         <button class="tab-btn" onclick="switchTab('data')">Analytics</button>
     </nav>
-    <div id="drive-user-info" style="position:absolute;right:1.25rem;top:50%;transform:translateY(-50%);display:none;align-items:center;gap:0.6rem;">
+    <div id="drive-user-info" style="position:absolute;right:max(1.25rem, calc((100% - 1400px) / 2 + 1.5in));top:50%;transform:translateY(-50%);display:none;align-items:center;gap:0.6rem;">
         <span id="drive-user-name" style="display:none;"></span>
         <button id="manage-gear-btn" onclick="switchTab('manage')" title="Manage" style="padding:0.25rem;border:none;background:transparent;cursor:pointer;font-size:1.15rem;line-height:1;color:#86868b;transition:color 0.2s;display:flex;align-items:center;" onmouseover="this.style.color='#1d1d1f'" onmouseout="this.style.color='#86868b'">&#9881;</button>
         <button onclick="signOut()" style="padding:0.25rem 0.65rem;border:1px solid #d2d2d7;border-radius:8px;background:transparent;cursor:pointer;font-size:0.75rem;font-family:inherit;color:#86868b;transition:all 0.2s;white-space:nowrap;" onmouseover="this.style.background='#f5f5f7'" onmouseout="this.style.background='transparent'">Sign out</button>
@@ -1176,8 +1176,10 @@
 <!-- TAB 5: Digital Portfolio (Parent + Student sub-tabs) -->
 <div class="tab-content" id="tab-portfolio">
     <div id="portfolio-student-nav" class="data-subtab-nav" style="display:none;">
+        <div style="max-width:1400px;margin:0 auto;padding:0 1.5in;display:flex;align-items:center;">
         <button onclick="history.back();" style="padding:0.55rem 0.9rem;border:none;background:none;cursor:pointer;font-size:0.82rem;font-family:inherit;color:#86868b;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;" onmouseover="this.style.color='#1d1d1f'" onmouseout="this.style.color='#86868b'">&larr; Back</button>
         <span id="portfolio-student-nav-name" style="padding:0.55rem 0.5rem;font-size:0.82rem;font-weight:600;color:#1d1d1f;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-2px;"></span>
+        </div>
     </div>
     <div class="view-container">
         <div id="portfolio-content"></div>
@@ -9267,13 +9269,15 @@ function _renderPromoOverview() {
         +'<div style="background:#5c5b5a;color:#fff;padding:0.55rem 1rem;font-size:.8rem;font-weight:700;">Year-by-Year Summary</div>'
         +'<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:.78rem;">'
         +'<thead><tr style="background:#5c5b5a;">'
-        +['Year','Students','MOY Attempt','MOY Success','MOY Rate','EOY Attempt','EOY Success','EOY Rate','Promoted'].map(function(h){
+        +['Year','Students','MOY Attempt','MOY Success','MOY Rate','EOY Attempt','EOY Success','EOY Rate','Promoted','Success Rate'].map(function(h){
             return '<th style="padding:7px 10px;text-align:'+(h==='Year'?'left':'center')+';font-weight:700;color:#ffffff;">'+h+'</th>';
         }).join('')+'</tr></thead><tbody>';
     ys.forEach(function(y,i){
         var s=y.s;
         var mr=s.midAtt?Math.round(s.midSuc/s.midAtt*100)+'%':'—';
         var er=s.eoyAtt?Math.round(s.eoySuc/s.eoyAtt*100)+'%':'—';
+        var promoted=s.midSuc+s.eoySuc;
+        var sr=s.n?Math.round(promoted/s.n*100)+'%':'—';
         html+='<tr style="border-top:1px solid #e8e8ed;'+(i%2?'background:#fafafa;':'')+'">'
             +'<td style="padding:6px 10px;font-weight:600;">'+y.label+'</td>'
             +'<td style="padding:6px 10px;text-align:center;">'+s.n+'</td>'
@@ -9283,7 +9287,8 @@ function _renderPromoOverview() {
             +'<td style="padding:6px 10px;text-align:center;">'+s.eoyAtt+'</td>'
             +'<td style="padding:6px 10px;text-align:center;">'+s.eoySuc+'</td>'
             +'<td style="padding:6px 10px;text-align:center;font-weight:700;">'+er+'</td>'
-            +'<td style="padding:6px 10px;text-align:center;font-weight:700;">'+(s.midSuc+s.eoySuc)+'</td></tr>';
+            +'<td style="padding:6px 10px;text-align:center;font-weight:700;">'+promoted+'</td>'
+            +'<td style="padding:6px 10px;text-align:center;font-weight:700;">'+sr+'</td></tr>';
     });
     html += '</tbody></table></div></div>';
 
