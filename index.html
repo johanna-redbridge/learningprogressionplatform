@@ -28,7 +28,6 @@
             border-bottom: 1px solid #f0f0f0;
             display: flex;
             align-items: center;
-            justify-content: flex-start;
             gap: 1rem;
             position: sticky;
             top: 0;
@@ -41,7 +40,6 @@
             font-weight: 700;
             letter-spacing: -0.02em;
             color: #FF4400;
-            margin-right: 1.5rem;
             white-space: nowrap;
         }
 
@@ -55,9 +53,18 @@
             display: flex;
             gap: 0;
             padding: 0;
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
+        }
+        .header-brand {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .header-end {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
         }
 
         .tab-btn {
@@ -999,6 +1006,7 @@
         body.redacted input.redact-input { color:transparent !important; background:#1c1c1e !important; border-color:#1c1c1e !important; caret-color:transparent; }
         body.redacted .student-portrait { background:#1c1c1e !important; }
         body.redacted .student-portrait * { visibility:hidden !important; }
+        body.redacted .user-pic-wrap::after { content:''; position:absolute; inset:0; border-radius:50%; background:#1c1c1e; }
     </style>
 <script src="https://accounts.google.com/gsi/client" async defer onload="window._gisReady=true;if(typeof initGDrive==='function')initGDrive();"></script>
 <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
@@ -1020,18 +1028,24 @@
 
 <span style="font-family:'TT Norms Pro';position:absolute;visibility:hidden;pointer-events:none;font-size:0;">a</span>
 <header>
-    <img id="app-logo-header" src="https://drive.google.com/thumbnail?id=1-bF7UTdKzEtoby0_ZIW8HtMe0-4n1MgX&sz=w400" alt="Logo" class="header-logo">
-    <h1>Learning Progression Platform</h1>
+    <div class="header-brand">
+        <img id="app-logo-header" src="https://drive.google.com/thumbnail?id=1-bF7UTdKzEtoby0_ZIW8HtMe0-4n1MgX&sz=w400" alt="Logo" class="header-logo">
+        <h1>Learning Progression Platform</h1>
+    </div>
     <nav class="tab-nav">
         <button class="tab-btn active" onclick="switchTab('available')">Learning Credits</button>
         <button class="tab-btn" onclick="switchTab('portfolio')">Digital Portfolio</button>
         <button class="tab-btn" onclick="switchTab('data')">Analytics</button>
     </nav>
-    <div id="drive-user-info" style="position:absolute;right:max(1.25rem, calc((100% - 1400px) / 2 + 1.5in));top:50%;transform:translateY(-50%);display:none;align-items:center;gap:0.6rem;">
-        <span id="drive-user-name" style="display:none;"></span>
-        <button id="manage-gear-btn" onclick="switchTab('manage')" title="Manage" style="padding:0.25rem;border:none;background:transparent;cursor:pointer;font-size:1.15rem;line-height:1;color:#86868b;transition:color 0.2s;display:flex;align-items:center;" onmouseover="this.style.color='#1d1d1f'" onmouseout="this.style.color='#86868b'">&#9881;</button>
-        <button onclick="signOut()" style="padding:0.25rem 0.65rem;border:1px solid #d2d2d7;border-radius:8px;background:transparent;cursor:pointer;font-size:0.75rem;font-family:inherit;color:#86868b;transition:all 0.2s;white-space:nowrap;" onmouseover="this.style.background='#f5f5f7'" onmouseout="this.style.background='transparent'">Sign out</button>
-        <img id="drive-user-pic" src="" alt="" style="display:none;width:30px;height:30px;border-radius:50%;object-fit:cover;border:1.5px solid #e8e8ed;">
+    <div class="header-end">
+        <div id="drive-user-info" style="display:none;align-items:center;gap:0.6rem;">
+            <span id="drive-user-name" style="display:none;"></span>
+            <button id="manage-gear-btn" onclick="switchTab('manage')" title="Manage" style="padding:0.25rem;border:none;background:transparent;cursor:pointer;font-size:1.15rem;line-height:1;color:#86868b;transition:color 0.2s;display:flex;align-items:center;" onmouseover="this.style.color='#1d1d1f'" onmouseout="this.style.color='#86868b'">&#9881;</button>
+            <button onclick="signOut()" style="padding:0.25rem 0.65rem;border:1px solid #d2d2d7;border-radius:8px;background:transparent;cursor:pointer;font-size:0.75rem;font-family:inherit;color:#86868b;transition:all 0.2s;white-space:nowrap;" onmouseover="this.style.background='#f5f5f7'" onmouseout="this.style.background='transparent'">Sign out</button>
+            <div class="user-pic-wrap" style="display:none;width:30px;height:30px;border-radius:50%;position:relative;flex-shrink:0;">
+                <img id="drive-user-pic" src="" alt="" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:1.5px solid #e8e8ed;display:block;">
+            </div>
+        </div>
     </div>
 </header>
 
@@ -1473,9 +1487,6 @@
                         <button class="toggle-btn bench-view-btn active" data-view="overview" onclick="setBenchView('overview')">Overview Growth</button>
                         <button class="toggle-btn bench-view-btn" data-view="drilldown" onclick="setBenchView('drilldown')">Drilldown</button>
                         <button class="toggle-btn bench-view-btn" data-view="student-growth" onclick="setBenchView('student-growth')">Student Growth</button>
-                    </div>
-                    <div style="margin-left:auto;display:flex;align-items:center;gap:0.5rem;">
-                        <button onclick="showEnterDataModal()" style="padding:0.35rem 0.85rem;border-radius:8px;border:1px solid #e8e8ed;background:#f5f5f7;color:#1d1d1f;font-family:inherit;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#e8e8ed'" onmouseout="this.style.background='#f5f5f7'">+ Enter New Data</button>
                     </div>
                 </div>
                 <div id="comp-filters" style="display:none;gap:0.75rem;align-items:center;padding:0.7rem 1.25rem;border-bottom:1px solid #e8e8ed;flex-wrap:wrap;">
@@ -2642,7 +2653,7 @@ function signOut() {
     gDriveToken = null;
     driveFolderCache = {};
     var picEl = document.getElementById('drive-user-pic');
-    if (picEl) { picEl.src = ''; picEl.style.display = 'none'; }
+    if (picEl) { picEl.src = ''; var pw = picEl.closest('.user-pic-wrap'); if (pw) pw.style.display = 'none'; }
     document.getElementById('drive-user-info').style.display = 'none';
     document.getElementById('login-overlay').style.display = 'flex';
 }
@@ -2656,7 +2667,7 @@ function fetchUserInfo() {
         var nameEl = document.getElementById('drive-user-name');
         if (nameEl) nameEl.textContent = info.given_name || info.name || '';
         var picEl = document.getElementById('drive-user-pic');
-        if (picEl && info.picture) { picEl.src = info.picture; picEl.style.display = 'block'; }
+        if (picEl && info.picture) { picEl.src = info.picture; var pw = picEl.closest('.user-pic-wrap'); if (pw) pw.style.display = 'block'; }
         document.getElementById('drive-user-info').style.display = 'flex';
         document.getElementById('login-overlay').style.display = 'none';
         loadAppLogo();
@@ -10652,6 +10663,29 @@ function normCcssCode(code){
 
 var ELA_DOMAINS = {RF:1,RL:2,RI:3,L:4,W:5,SL:6};
 
+function parseSubstdDescs(desc) {
+    // Extract per-letter substandard descriptions embedded in parent text.
+    // e.g. "Main text. a. Sub-a text. b. Sub-b text." → {a:'Sub-a text.',b:'Sub-b text.'}
+    var result = {};
+    var aMatch = /\s+a\.\s+/.exec(desc);
+    if (!aMatch) return result;
+    var rest = desc.substring(aMatch.index + aMatch[0].length);
+    var letter = 'a';
+    while (letter <= 'z') {
+        var next = String.fromCharCode(letter.charCodeAt(0) + 1);
+        var nm = new RegExp('\\s+' + next + '\\.\\s+').exec(rest);
+        if (nm) {
+            result[letter] = rest.substring(0, nm.index).trim();
+            rest = rest.substring(nm.index + nm[0].length);
+            letter = next;
+        } else {
+            result[letter] = rest.trim();
+            break;
+        }
+    }
+    return result;
+}
+
 function xrefParseElaStds(text){
     var rows = parseCSVFull(text);
     var result = [];
@@ -10662,7 +10696,13 @@ function xrefParseElaStds(text){
         var desc  = (r[3]||'').trim();
         if(!grade || !id) continue;
         var gn = grade==='K' ? 0 : (parseInt(grade)||99);
-        result.push({gradeNum:gn, grade:grade, domain:(id.split('.')[0]||''), id:id, desc:desc});
+        var domain = id.split('.')[0]||'';
+        result.push({gradeNum:gn, grade:grade, domain:domain, id:id, desc:desc});
+        // Generate substandard rows from letter sections in description
+        var subs = parseSubstdDescs(desc);
+        Object.keys(subs).sort().forEach(function(letter) {
+            result.push({gradeNum:gn, grade:grade, domain:domain, id:id+letter, desc:subs[letter]});
+        });
     }
     return result;
 }
@@ -10870,7 +10910,7 @@ function xrefReadDetailHTML(){
     xrefReadStds.forEach(function(std){
         var gradeN = std.gradeNum;
         var atGle = gleNum >= 0 && gradeN >= 0 && gradeN <= gleNum;
-        var credits = stdCredits[std.id]||[];
+        var credits = stdCredits[normCcssCode(std.id)]||[];
         var best='';
         credits.forEach(function(r){ var st=xrefCreditStatus(xrefStudent,r.credit); if(st==='e') best='e'; else if(st==='a'&&best!=='e') best='a'; });
         var lexPct = getLexiaPct(std.id);
@@ -10928,7 +10968,7 @@ function xrefReadDetailHTML(){
         var gradeBestMap = xrefBestMap(stds, xrefStudent, stdCredits);
 
         stds.forEach(function(std, idx){
-            var credits = stdCredits[std.id] || [];
+            var credits = stdCredits[normCcssCode(std.id)] || [];
             var best = gradeBestMap[std.id]||'';
             var lexPct = getLexiaPct(std.id);
             var lexMastered = lexPct === 100;
@@ -11311,7 +11351,7 @@ function xrefCompDetailHTML(){
     // Summary counters
     var totEarned=0, totBench=0, totBoth=0;
     xrefCompStds.forEach(function(std){
-        var credits = stdCredits[std.id]||[];
+        var credits = stdCredits[normCcssCode(std.id)]||[];
         var best=''; credits.forEach(function(r){ var st=xrefCreditStatus(xrefStudent,r.credit); if(st==='e') best='e'; else if(st==='a'&&best!=='e') best='a'; });
         var bqs = stdBenchQs[std.id]||[];
         var benchMastered=false; bqs.forEach(function(q){ if(q.mastery[benchName]) benchMastered=true; });
@@ -11326,7 +11366,7 @@ function xrefCompDetailHTML(){
     var totAtGle = 0;
     xrefCompStds.forEach(function(std){
         var gradeN = std.grade==='K' ? 0 : (parseInt(std.grade)||99);
-        if(gleNum >= 0 && gradeN <= gleNum && (stdCredits[std.id]||[]).length > 0) totAtGle++;
+        if(gleNum >= 0 && gradeN <= gleNum && (stdCredits[normCcssCode(std.id)]||[]).length > 0) totAtGle++;
     });
 
     // Count standards with at least one benchmark question at or below student's GLE
@@ -11392,7 +11432,7 @@ function xrefCompDetailHTML(){
         // Grade-level summary
         var gEarned=0, gBench=0;
         stds.forEach(function(std){
-            var credits=stdCredits[std.id]||[], best='';
+            var credits=stdCredits[normCcssCode(std.id)]||[], best='';
             credits.forEach(function(r){ var st=xrefCreditStatus(xrefStudent,r.credit); if(st==='e') best='e'; else if(st==='a'&&best!=='e') best='a'; });
             if(best==='e') gEarned++;
             var bqs=stdBenchQs[std.id]||[]; var bm=false;
@@ -11413,7 +11453,7 @@ function xrefCompDetailHTML(){
         html += '</tr></thead><tbody>';
 
         stds.forEach(function(std, idx){
-            var credits = stdCredits[std.id]||[];
+            var credits = stdCredits[normCcssCode(std.id)]||[];
             var best='';
             credits.forEach(function(r){
                 var st=xrefCreditStatus(xrefStudent,r.credit);
@@ -14724,6 +14764,8 @@ function renderCompTable() {
         if (!gleMap.hasOwnProperty(gle)) { gleMap[gle] = gleGroups.length; gleGroups.push({ gle: gle, items: [] }); }
         gleGroups[gleMap[gle]].items.push({ idx: idx, q: q });
     });
+    // Always show GLE 8 even if no questions mapped to it yet
+    if (!gleMap.hasOwnProperty('8')) { gleGroups.push({ gle: '8', items: [] }); }
 
     // ── GLE mastery summary cards ──────────────────────────────────
     var cards = '<div style="display:flex;gap:12px;flex-wrap:wrap;padding:14px 1.25rem 10px;">';
