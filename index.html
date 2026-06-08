@@ -16346,6 +16346,7 @@ var rosterGrowthCol = 'fw';
 var studentGrowthCol = 'fw';
 var selectedStudent = '';
 var catDiveIdx = 0;
+var catDiveALFilter = 'all';
 var sortState = {
     cat:     { col:'label', dir:'asc' },
     roster:  { col:'name',  dir:'asc' },
@@ -16654,7 +16655,7 @@ function renderGroupsView() {
     var html = '<div class="wd-card"><div class="wd-section-title">Cross-Level Comparison — BOY → MOY</div>'
         + '<p style="font-size:.75rem;color:#94a3b8;margin:0 0 14px">Shows overall average scores per level. Click a level button above to load it.</p>'
         + '<div class="wd-tbl-wrap"><table style="width:100%;border-collapse:collapse;font-size:.82rem"><thead><tr>'
-        + '<th style="padding:7px 9px;font-size:.65rem;font-weight:700;letter-spacing:.06em;color:#fff;border-bottom:1px solid #4a4948">Level</th>'
+        + '<th style="padding:7px 9px;font-size:.65rem;font-weight:700;letter-spacing:.06em;color:#fff;border-bottom:1px solid #4a4948">AL</th>'
         + '<th class="center" style="padding:7px 9px;font-size:.65rem;font-weight:700;letter-spacing:.06em;color:#fff;border-bottom:1px solid #4a4948">Students</th>'
         + '<th class="center" style="padding:7px 9px;font-size:.65rem;font-weight:700;letter-spacing:.06em;color:#fff;border-bottom:1px solid #4a4948">BOY Avg</th>'
         + '<th class="center" style="padding:7px 9px;font-size:.65rem;font-weight:700;letter-spacing:.06em;color:#fff;border-bottom:1px solid #4a4948">MOY Avg</th>'
@@ -16678,6 +16679,40 @@ function renderGroupsView() {
     document.getElementById('wd-view-groups').innerHTML = html;
 }
 
+// ── AL dropdown filter for Category view ──
+function _wdALDD(thEl, opts, event) {
+    event.stopPropagation();
+    var existing = document.getElementById('wd-al-dd');
+    if (existing) { existing.parentNode.removeChild(existing); return; }
+    var rect = thEl.getBoundingClientRect();
+    var dd = document.createElement('div');
+    dd.id = 'wd-al-dd';
+    dd.style.cssText = 'position:fixed;background:#fff;border:1px solid #d2d2d7;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.12);z-index:10000;min-width:120px;overflow:hidden;';
+    dd.style.left = rect.left + 'px';
+    dd.style.top = (rect.bottom + 2) + 'px';
+    opts.forEach(function(o) {
+        var label = o === 'all' ? 'All ALs' : o;
+        var isActive = catDiveALFilter === o;
+        var item = document.createElement('div');
+        item.textContent = label;
+        item.style.cssText = 'padding:0.5rem 1rem;cursor:pointer;font-size:0.82rem;'+(isActive?'background:#fff7f0;color:#FF8200;font-weight:600;':'color:#1d1d1f;');
+        item.addEventListener('mouseenter', function() { if (!isActive) this.style.background='#f5f5f7'; });
+        item.addEventListener('mouseleave', function() { if (!isActive) this.style.background=''; });
+        item.addEventListener('click', function(e) {
+            e.stopPropagation();
+            catDiveALFilter = o;
+            var el = document.getElementById('wd-al-dd');
+            if (el) el.parentNode.removeChild(el);
+            renderCategoryView();
+        });
+        dd.appendChild(item);
+    });
+    document.body.appendChild(dd);
+    setTimeout(function() {
+        document.addEventListener('click', function _c(){ var el=document.getElementById('wd-al-dd'); if(el)el.parentNode.removeChild(el); document.removeEventListener('click',_c); });
+    }, 0);
+}
+
 // ── Render: Category Deep Dive ──
 function renderCategoryView() {
     var rows=APP.students.map(function(s){
@@ -16685,9 +16720,12 @@ function renderCategoryView() {
         var ws=(s.winter?s.winter.scores||[]:[])[catDiveIdx];
         return{name:s.name, al:s.al||'—', fallScore:fs!=null?fs:null, winterScore:ws!=null?ws:null, growth:growthDiff(fs,ws), noWork:s.winter&&s.winter.noWork||false};
     });
-    var sorted=sortRows(rows,sortState.catDive.col,sortState.catDive.dir,function(r,c){return{name:r.name,al:r.al,fallScore:r.fallScore,winterScore:r.winterScore,growth:r.growth}[c];});
+    var alOptions=['all'].concat(APP.students.map(function(s){return s.al||'—';}).filter(function(v,i,a){return a.indexOf(v)===i;}).sort());
+    var filteredRows=catDiveALFilter==='all'?rows:rows.filter(function(r){return r.al===catDiveALFilter;});
+    var sorted=sortRows(filteredRows,sortState.catDive.col,sortState.catDive.dir,function(r,c){return{name:r.name,al:r.al,fallScore:r.fallScore,winterScore:r.winterScore,growth:r.growth}[c];});
     var clsFall=safeAvg(rows.map(function(r){return r.fallScore;})),clsWin=safeAvg(rows.map(function(r){return r.winterScore;})),clsGrow=growthDiff(clsFall,clsWin);
     var gc=growthColors(clsGrow,'half');
+    var alThLabel='AL'+(catDiveALFilter!=='all'?' ('+catDiveALFilter+')':'')+' <span style="opacity:.5;font-size:.65em;">▾</span>';
     var html='<div class="wd-filter-bar" style="flex-wrap:wrap;gap:6px;padding-bottom:10px;">'
         +'<div class="toggle-group" style="flex-wrap:wrap;gap:3px;">'
         +CATS.map(function(c,i){return'<button class="toggle-btn'+(i===catDiveIdx?' active':'')+'" onclick="WD.setCatDive('+i+')" style="font-size:0.72rem;padding:0.3rem 0.75rem;">'+c+'</button>';}).join('')
@@ -16696,9 +16734,10 @@ function renderCategoryView() {
         +'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">'
         +(clsGrow!=null?'<div class="wd-cat-kpi" style="background:'+gc.bg+'"><div class="ck-label" style="color:'+gc.text+'">BOY→MOY Growth</div><div class="ck-value" style="color:'+gc.text+'">'+(clsGrow>0?'+':'')+clsGrow.toFixed(2)+'</div></div>':'<div class="wd-cat-kpi"><div class="ck-label">BOY→MOY Growth</div><div class="ck-value" style="color:#94a3b8;font-size:.9rem">No data yet</div></div>')
         +'</div>'
-        +'<div class="wd-card"><div class="wd-section-title">'+CATS[catDiveIdx]+' · click header to sort</div>'
+        +'<div class="wd-card"><div class="wd-section-title">'+CATS[catDiveIdx]+' · click header to sort · click AL to filter</div>'
         +'<div class="wd-tbl-wrap"><table id="wd-tbl-catdive"><thead><tr>'
-        +makeSortTh('Student','name','catDive')+makeSortTh('Level','al','catDive')
+        +makeSortTh('Student','name','catDive')
+        +'<th onclick="WD.alDD(this,'+JSON.stringify(alOptions)+',event)" style="cursor:pointer;user-select:none;padding:0.45rem 0.6rem;">'+alThLabel+'</th>'
         +makeSortTh('BOY','fallScore','catDive',true)+'<th>BOY Bar</th>'
         +makeSortTh('MOY','winterScore','catDive',true)+'<th>MOY Bar</th>'
         +makeSortTh('BOY→MOY','growth','catDive',true)
@@ -16867,10 +16906,10 @@ function setLevel(lvl) {
 }
 function setRosterGrowth(col) { rosterGrowthCol=col; renderClassOverview(); }
 function setStudentGrowth(col) { studentGrowthCol=col; renderStudentView(); }
-function setCatDive(i) { catDiveIdx=i; renderCategoryView(); }
+function setCatDive(i) { catDiveIdx=i; catDiveALFilter='all'; renderCategoryView(); }
 
 function refresh() { levelCache = {}; tierCache = null; initialized = false; init(); }
-return { init:init, refresh:refresh, switchView:switchView, setLevel:setLevel, setRosterGrowth:setRosterGrowth, setStudentGrowth:setStudentGrowth, setCatDive:setCatDive };
+return { init:init, refresh:refresh, switchView:switchView, setLevel:setLevel, setRosterGrowth:setRosterGrowth, setStudentGrowth:setStudentGrowth, setCatDive:setCatDive, alDD:_wdALDD };
 })();
 
 /* ═══════════════════════════════════════════════════════════════
