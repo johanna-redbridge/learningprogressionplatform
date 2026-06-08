@@ -11928,17 +11928,18 @@ function coreCellAllHtml(student, catIdx) {
         var pData = student[pd.key];
         var raw = pData ? pData.scores[catIdx] : null;
         var bg, pct, scoreLabel;
+        var isEoy = pd.key === 'spring';
         if (raw === null) {
             bg = '#e2e2e7'; pct = 0; scoreLabel = '';
         } else if (coreRawIsMastered(raw)) {
-            bg = '#5a9e5a'; pct = 100; scoreLabel = '&#10003;'; hasAny = true;
+            bg = isEoy ? '#c4c4cc' : '#5a9e5a'; pct = 100; scoreLabel = pd.lbl; hasAny = true;
         } else {
             var score = parseInt(raw, 10);
             if (!isNaN(score)) {
                 if (score >= cat.max) {
-                    bg = '#5a9e5a'; pct = 100; scoreLabel = '&#10003;';
+                    bg = isEoy ? '#c4c4cc' : '#5a9e5a'; pct = 100; scoreLabel = pd.lbl;
                 } else {
-                    bg = coreCellBg(score, cat.max);
+                    bg = isEoy ? '#c4c4cc' : coreCellBg(score, cat.max);
                     pct = score > 0 ? Math.max((score / cat.max) * 100, 5) : 0;
                     scoreLabel = score + '/' + cat.max;
                 }
@@ -11947,7 +11948,7 @@ function coreCellAllHtml(student, catIdx) {
                 bg = '#e2e2e7'; pct = 0; scoreLabel = '';
             }
         }
-        cols.push({ bg: bg, pct: pct, scoreLabel: scoreLabel });
+        cols.push({ bg: bg, pct: pct, scoreLabel: scoreLabel, lbl: pd.lbl, isEoy: isEoy });
     });
     if (!hasAny) return '<span style="color:#c7c7cc;font-size:0.7rem;">&ndash;</span>';
     var BH = 26, BW = 9;
@@ -11957,7 +11958,7 @@ function coreCellAllHtml(student, catIdx) {
             + '<div style="width:' + BW + 'px;height:' + BH + 'px;background:#efefef;border-radius:2px;overflow:hidden;position:relative;">'
             + (c.pct > 0 ? '<div style="position:absolute;bottom:0;width:100%;height:' + c.pct + '%;background:' + c.bg + ';border-radius:2px 2px 0 0;"></div>' : '')
             + '</div>'
-            + (c.scoreLabel ? '<span style="font-size:0.42rem;color:#3a3a3c;text-align:center;line-height:1.1;max-width:22px;overflow:hidden;">' + c.scoreLabel + '</span>' : '')
+            + (c.scoreLabel ? '<span style="font-size:0.42rem;color:'+(c.isEoy?'#a0a0a8':'#3a3a3c')+';text-align:center;line-height:1.1;max-width:22px;overflow:hidden;">' + c.scoreLabel + '</span>' : '')
             + '</div>';
     });
     out += '</div>';
