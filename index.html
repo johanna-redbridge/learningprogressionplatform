@@ -16336,12 +16336,15 @@ var LEVELS = {
     ms:   makeLvl('MS',    '1129171748', WD_CATS_MS,    false, 1, null, 2, 3, 4, 5, 16, 17)
 };
 
+var WD_TIER_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRvA3HUXEnfrsThbgpHRNPiZs4-L5lRFT8wSuqjsFGAJV_2kEGQW9wJAJazlDFJuQ/pub?gid=1472378993&single=true&output=csv';
+
 // ── State ──
 var APP = { students: [] };
 var initialized = false;
 var currentView = 'class';
 var currentLevel = 'al1';
 var levelCache = {};
+var tierCache = null;
 var CATS = WD_CATS_LOWER;
 var rosterGrowthCol = 'fw';
 var studentGrowthCol = 'fw';
@@ -16518,54 +16521,70 @@ function attachSortListeners(tableId, stateKey, renderFn) {
 function renderClassOverview() {
     var lsStudents = (levelCache['al1']||[]).concat(levelCache['al2']||[]).concat(levelCache['al34']||[]);
     var msStudents = levelCache['ms'] || [];
+    var tiers = tierCache || {};
 
-    function latestSeason(s) { return s.spring || s.winter || s.fall || null; }
-
-    function scoreTd(v) {
-        if (v === null || v === undefined) return '<td class="center" style="padding:4px 5px;color:#c7c7cc;font-size:.7rem;">—</td>';
-        var col = scoreColor(v);
-        return '<td class="center" style="padding:4px 5px;background:'+col+';font-size:.72rem;font-weight:600;">'+fmtScore(v,1)+'</td>';
+    function avgTd(score, goal) {
+        var P = 'padding:5px 7px;text-align:center;font-size:.76rem;font-weight:600;';
+        if (score === null || score === undefined) {
+            return '<td style="'+P+'color:#b0b0b8;">—</td>';
+        }
+        var col = wdScoreColor(score, goal);
+        var style = col ? P+'background:'+col.bg+';color:'+col.text+';' : P+'color:#1d1d1f;';
+        return '<td style="'+style+'">'+fmtScore(score,1)+'</td>';
     }
 
-    function buildSection(students, cats, title) {
+    function tierBadge(val) {
+        if (!val) return '<span style="color:#c7c7cc;">—</span>';
+        return '<span style="display:inline-block;padding:1px 7px;border-radius:5px;font-size:.68rem;font-weight:700;background:#e8e8ed;color:#3a3a3c;">'+val+'</span>';
+    }
+
+    function buildSection(students, title) {
         if (!students.length) return '';
         var alOrder = {'AL1':1,'AL2':2,'AL3/4':3,'MS':4};
         var sorted = students.slice().sort(function(a,b){
             var ao=alOrder[a.al]||9, bo=alOrder[b.al]||9;
             return ao!==bo ? ao-bo : a.name.localeCompare(b.name);
         });
-        var TH = 'padding:6px 7px;color:#fff;white-space:nowrap;font-size:.66rem;font-weight:700;';
+        var TH = 'padding:6px 8px;color:#fff;white-space:nowrap;font-size:.68rem;font-weight:700;text-align:center;';
         var html = '<div class="wd-card" style="margin-bottom:1rem;">'
             +'<div class="wd-section-title" style="margin-bottom:8px;">'+title+'</div>'
             +'<div class="wd-tbl-wrap"><table style="width:100%;border-collapse:collapse;font-size:.78rem;">'
             +'<thead><tr style="background:#5c5b5a;">'
-            +'<th style="'+TH+'text-align:left;">Student</th>'
-            +'<th style="'+TH+'text-align:center;">AL</th>'
-            +'<th style="'+TH+'text-align:center;">GLE</th>';
-        cats.forEach(function(cat){
-            html += '<th style="'+TH+'text-align:center;">'+cat+'</th>';
-        });
-        html += '<th style="'+TH+'text-align:center;border-left:2px solid rgba(255,255,255,0.25);">Avg</th>'
+            +'<th style="'+TH+'text-align:left;min-width:120px;">Student</th>'
+            +'<th style="'+TH+'">AL</th>'
+            +'<th style="'+TH+'">GLE</th>'
+            +'<th style="'+TH+'">Goal</th>'
+            +'<th style="'+TH+'border-left:2px solid rgba(255,255,255,0.2);">BOY</th>'
+            +'<th style="'+TH+'">MOY</th>'
+            +'<th style="'+TH+'">EOY</th>'
+            +'<th style="'+TH+'border-left:2px solid rgba(255,255,255,0.2);">BOY Tier</th>'
+            +'<th style="'+TH+'">MOY Tier</th>'
             +'</tr></thead><tbody>';
         sorted.forEach(function(s, i) {
-            var d = latestSeason(s);
+            var goal = wdGoalForStudent(s);
+            var boy = s.fall ? s.fall.avg : null;
+            var moy = s.winter ? s.winter.avg : null;
+            var eoy = s.spring ? s.spring.avg : null;
+            var tk = s.name.toLowerCase();
+            var t = tiers[tk] || {};
             html += '<tr style="background:'+(i%2?'#fafafa':'#fff')+'">'
                 +'<td data-redact="name" style="padding:5px 8px;font-weight:600;white-space:nowrap;">'+fullName(s.name).replace(/</g,'&lt;')+'</td>'
-                +'<td class="center" style="padding:5px 7px;color:#64748b;font-size:.72rem;">'+s.al+'</td>'
-                +'<td class="center" style="padding:5px 7px;color:#64748b;font-size:.72rem;">'+(s.gle||'—')+'</td>';
-            cats.forEach(function(cat, ci) {
-                var v = (d && d.scores && d.scores[ci] !== undefined) ? d.scores[ci] : null;
-                html += scoreTd(v);
-            });
-            html += '<td class="center" style="padding:5px 7px;font-weight:700;border-left:2px solid #e8e8ed;">'+(d&&d.avg!=null?fmtScore(d.avg,1):'—')+'</td>'
+                +'<td style="padding:5px 7px;text-align:center;color:#64748b;font-size:.72rem;">'+s.al+'</td>'
+                +'<td style="padding:5px 7px;text-align:center;color:#64748b;font-size:.72rem;">'+(s.gle||'—')+'</td>'
+                +'<td style="padding:5px 7px;text-align:center;color:#64748b;font-size:.72rem;">'+(goal||'—')+'</td>'
+                +avgTd(boy, goal)
+                +avgTd(moy, goal)
+                +avgTd(eoy, goal)
+                +'<td style="padding:5px 7px;text-align:center;border-left:2px solid #e8e8ed;">'+tierBadge(t.boy)+'</td>'
+                +'<td style="padding:5px 7px;text-align:center;">'+tierBadge(t.moy)+'</td>'
                 +'</tr>';
         });
         html += '</tbody></table></div></div>';
         return html;
     }
 
-    var html = buildSection(lsStudents, WD_CATS_LOWER, 'Lower School — Writing on Demand');
-    html += buildSection(msStudents, WD_CATS_MS, 'Middle School — Writing on Demand');
+    var html = buildSection(lsStudents, 'Lower School — Writing on Demand');
+    html += buildSection(msStudents, 'Middle School — Writing on Demand');
     document.getElementById('wd-view-class').innerHTML = html;
 }
 
@@ -16715,6 +16734,46 @@ function renderCurrentView() {
 }
 
 // ── Data loading ──
+function loadTiers(callback) {
+    if (tierCache) { callback(tierCache); return; }
+    fetch(WD_TIER_URL)
+        .then(function(r){ return r.text(); })
+        .then(function(text){
+            var map = {};
+            var rows = parseCsvText(text);
+            rows.forEach(function(row){
+                var name = (row[1]||'').trim();
+                if (!name) return;
+                map[name.toLowerCase()] = { boy:(row[5]||'').trim(), moy:(row[7]||'').trim() };
+            });
+            tierCache = map;
+            callback(tierCache);
+        })
+        .catch(function(){ tierCache = {}; callback(tierCache); });
+}
+
+function wdScoreColor(score, goal) {
+    if (score === null || score === undefined || !goal) return null;
+    var pct = score / goal * 100;
+    if (pct >= 50) return { bg:'#c6f5c6', text:'#166534' };
+    if (pct >= 40) return { bg:'#d9f5d9', text:'#166534' };
+    if (pct >= 30) return { bg:'#fed7aa', text:'#7c2d12' };
+    if (pct >= 20) return { bg:'#fef9c3', text:'#713f12' };
+    return { bg:'#fee2e2', text:'#7f1d1d' };
+}
+
+function wdGoalForStudent(s) {
+    if (s.goal) return s.goal;
+    var gle = parseFloat(s.gle);
+    if (isNaN(gle)) return null;
+    if (gle < 1) return 1;
+    if (gle < 2) return 2;
+    if (gle < 3) return 3;
+    if (gle < 4) return 4;
+    if (gle < 5) return 5;
+    return 6;
+}
+
 function loadLevel(levelKey, callback) {
     if (levelCache[levelKey]) { callback(levelCache[levelKey]); return; }
     var cfg = LEVELS[levelKey];
@@ -16751,17 +16810,21 @@ function init() {
     var loadEl = document.getElementById('wd-loading'), mainEl = document.getElementById('wd-main');
     if (loadEl) loadEl.style.display = '';
     if (mainEl) mainEl.style.display = 'none';
+    var tiersDone = false, levelsDone = false;
+    function checkAllLoaded() {
+        if (!tiersDone || !levelsDone) return;
+        var ls = (levelCache['al1']||[]).concat(levelCache['al2']||[]).concat(levelCache['al34']||[]);
+        ls.sort(function(a,b){ return a.name.localeCompare(b.name); });
+        APP.students = ls;
+        CATS = WD_CATS_LOWER;
+        selectedStudent = ls.length ? ls[0].name : '';
+        onReady();
+    }
+    loadTiers(function() { tiersDone = true; checkAllLoaded(); });
     keys.forEach(function(key) {
         loadLevel(key, function() {
             done++;
-            if (done === keys.length) {
-                var ls = (levelCache['al1']||[]).concat(levelCache['al2']||[]).concat(levelCache['al34']||[]);
-                ls.sort(function(a,b){ return a.name.localeCompare(b.name); });
-                APP.students = ls;
-                CATS = WD_CATS_LOWER;
-                selectedStudent = ls.length ? ls[0].name : '';
-                onReady();
-            }
+            if (done === keys.length) { levelsDone = true; checkAllLoaded(); }
         });
     });
 }
@@ -16805,7 +16868,7 @@ function setRosterGrowth(col) { rosterGrowthCol=col; renderClassOverview(); }
 function setStudentGrowth(col) { studentGrowthCol=col; renderStudentView(); }
 function setCatDive(i) { catDiveIdx=i; renderCategoryView(); }
 
-function refresh() { levelCache = {}; initialized = false; init(); }
+function refresh() { levelCache = {}; tierCache = null; initialized = false; init(); }
 return { init:init, refresh:refresh, switchView:switchView, setLevel:setLevel, setRosterGrowth:setRosterGrowth, setStudentGrowth:setStudentGrowth, setCatDive:setCatDive };
 })();
 
