@@ -9403,15 +9403,15 @@ function _renderPromoOverview() {
     });
     html += '</tbody></table></div></div>';
 
-    // ── Box 1: Attempt-to-success ratio by AL (all years combined) ──
-    var alStats = {1:{att:0,suc:0,n:0},2:{att:0,suc:0,n:0},3:{att:0,suc:0,n:0},4:{att:0,suc:0,n:0}};
+    // ── Box 1: Attempt-to-success ratio by AL split by MOY and EOY ──
+    var alStatsMOY = {1:{att:0,suc:0,n:0},2:{att:0,suc:0,n:0},3:{att:0,suc:0,n:0},4:{att:0,suc:0,n:0}};
+    var alStatsEOY = {1:{att:0,suc:0,n:0},2:{att:0,suc:0,n:0},3:{att:0,suc:0,n:0},4:{att:0,suc:0,n:0}};
     PROMO_YEARS.forEach(function(y) {
         (promoAllData[y.label]||[]).forEach(function(r) {
             var al = r.boyAL;
             if (al >= 1 && al <= 4) {
-                alStats[al].n++;
-                if (r.midAttempted === true) { alStats[al].att++; if (r.midSuccess === true) alStats[al].suc++; }
-                if (r.eoyAttempted === true) { alStats[al].att++; if (r.eoySuccess === true) alStats[al].suc++; }
+                if (r.midAttempted === true) { alStatsMOY[al].att++; alStatsMOY[al].n++; if (r.midSuccess === true) alStatsMOY[al].suc++; }
+                if (r.eoyAttempted === true) { alStatsEOY[al].att++; alStatsEOY[al].n++; if (r.eoySuccess === true) alStatsEOY[al].suc++; }
             }
         });
     });
@@ -9441,31 +9441,42 @@ function _renderPromoOverview() {
 
     html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem;">';
 
-    // AL ratio box
+    // AL ratio box — split by MOY and EOY
+    function alPeriodCells(st, borderLeft) {
+        var bl = borderLeft ? 'border-left:2px solid #e8e8ed;' : '';
+        var P = 'padding:5px 6px;text-align:center;';
+        if (!st.att) return '<td colspan="3" style="'+P+bl+'color:#d2d2d7;">—</td>';
+        var rate = pct(st.suc, st.att);
+        var col = rate >= 70 ? '#34c759' : rate >= 50 ? '#ff9500' : '#ff3b30';
+        return '<td style="'+P+bl+'color:#64748b;">'+st.att+'</td>'
+            +'<td style="'+P+'color:#64748b;">'+st.suc+'</td>'
+            +'<td style="padding:5px 6px;min-width:70px;"><span style="font-weight:700;color:'+col+';">'+rate+'%</span>'+bar(rate,col)+'</td>';
+    }
     html += '<div style="background:#fff;border-radius:14px;border:1px solid #e8e8ed;overflow:hidden;">'
-        +'<div style="background:#5c5b5a;color:#fff;padding:0.55rem 1rem;font-size:.8rem;font-weight:700;">Attempt-to-success ratio by AL</div>'
+        +'<div style="background:#5c5b5a;color:#fff;padding:0.55rem 1rem;font-size:.8rem;font-weight:700;">Promotion attempts &amp; successes by AL</div>'
         +'<div style="padding:0.75rem 1rem;">'
-        +'<p style="font-size:.68rem;color:#94a3b8;margin:0 0 10px;">All years combined · grouped by BOY autonomy level</p>'
-        +'<table style="width:100%;border-collapse:collapse;font-size:.75rem;">'
-        +'<thead><tr style="border-bottom:1px solid #e8e8ed;">'
-        +'<th style="padding:4px 6px;text-align:left;font-weight:700;color:#fff;">AL</th>'
-        +'<th style="padding:4px 6px;text-align:center;font-weight:700;color:#fff;">Students</th>'
-        +'<th style="padding:4px 6px;text-align:center;font-weight:700;color:#fff;">Attempts</th>'
-        +'<th style="padding:4px 6px;text-align:center;font-weight:700;color:#fff;">Successes</th>'
-        +'<th style="padding:4px 6px;text-align:left;font-weight:700;color:#fff;min-width:90px;">Success rate</th>'
+        +'<p style="font-size:.68rem;color:#94a3b8;margin:0 0 8px;">All years combined · grouped by BOY autonomy level</p>'
+        +'<table style="width:100%;border-collapse:collapse;font-size:.74rem;">'
+        +'<thead>'
+        +'<tr style="background:#f5f5f7;">'
+        +'<th rowspan="2" style="padding:5px 6px;text-align:left;font-weight:700;color:#3a3a3c;border-bottom:2px solid #e8e8ed;">AL</th>'
+        +'<th colspan="3" style="padding:5px 8px;text-align:center;font-weight:700;color:#3b82f6;border-bottom:1px solid #bfdbfe;border-left:2px solid #e8e8ed;">MOY</th>'
+        +'<th colspan="3" style="padding:5px 8px;text-align:center;font-weight:700;color:#f97316;border-bottom:1px solid #fed7aa;border-left:2px solid #e8e8ed;">EOY</th>'
+        +'</tr>'
+        +'<tr style="background:#f9fafb;">'
+        +'<th style="padding:4px 5px;text-align:center;font-weight:600;font-size:.68rem;color:#64748b;border-bottom:1px solid #e8e8ed;border-left:2px solid #e8e8ed;">Att</th>'
+        +'<th style="padding:4px 5px;text-align:center;font-weight:600;font-size:.68rem;color:#64748b;border-bottom:1px solid #e8e8ed;">Suc</th>'
+        +'<th style="padding:4px 5px;text-align:center;font-weight:600;font-size:.68rem;color:#64748b;border-bottom:1px solid #e8e8ed;">Rate</th>'
+        +'<th style="padding:4px 5px;text-align:center;font-weight:600;font-size:.68rem;color:#64748b;border-bottom:1px solid #e8e8ed;border-left:2px solid #e8e8ed;">Att</th>'
+        +'<th style="padding:4px 5px;text-align:center;font-weight:600;font-size:.68rem;color:#64748b;border-bottom:1px solid #e8e8ed;">Suc</th>'
+        +'<th style="padding:4px 5px;text-align:center;font-weight:600;font-size:.68rem;color:#64748b;border-bottom:1px solid #e8e8ed;">Rate</th>'
         +'</tr></thead><tbody>';
     [1,2,3,4].forEach(function(al) {
-        var st = alStats[al];
-        var rate = st.att ? pct(st.suc, st.att) : 0;
-        var color = rate >= 70 ? '#34c759' : rate >= 50 ? '#ff9500' : '#ff3b30';
         html += '<tr style="border-bottom:1px solid #f5f5f7;">'
             +'<td style="padding:5px 6px;font-weight:700;color:'+PROMO_AL_DARK[al]+';">AL'+al+'</td>'
-            +'<td style="padding:5px 6px;text-align:center;color:#64748b;">'+st.n+'</td>'
-            +'<td style="padding:5px 6px;text-align:center;color:#64748b;">'+st.att+'</td>'
-            +'<td style="padding:5px 6px;text-align:center;color:#64748b;">'+st.suc+'</td>'
-            +'<td style="padding:5px 6px;">'
-            +(st.att ? '<span style="font-weight:700;color:'+color+';">'+rate+'%</span>'+bar(rate,color) : '<span style="color:#d2d2d7;">—</span>')
-            +'</td></tr>';
+            + alPeriodCells(alStatsMOY[al], true)
+            + alPeriodCells(alStatsEOY[al], true)
+            +'</tr>';
     });
     html += '</tbody></table></div></div>';
 
