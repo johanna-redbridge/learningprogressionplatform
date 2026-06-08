@@ -16348,6 +16348,7 @@ var selectedStudent = '';
 var catDiveIdx = 0;
 var catDiveALFilter = 'all';
 var _extCb = null;
+var _wdLoading = false;
 var sortState = {
     cat:     { col:'label', dir:'asc' },
     roster:  { col:'name',  dir:'asc' },
@@ -16832,9 +16833,12 @@ function loadLevel(levelKey, callback) {
         })
         .catch(function(e){
             if (loadEl) loadEl.innerHTML='<div style="color:#f87171;font-size:.85rem;padding:20px">Error loading data: '+e.message+'</div>';
+            levelCache[levelKey] = [];
+            callback([]);
         });
 }
 function onReady() {
+    _wdLoading = false;
     var loadEl = document.getElementById('wd-loading');
     var mainEl = document.getElementById('wd-main');
     if (loadEl) loadEl.style.display = 'none';
@@ -16846,8 +16850,9 @@ function onReady() {
 // ── Public API ──
 function init() {
     var allLoaded = ['al1','al2','al34','ms'].every(function(k){ return levelCache[k]; });
-    if (initialized && allLoaded) { renderCurrentView(); return; }
+    if (initialized && allLoaded) { renderCurrentView(); if (_extCb){var cb=_extCb;_extCb=null;cb();} return; }
     initialized = true;
+    _wdLoading = true;
     var keys = ['al1','al2','al34','ms'], done = 0;
     var loadEl = document.getElementById('wd-loading'), mainEl = document.getElementById('wd-main');
     if (loadEl) loadEl.style.display = '';
@@ -16916,7 +16921,7 @@ function ensureLoaded(cb) {
     var allLoaded = ['al1','al2','al34','ms'].every(function(k){ return levelCache[k]; }) && !!tierCache;
     if (allLoaded) { cb(); return; }
     _extCb = cb;
-    if (!initialized) init();
+    if (!_wdLoading) { levelCache = {}; tierCache = null; initialized = false; init(); }
 }
 return { init:init, refresh:refresh, switchView:switchView, setLevel:setLevel, setRosterGrowth:setRosterGrowth, setStudentGrowth:setStudentGrowth, setCatDive:setCatDive, alDD:_wdALDD, getData:getData, ensureLoaded:ensureLoaded };
 })();
