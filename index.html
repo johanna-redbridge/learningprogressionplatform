@@ -11952,7 +11952,7 @@ function coreCellAllHtml(student, catIdx) {
     });
     if (!hasAny) return '<span style="color:#c7c7cc;font-size:0.7rem;">&ndash;</span>';
     var BH = 26, BW = 9;
-    var out = '<div style="display:flex;align-items:flex-end;gap:2px;justify-content:center;padding:2px 1px;">';
+    var out = '<div style="display:flex;align-items:flex-start;gap:2px;justify-content:center;padding:2px 1px;">';
     cols.forEach(function(c) {
         out += '<div style="display:flex;flex-direction:column;align-items:center;gap:1px;">'
             + '<div style="width:' + BW + 'px;height:' + BH + 'px;background:#efefef;border-radius:2px;overflow:hidden;position:relative;">'
@@ -12265,14 +12265,13 @@ function renderCore() {
     var p = corePeriod;
     var isAll = (p === 'all');
     // colgroup: student 14%, AL 5%, goal 7%, boymoy 6%, period 2.5%(All), 13 cats share rest, known 4%
-    var fixedPct = 14 + 5 + 7 + 6 + (isAll ? 2.5 : 0) + 4;
+    var fixedPct = 14 + 5 + 7 + 6 + 4;
     var catPct   = ((100 - fixedPct) / CORE_CATS.length).toFixed(1);
     var colgroup = '<colgroup>'
         + '<col style="width:14%">'
         + '<col style="width:5%">'
         + '<col style="width:7%">'
         + '<col style="width:6%">'
-        + (isAll ? '<col style="width:2.5%">' : '')
         + CORE_CATS.map(function() { return '<col style="width:' + catPct + '%">'; }).join('')
         + '<col style="width:4%">'
         + '</colgroup>';
@@ -12316,7 +12315,6 @@ function renderCore() {
     html += cTh('al','AL','text-align:center;font-size:0.6rem;');
     html += cTh('goal','EOY Goal<br><span style="font-weight:400;color:rgba(255,255,255,0.6);font-size:0.55rem;">words</span>','font-size:0.6rem;white-space:normal;line-height:1.2;overflow:hidden;');
     html += cTh('boymoy','BOY→MOY<br><span style="font-weight:400;color:rgba(255,255,255,0.6);font-size:0.55rem;">growth</span>','font-size:0.65rem;white-space:nowrap;line-height:1.3;');
-    if (isAll) html += '<th style="font-size:0.55rem;color:rgba(255,255,255,0.7);font-weight:500;overflow:hidden;"></th>';
     CORE_CATS.forEach(function(cat, ci) {
         html += '<th title="' + cat.full + '" onclick="setCoreSort(\'cat_'+ci+'\')" style="cursor:pointer;user-select:none;overflow:hidden;vertical-align:bottom;">'
             + (coreSortCol==='cat_'+ci ? (coreSortDir===1?'↑':'↓')+' ' : '')
@@ -12365,14 +12363,6 @@ function renderCore() {
         html += '<td style="padding:3px 5px;vertical-align:middle;text-align:center;">'
             + coreBoyMoyHtml(fallT, winterT) + '</td>';
 
-        if (isAll) {
-            html += '<td style="padding:2px 4px;vertical-align:middle;white-space:nowrap;">'
-                + '<div style="display:flex;flex-direction:column;gap:1px;align-items:flex-end;">'
-                + '<span style="font-size:0.54rem;color:#aeaeb2;line-height:14px;">BOY</span>'
-                + '<span style="font-size:0.54rem;color:#aeaeb2;line-height:14px;">MOY</span>'
-                + '<span style="font-size:0.54rem;color:#aeaeb2;line-height:14px;">EOY</span>'
-                + '</div></td>';
-        }
         CORE_CATS.forEach(function(cat, i) {
             if (isAll) {
                 html += '<td style="padding:2px 3px;">' + coreCellAllHtml(s, i) + '</td>';
