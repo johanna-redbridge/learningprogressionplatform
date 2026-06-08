@@ -13454,7 +13454,7 @@ function doRenderMapTable(el, students, periods, scoresFn, pctsFn, sortCfg) {
         var _nameCursor = (sortCfg && sortCfg.onStudentClick) ? 'cursor:pointer;' : '';
         bodyRows += '<tr>'
             + '<td data-redact="name"' + _nameClick + ' style="padding:5px 8px;font-size:0.75rem;color:#1d1d1f;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;position:sticky;left:0;background:' + rb + ';z-index:1;' + _nameCursor + '" title="' + fullName(s.name).replace(/"/g,'&quot;') + '">' + fullName(s.name).replace(/</g,'&lt;') + '</td>'
-            + '<td style="text-align:center;font-size:0.72rem;color:#64748b;' + PH + '">' + (s.gle || '—') + '</td>'
+            + '<td data-redact="gle" style="text-align:center;font-size:0.72rem;color:#64748b;' + PH + '">' + (s.gle || '—') + '</td>'
             + '<td data-redact="al" style="text-align:center;font-size:0.72rem;color:#64748b;' + PH + '">' + (s.al || '—') + '</td>';
         yearOrder.forEach(function(yr) {
             var yd = yearMap[yr];
