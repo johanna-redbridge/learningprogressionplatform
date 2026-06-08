@@ -1573,7 +1573,7 @@
             <!-- Writing Benchmark (new data panel) -->
             <div id="writing-panel-wb" style="display:none;">
                 <!-- Writing toolbar -->
-                <div id="wb-view-bar" style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem max(1.25rem,calc((100vw - 1400px)/2 + 1.25rem));border-bottom:1px solid #e8e8ed;background:#f5f5f7;">
+                <div id="wb-view-bar" style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 1.25rem;border-bottom:1px solid #e8e8ed;background:#f5f5f7;">
                     <div id="wb-back-btn" style="display:none;">
                         <button onclick="setWbView('overview')" style="padding:0.35rem 0.85rem;border-radius:8px;border:1px solid #e8e8ed;background:#f5f5f7;color:#1d1d1f;font-family:inherit;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#e8e8ed'" onmouseout="this.style.background='#f5f5f7'">← Back to Overview</button>
                     </div>
@@ -11942,17 +11942,17 @@ function setCoreView(mode) {
 function coreCellAllHtml(student, catIdx) {
     var cat = CORE_CATS[catIdx];
     var periods = [
-        { key: 'fall',   lbl: 'BOY' },
-        { key: 'winter', lbl: 'MOY' },
-        { key: 'spring', lbl: 'EOY' }
+        { key: 'fall',   lbl: 'B' },
+        { key: 'winter', lbl: 'M' },
+        { key: 'spring', lbl: 'E' }
     ];
-    var rows = '', hasAny = false;
+    var cols = [], hasAny = false;
     periods.forEach(function(pd) {
         var pData = student[pd.key];
         var raw = pData ? pData.scores[catIdx] : null;
         var bg, pct, scoreLabel;
         if (raw === null) {
-            bg = '#d1d1d6'; pct = 0; scoreLabel = '0';
+            bg = '#e2e2e7'; pct = 0; scoreLabel = '';
         } else if (coreRawIsMastered(raw)) {
             bg = '#5a9e5a'; pct = 100; scoreLabel = '&#10003;'; hasAny = true;
         } else {
@@ -11962,23 +11962,29 @@ function coreCellAllHtml(student, catIdx) {
                     bg = '#5a9e5a'; pct = 100; scoreLabel = '&#10003;';
                 } else {
                     bg = coreCellBg(score, cat.max);
-                    pct = score > 0 ? Math.max((score / cat.max) * 100, 4) : 0;
+                    pct = score > 0 ? Math.max((score / cat.max) * 100, 5) : 0;
                     scoreLabel = score + '/' + cat.max;
                 }
                 hasAny = true;
             } else {
-                bg = '#d1d1d6'; pct = 0; scoreLabel = '0';
+                bg = '#e2e2e7'; pct = 0; scoreLabel = '';
             }
         }
-        var barFill = pct > 0 ? '<div style="width:' + pct + '%;height:100%;background:' + bg + ';"></div>' : '';
-        var lblColor = (raw === null || scoreLabel === '0') ? '#aeaeb2' : '#1d1d1f';
-        rows += '<div style="display:flex;align-items:center;gap:2px;margin-bottom:1px;">' +
-            '<div style="flex:1;height:5px;background:#f0f0f0;border-radius:2px;overflow:hidden;">' + barFill + '</div>' +
-            '<span style="min-width:18px;font-size:0.55rem;color:' + lblColor + ';text-align:right;flex-shrink:0;">' + scoreLabel + '</span>' +
-            '</div>';
+        cols.push({ bg: bg, pct: pct, scoreLabel: scoreLabel });
     });
     if (!hasAny) return '<span style="color:#c7c7cc;font-size:0.7rem;">&ndash;</span>';
-    return '<div style="padding:2px 2px;">' + rows + '</div>';
+    var BH = 26, BW = 9;
+    var out = '<div style="display:flex;align-items:flex-end;gap:2px;justify-content:center;padding:2px 1px;">';
+    cols.forEach(function(c) {
+        out += '<div style="display:flex;flex-direction:column;align-items:center;gap:1px;">'
+            + '<div style="width:' + BW + 'px;height:' + BH + 'px;background:#efefef;border-radius:2px;overflow:hidden;position:relative;">'
+            + (c.pct > 0 ? '<div style="position:absolute;bottom:0;width:100%;height:' + c.pct + '%;background:' + c.bg + ';border-radius:2px 2px 0 0;"></div>' : '')
+            + '</div>'
+            + (c.scoreLabel ? '<span style="font-size:0.42rem;color:#3a3a3c;text-align:center;line-height:1.1;max-width:22px;overflow:hidden;">' + c.scoreLabel + '</span>' : '')
+            + '</div>';
+    });
+    out += '</div>';
+    return out;
 }
 
 var CORE_TOTAL_MAX = CORE_CATS.reduce(function(a, c) { return a + c.max; }, 0);
@@ -14176,24 +14182,45 @@ function renderFactFluencyTable() {
     });
 
     // Detect if any op has MOY data
-    var hasMoy = activeOps.some(function(op, ai) {
-        var oi = ops.indexOf(op);
-        return filtered.some(function(s) { return s.facts[oi] && s.facts[oi].moyCount !== ''; });
-    });
-    var colsPerOp = hasMoy ? 4 : 2;
-
-    function ffTh(col, label, extraStyle, colspan) {
+    function ffTh(col, label, extraStyle) {
         var active = ffSortCol === col;
         var arr = active ? (ffSortDir === 1 ? ' ↑' : ' ↓') : ' <span style="opacity:.35">↕</span>';
-        var cs = colspan ? ' colspan="' + colspan + '"' : '';
-        return '<th' + cs + ' onclick="setFfSort(\'' + col + '\')" style="cursor:pointer;user-select:none;position:sticky;top:0;z-index:12;background:#5c5b5a;padding:0.5rem 0.6rem;font-weight:600;font-size:0.72rem;color:#fff;white-space:nowrap;' + (extraStyle || '') + '">' + label + arr + '</th>';
+        return '<th onclick="setFfSort(\'' + col + '\')" style="cursor:pointer;user-select:none;position:sticky;top:0;z-index:12;background:#5c5b5a;padding:0.5rem 0.6rem;font-weight:600;font-size:0.72rem;color:#fff;white-space:nowrap;' + (extraStyle || '') + '">' + label + arr + '</th>';
+    }
+
+    function ffBarHtml(boyPn, moyPn) {
+        var BH = 28, BW = 9;
+        function barColor(pct) {
+            if (pct === null || pct === undefined) return '#e2e2e7';
+            if (pct >= 80) return '#5a9e5a';
+            if (pct >= 50) return '#c4a434';
+            return '#c05050';
+        }
+        var bars = [
+            { pct: boyPn, lbl: 'B' },
+            { pct: moyPn, lbl: 'M' },
+            { pct: null,  lbl: 'E' }
+        ];
+        var out = '<div style="display:flex;align-items:flex-end;gap:2px;justify-content:center;padding:2px 1px;">';
+        bars.forEach(function(b) {
+            var isEoy = b.lbl === 'E';
+            var fillPct = (!isEoy && b.pct !== null && b.pct > 0) ? Math.max(b.pct, 5) : 0;
+            var fillColor = isEoy ? '#c8c8d0' : barColor(b.pct);
+            out += '<div style="display:flex;flex-direction:column;align-items:center;gap:1px;">'
+                + '<div style="width:'+BW+'px;height:'+BH+'px;background:#efefef;border-radius:2px;overflow:hidden;position:relative;">'
+                + (fillPct > 0 ? '<div style="position:absolute;bottom:0;width:100%;height:'+fillPct+'%;background:'+fillColor+';border-radius:2px 2px 0 0;"></div>' : '')
+                + '</div>'
+                + ((!isEoy && b.pct !== null) ? '<span style="font-size:0.42rem;color:#3a3a3c;text-align:center;line-height:1.1;">'+Math.round(b.pct)+'%</span>' : '<span style="font-size:0.42rem;color:#c7c7cc;line-height:1.1;">–</span>')
+                + '</div>';
+        });
+        return out + '</div>';
     }
 
     var fixedCols = ffGroupFilter === 'all' ? 4 : 3;
     var html = '<div style="overflow-x:auto;overflow-y:auto;max-height:65vh;border-radius:16px;border:1px solid #f0f0f0;">';
     html += '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
 
-    // Header row 1: student columns + op labels
+    // Header row: student columns + op labels
     html += '<thead><tr style="background:#5c5b5a;">';
     html += ffTh('name',  'Student', 'text-align:left;padding:0.5rem 0.75rem;');
     html += ffTh('al',    'AL',    'text-align:center;');
@@ -14204,33 +14231,20 @@ function renderFactFluencyTable() {
     activeOps.forEach(function(op) {
         var globalIdx = ops.indexOf(op);
         var short = ffShortLabel(op.label);
-        html += ffTh('op_' + globalIdx, short.replace(/</g,'&lt;'), 'text-align:center;border-left:2px solid rgba(255,255,255,0.25);', colsPerOp);
+        html += ffTh('op_' + globalIdx, short.replace(/</g,'&lt;'), 'text-align:center;border-left:2px solid rgba(255,255,255,0.25);');
     });
     html += '</tr>';
 
-    // Header row 2: BOY / MOY sub-groups (only if MOY data exists)
-    if (hasMoy) {
-        html += '<tr style="background:#4a4948;">';
-        html += '<th colspan="' + fixedCols + '" style="position:sticky;top:32px;z-index:11;background:#4a4948;border-bottom:1px solid #3a3a3c;"></th>';
-        activeOps.forEach(function() {
-            html += '<th colspan="2" style="position:sticky;top:32px;z-index:11;background:#3d5a3d;padding:0.2rem 0.4rem;text-align:center;font-weight:700;font-size:0.65rem;color:#b0e0b0;border-bottom:1px solid #3a3a3c;border-left:2px solid rgba(255,255,255,0.2);">BOY</th>';
-            html += '<th colspan="2" style="position:sticky;top:32px;z-index:11;background:#3a4a5a;padding:0.2rem 0.4rem;text-align:center;font-weight:700;font-size:0.65rem;color:#a0c8f0;border-bottom:1px solid #3a3a3c;border-left:1px solid rgba(255,255,255,0.1);">MOY</th>';
-        });
-        html += '</tr>';
-    }
-
-    // Sub-header: # / %
+    // Sub-header: B / M / E legend
     html += '<tr style="background:#4a4948;">';
-    html += '<th colspan="' + fixedCols + '" style="position:sticky;top:' + (hasMoy?52:32) + 'px;z-index:11;background:#4a4948;border-bottom:1px solid #3a3a3c;"></th>';
-    activeOps.forEach(function(op) {
-        var maxLbl = op.max ? '/' + op.max : '';
-        var top = 'position:sticky;top:' + (hasMoy?52:32) + 'px;z-index:11;background:#4a4948;padding:0.25rem 0.4rem;text-align:center;font-weight:500;font-size:0.65rem;color:#d1d1d6;border-bottom:1px solid #3a3a3c;';
-        html += '<th style="' + top + 'border-left:2px solid rgba(255,255,255,0.2);">#' + maxLbl + '</th>';
-        html += '<th style="' + top + '">%</th>';
-        if (hasMoy) {
-            html += '<th style="' + top + 'border-left:1px solid rgba(255,255,255,0.1);">#' + maxLbl + '</th>';
-            html += '<th style="' + top + '">%</th>';
-        }
+    html += '<th colspan="' + fixedCols + '" style="position:sticky;top:32px;z-index:11;background:#4a4948;border-bottom:1px solid #3a3a3c;"></th>';
+    activeOps.forEach(function() {
+        html += '<th style="position:sticky;top:32px;z-index:11;background:#4a4948;padding:0.2rem 0.6rem;text-align:center;font-size:0.6rem;border-bottom:1px solid #3a3a3c;border-left:2px solid rgba(255,255,255,0.2);">'
+            + '<span style="display:inline-flex;gap:5px;">'
+            + '<span style="color:#b0e0b0;">BOY</span>'
+            + '<span style="color:#a0c8f0;">MOY</span>'
+            + '<span style="color:#909098;">EOY</span>'
+            + '</span></th>';
     });
     html += '</tr></thead><tbody>';
 
@@ -14247,26 +14261,12 @@ function renderFactFluencyTable() {
         activeOps.forEach(function(op) {
             var globalIdx = ops.indexOf(op);
             var f = s.facts[globalIdx];
-            var boyC = f ? f.boyCount : '', boyP = f ? f.boyPct : '';
-            var moyC = f ? f.moyCount : '', moyP = f ? f.moyPct : '';
-            var boyPn = boyC !== '' ? ffPctNum(boyP) : null;
-            var moyPn = moyC !== '' ? ffPctNum(moyP) : null;
-            var boyBg = ffCellBg(boyPn), moyBg = ffCellBg(moyPn);
-            var P = 'padding:0.4rem 0.4rem;text-align:center;font-size:0.78rem;';
-            if (boyC !== '') {
-                html += '<td style="' + P + (boyBg?'background:'+boyBg+';':'') + 'border-left:2px solid #d1d1d6;">' + boyC.replace(/</g,'&lt;') + '</td>';
-                html += '<td style="' + P + (boyBg?'background:'+boyBg+';':'') + 'font-weight:600;">' + boyP.replace(/</g,'&lt;') + '</td>';
-            } else {
-                html += '<td colspan="2" style="' + P + 'color:#c4c4c6;border-left:2px solid #d1d1d6;">—</td>';
-            }
-            if (hasMoy) {
-                if (moyC !== '') {
-                    html += '<td style="' + P + (moyBg?'background:'+moyBg+';':'') + 'border-left:1px solid #d1d1d6;">' + moyC.replace(/</g,'&lt;') + '</td>';
-                    html += '<td style="' + P + (moyBg?'background:'+moyBg+';':'') + 'font-weight:600;">' + moyP.replace(/</g,'&lt;') + '</td>';
-                } else {
-                    html += '<td colspan="2" style="' + P + 'color:#c4c4c6;border-left:1px solid #d1d1d6;">—</td>';
-                }
-            }
+            var boyPn = f ? ffPctNum(f.boyPct) : null;
+            var moyPn = f ? ffPctNum(f.moyPct) : null;
+            var hasData = boyPn !== null || moyPn !== null;
+            html += '<td style="padding:0.3rem 0.4rem;text-align:center;border-left:2px solid #d1d1d6;">';
+            html += hasData ? ffBarHtml(boyPn, moyPn) : '<span style="color:#c4c4c6;font-size:0.75rem;">—</span>';
+            html += '</td>';
         });
         html += '</tr>';
     });
