@@ -8748,12 +8748,20 @@ function renderCompStudentOverview() {
     html += '<div style="padding:1rem 1.25rem;">';
     if (ffRec && ffRec.facts && ffRec.facts.length) {
         ffRec.facts.forEach(function(f) {
-            var pct = ffPctNum(f.pct);
+            // Use MOY data if available, otherwise BOY
+            var hasMoy = f.moyCount !== undefined && f.moyCount !== '';
+            var dispCount = hasMoy ? f.moyCount : (f.boyCount !== undefined ? f.boyCount : f.count || '');
+            var dispPct   = hasMoy ? f.moyPct   : (f.boyPct   !== undefined ? f.boyPct   : f.pct   || '');
+            var boyCount  = f.boyCount !== undefined ? f.boyCount : f.count || '';
+            var boyPct    = f.boyPct   !== undefined ? f.boyPct   : f.pct   || '';
+            var pct = ffPctNum(dispPct);
             var bg = pct !== null ? pctColor(pct) : '#f0f0f0';
             html += '<div style="margin-bottom:0.6rem;">';
             html += '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px;">';
             html += '<span style="font-size:.7rem;font-weight:600;color:#3a3a3c;">'+f.label+'</span>';
-            html += '<span style="font-size:.68rem;color:#5c5b5a;font-weight:600;">'+(f.count||'—')+(f.max?'/'+f.max:'')+'&nbsp;<span style="color:#86868b;font-weight:400;">'+(pct!==null?pct+'%':'')+'</span></span>';
+            var scoreStr = (dispCount||'—')+(f.max?'/'+f.max:'');
+            if (hasMoy && boyCount !== '') scoreStr = 'BOY:'+boyCount+' → MOY:'+dispCount+(f.max?'/'+f.max:'');
+            html += '<span style="font-size:.68rem;color:#5c5b5a;font-weight:600;">'+scoreStr+'&nbsp;<span style="color:#86868b;font-weight:400;">'+(pct!==null?pct+'%':'')+'</span></span>';
             html += '</div>';
             html += '<div style="background:#f0f0f0;border-radius:4px;height:10px;overflow:hidden;">';
             html += '<div style="height:100%;width:'+(pct||0)+'%;background:'+bg+';border-radius:4px;"></div></div>';
@@ -9622,20 +9630,24 @@ function _drawPromoALChart(canvas, ys) {
     for(var g=0;g<=4;g++){var gv=maxN*g/4,gy=yOf(gv);ctx.strokeStyle='#ebebf0';ctx.lineWidth=1;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(pL,gy);ctx.lineTo(pL+plotW,gy);ctx.stroke();ctx.fillStyle='#8e8e93';ctx.font='9px -apple-system,sans-serif';ctx.textAlign='right';ctx.fillText(Math.round(gv),pL-4,gy+3);}
     var n=ys.length, gW=plotW/n;
     var subKeys=['BOY','MOY','EOY'], subData=['alBoy','alMOY','alEOY'], numSubs=3, gap=2;
+    var PROMO_AL_GREY = { 1:'#d8d8de', 2:'#b8b8c2', 3:'#9898a4', 4:'#787886' };
     var bw=Math.max(8,(gW*0.82-gap*(numSubs-1))/numSubs);
     var totalBW=bw*numSubs+gap*(numSubs-1);
     ys.forEach(function(y,i){
         var gx=pL+i*gW+gW/2, startX=gx-totalBW/2;
+        var isCurYear = y.label === '25-26';
         subKeys.forEach(function(sk,si){
             var bx=startX+si*(bw+gap), cx=bx+bw/2, cumY=pT+plotH;
+            var useGrey = isCurYear && si === 2; // EOY bar of current year
             [1,2,3,4].forEach(function(al){
                 var cnt=y.s[subData[si]][al]||0; if(!cnt) return;
                 var bh=plotH*cnt/maxN; cumY-=bh;
-                ctx.fillStyle=PROMO_AL_LIGHT[al]; ctx.fillRect(bx,cumY,bw,bh);
+                ctx.fillStyle=useGrey ? PROMO_AL_GREY[al] : PROMO_AL_LIGHT[al];
+                ctx.fillRect(bx,cumY,bw,bh);
                 ctx.strokeStyle='#fff';ctx.lineWidth=0.5;ctx.strokeRect(bx,cumY,bw,bh);
-                if(bh>12){ctx.fillStyle='rgba(0,0,0,0.6)';ctx.font='bold 8px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillText(cnt,cx,cumY+bh/2+3);}
+                if(bh>12){ctx.fillStyle=useGrey?'rgba(0,0,0,0.4)':'rgba(0,0,0,0.6)';ctx.font='bold 8px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillText(cnt,cx,cumY+bh/2+3);}
             });
-            ctx.fillStyle='#8e8e93';ctx.font='8px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillText(sk,cx,pT+plotH+13);
+            ctx.fillStyle=useGrey?'#aeaeb2':'#8e8e93';ctx.font='8px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillText(sk,cx,pT+plotH+13);
         });
         ctx.fillStyle='#64748b';ctx.font='10px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillText(y.label,gx,pT+plotH+30);
         ctx.fillStyle='#8e8e93';ctx.font='8px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillText('n='+y.s.n,gx,pT+plotH+42);
@@ -11777,7 +11789,7 @@ var CORE_CATS = [
 var coreData = { al1: null, al2: null, al34: null };
 var coreAL = 'all';
 var corePeriod = 'all';
-var coreViewMode = 'chart';
+var coreViewMode = 'table';
 var coreSortCol = 'name';
 var coreSortDir = 1;
 function setCoreSort(col) {
@@ -12016,7 +12028,7 @@ function coreGleBar(knownTotal, gleGoal) {
 }
 
 function renderCoreGrowthChart(students) {
-    var el = document.getElementById('core-content');
+    var el = document.getElementById('core-chart-area') || document.getElementById('core-content');
     if (!el) return;
 
     var PERIODS = [
@@ -12251,7 +12263,10 @@ function renderCore() {
         el.innerHTML = '<div style="padding:3rem;text-align:center;color:#86868b;font-size:0.85rem;">No data found.</div>';
         return;
     }
-    if (coreViewMode === 'chart') { renderCoreGrowthChart(students); return; }
+    // Always show chart on top, table below
+    el.innerHTML = '<div id="core-chart-area"></div><div id="core-table-area" style="border-top:1px solid #e8e8ed;"></div>';
+    renderCoreGrowthChart(students);
+    var el = document.getElementById('core-table-area');
     var p = corePeriod;
     var isAll = (p === 'all');
     // colgroup: student 14%, AL 5%, goal 7%, boymoy 6%, period 2.5%(All), 13 cats share rest, known 4%
@@ -14028,11 +14043,11 @@ function ffCellBg(pct) {
 function parseFactFluencyCsv(text) {
     var rows = parseCSVFull(text);
     if (rows.length < 3) return { ops: [], students: [] };
-    var opRow  = rows[0] || [];   // row 1: operation labels at cols 4, 6, 8, …
-    var subRow = rows[1] || [];   // row 2: "# correct (up to N)" / "% correct"
-    // Parse operations: label every 2 cols starting at index 4
+    var opRow  = rows[0] || [];   // row 1: operation labels
+    var subRow = rows[1] || [];   // row 2: sub-headers (# correct / %)
+    // Each operation now spans 4 columns: BOY count, BOY %, MOY count, MOY %
     var ops = [];
-    for (var c = 4; c < Math.max(opRow.length, subRow.length); c += 2) {
+    for (var c = 4; c < Math.max(opRow.length, subRow.length); c += 4) {
         var label  = (opRow[c]  || '').trim();
         var subHdr = (subRow[c] || '').trim();
         var maxMatch = subHdr.match(/up to (\d+)/i);
@@ -14048,10 +14063,12 @@ function parseFactFluencyCsv(text) {
         if (!name) continue;
         var facts = ops.map(function(op) {
             return {
-                label: op.label,
-                max:   op.max,
-                count: (r[op.colIdx]     || '').trim(),
-                pct:   (r[op.colIdx + 1] || '').trim()
+                label:    op.label,
+                max:      op.max,
+                boyCount: (r[op.colIdx]     || '').trim(),
+                boyPct:   (r[op.colIdx + 1] || '').trim(),
+                moyCount: (r[op.colIdx + 2] || '').trim(),
+                moyPct:   (r[op.colIdx + 3] || '').trim()
             };
         });
         students.push({
@@ -14128,10 +14145,10 @@ function renderFactFluencyTable() {
 
     // Only show operation columns that have at least one student with data
     var activeOps = ops.filter(function(op, oi) {
-        return filtered.some(function(s) { return s.facts[oi] && s.facts[oi].count !== ''; });
+        return filtered.some(function(s) { return s.facts[oi] && (s.facts[oi].boyCount !== '' || s.facts[oi].moyCount !== ''); });
     });
 
-    // Sort
+    // Sort — use MOY % if available, else BOY %
     filtered = filtered.slice().sort(function(a, b) {
         var d = ffSortDir;
         if (ffSortCol === 'al')    return d * (a.al || '').localeCompare(b.al || '');
@@ -14140,11 +14157,19 @@ function renderFactFluencyTable() {
         if (ffSortCol.indexOf('op_') === 0) {
             var oi = parseInt(ffSortCol.slice(3), 10);
             var af = a.facts[oi], bf = b.facts[oi];
-            var ap = af ? ffPctNum(af.pct) : -1, bp = bf ? ffPctNum(bf.pct) : -1;
+            var ap = af ? (ffPctNum(af.moyPct) !== null ? ffPctNum(af.moyPct) : ffPctNum(af.boyPct)) : -1;
+            var bp = bf ? (ffPctNum(bf.moyPct) !== null ? ffPctNum(bf.moyPct) : ffPctNum(bf.boyPct)) : -1;
             return d * (ap - bp);
         }
         return d * fullName(a.name).localeCompare(fullName(b.name));
     });
+
+    // Detect if any op has MOY data
+    var hasMoy = activeOps.some(function(op, ai) {
+        var oi = ops.indexOf(op);
+        return filtered.some(function(s) { return s.facts[oi] && s.facts[oi].moyCount !== ''; });
+    });
+    var colsPerOp = hasMoy ? 4 : 2;
 
     function ffTh(col, label, extraStyle, colspan) {
         var active = ffSortCol === col;
@@ -14153,10 +14178,11 @@ function renderFactFluencyTable() {
         return '<th' + cs + ' onclick="setFfSort(\'' + col + '\')" style="cursor:pointer;user-select:none;position:sticky;top:0;z-index:12;background:#5c5b5a;padding:0.5rem 0.6rem;font-weight:600;font-size:0.72rem;color:#fff;white-space:nowrap;' + (extraStyle || '') + '">' + label + arr + '</th>';
     }
 
+    var fixedCols = ffGroupFilter === 'all' ? 4 : 3;
     var html = '<div style="overflow-x:auto;overflow-y:auto;max-height:65vh;border-radius:16px;border:1px solid #f0f0f0;">';
     html += '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
 
-    // Header
+    // Header row 1: student columns + op labels
     html += '<thead><tr style="background:#5c5b5a;">';
     html += ffTh('name',  'Student', 'text-align:left;padding:0.5rem 0.75rem;');
     html += ffTh('al',    'AL',    'text-align:center;');
@@ -14167,18 +14193,33 @@ function renderFactFluencyTable() {
     activeOps.forEach(function(op) {
         var globalIdx = ops.indexOf(op);
         var short = ffShortLabel(op.label);
-        var tip   = op.label + (op.max ? ' (up to ' + op.max + ')' : '');
-        html += ffTh('op_' + globalIdx, short.replace(/</g,'&lt;'), 'text-align:center;border-left:1px solid rgba(255,255,255,0.15);', 2);
+        html += ffTh('op_' + globalIdx, short.replace(/</g,'&lt;'), 'text-align:center;border-left:2px solid rgba(255,255,255,0.25);', colsPerOp);
     });
     html += '</tr>';
 
+    // Header row 2: BOY / MOY sub-groups (only if MOY data exists)
+    if (hasMoy) {
+        html += '<tr style="background:#4a4948;">';
+        html += '<th colspan="' + fixedCols + '" style="position:sticky;top:32px;z-index:11;background:#4a4948;border-bottom:1px solid #3a3a3c;"></th>';
+        activeOps.forEach(function() {
+            html += '<th colspan="2" style="position:sticky;top:32px;z-index:11;background:#3d5a3d;padding:0.2rem 0.4rem;text-align:center;font-weight:700;font-size:0.65rem;color:#b0e0b0;border-bottom:1px solid #3a3a3c;border-left:2px solid rgba(255,255,255,0.2);">BOY</th>';
+            html += '<th colspan="2" style="position:sticky;top:32px;z-index:11;background:#3a4a5a;padding:0.2rem 0.4rem;text-align:center;font-weight:700;font-size:0.65rem;color:#a0c8f0;border-bottom:1px solid #3a3a3c;border-left:1px solid rgba(255,255,255,0.1);">MOY</th>';
+        });
+        html += '</tr>';
+    }
+
     // Sub-header: # / %
     html += '<tr style="background:#4a4948;">';
-    html += '<th colspan="' + (ffGroupFilter==='all'?4:3) + '" style="position:sticky;top:32px;z-index:11;background:#4a4948;border-bottom:1px solid #3a3a3c;"></th>';
+    html += '<th colspan="' + fixedCols + '" style="position:sticky;top:' + (hasMoy?52:32) + 'px;z-index:11;background:#4a4948;border-bottom:1px solid #3a3a3c;"></th>';
     activeOps.forEach(function(op) {
         var maxLbl = op.max ? '/' + op.max : '';
-        html += '<th style="position:sticky;top:32px;z-index:11;background:#4a4948;padding:0.25rem 0.4rem;text-align:center;font-weight:500;font-size:0.65rem;color:#d1d1d6;border-bottom:1px solid #3a3a3c;border-left:1px solid rgba(255,255,255,0.12);">#' + maxLbl + '</th>';
-        html += '<th style="position:sticky;top:32px;z-index:11;background:#4a4948;padding:0.25rem 0.4rem;text-align:center;font-weight:500;font-size:0.65rem;color:#d1d1d6;border-bottom:1px solid #3a3a3c;">%</th>';
+        var top = 'position:sticky;top:' + (hasMoy?52:32) + 'px;z-index:11;background:#4a4948;padding:0.25rem 0.4rem;text-align:center;font-weight:500;font-size:0.65rem;color:#d1d1d6;border-bottom:1px solid #3a3a3c;';
+        html += '<th style="' + top + 'border-left:2px solid rgba(255,255,255,0.2);">#' + maxLbl + '</th>';
+        html += '<th style="' + top + '">%</th>';
+        if (hasMoy) {
+            html += '<th style="' + top + 'border-left:1px solid rgba(255,255,255,0.1);">#' + maxLbl + '</th>';
+            html += '<th style="' + top + '">%</th>';
+        }
     });
     html += '</tr></thead><tbody>';
 
@@ -14192,19 +14233,28 @@ function renderFactFluencyTable() {
         if (ffGroupFilter === 'all') {
             html += '<td data-redact="group" style="padding:0.45rem 0.6rem;text-align:center;color:#1d1d1f;">' + (s.group||'—') + '</td>';
         }
-        activeOps.forEach(function(op, ai) {
+        activeOps.forEach(function(op) {
             var globalIdx = ops.indexOf(op);
-            var f   = s.facts[globalIdx];
-            var cnt = f ? f.count : '';
-            var pct = f ? f.pct   : '';
-            var pn  = cnt !== '' ? ffPctNum(pct) : null;
-            var bg  = ffCellBg(pn);
-            var bgStyle = bg ? 'background:' + bg + ';' : '';
-            if (cnt !== '') {
-                html += '<td style="padding:0.4rem 0.5rem;text-align:center;' + bgStyle + 'border-left:1px solid #e8e8ed;font-size:0.82rem;">' + cnt.replace(/</g,'&lt;') + '</td>';
-                html += '<td style="padding:0.4rem 0.5rem;text-align:center;' + bgStyle + 'font-weight:600;font-size:0.82rem;">' + pct.replace(/</g,'&lt;') + '</td>';
+            var f = s.facts[globalIdx];
+            var boyC = f ? f.boyCount : '', boyP = f ? f.boyPct : '';
+            var moyC = f ? f.moyCount : '', moyP = f ? f.moyPct : '';
+            var boyPn = boyC !== '' ? ffPctNum(boyP) : null;
+            var moyPn = moyC !== '' ? ffPctNum(moyP) : null;
+            var boyBg = ffCellBg(boyPn), moyBg = ffCellBg(moyPn);
+            var P = 'padding:0.4rem 0.4rem;text-align:center;font-size:0.78rem;';
+            if (boyC !== '') {
+                html += '<td style="' + P + (boyBg?'background:'+boyBg+';':'') + 'border-left:2px solid #d1d1d6;">' + boyC.replace(/</g,'&lt;') + '</td>';
+                html += '<td style="' + P + (boyBg?'background:'+boyBg+';':'') + 'font-weight:600;">' + boyP.replace(/</g,'&lt;') + '</td>';
             } else {
-                html += '<td colspan="2" style="padding:0.4rem 0.5rem;text-align:center;color:#c4c4c6;border-left:1px solid #e8e8ed;">—</td>';
+                html += '<td colspan="2" style="' + P + 'color:#c4c4c6;border-left:2px solid #d1d1d6;">—</td>';
+            }
+            if (hasMoy) {
+                if (moyC !== '') {
+                    html += '<td style="' + P + (moyBg?'background:'+moyBg+';':'') + 'border-left:1px solid #d1d1d6;">' + moyC.replace(/</g,'&lt;') + '</td>';
+                    html += '<td style="' + P + (moyBg?'background:'+moyBg+';':'') + 'font-weight:600;">' + moyP.replace(/</g,'&lt;') + '</td>';
+                } else {
+                    html += '<td colspan="2" style="' + P + 'color:#c4c4c6;border-left:1px solid #d1d1d6;">—</td>';
+                }
             }
         });
         html += '</tr>';
