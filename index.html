@@ -16535,7 +16535,12 @@ function renderClassOverview() {
 
     function tierBadge(val) {
         if (!val) return '<span style="color:#c7c7cc;">—</span>';
-        return '<span style="display:inline-block;padding:1px 7px;border-radius:5px;font-size:.68rem;font-weight:700;background:#e8e8ed;color:#3a3a3c;">'+val+'</span>';
+        var t = val.trim().toLowerCase();
+        var style = (t==='tier 1'||t==='1') ? 'background:#dcfce7;color:#15803d;'
+                  : (t==='tier 2'||t==='2') ? 'background:#fef9c3;color:#854d0e;'
+                  : (t==='tier 3'||t==='3') ? 'background:#fee2e2;color:#b91c1c;'
+                  : 'background:#f3f4f6;color:#374151;';
+        return '<span style="display:inline-block;padding:1px 7px;border-radius:5px;font-size:.68rem;font-weight:700;'+style+'">'+val+'</span>';
     }
 
     function buildSection(students, title) {
