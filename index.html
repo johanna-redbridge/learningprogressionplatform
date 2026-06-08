@@ -1378,16 +1378,6 @@
             <!-- CORE -->
             <div id="reading-panel-core">
                 <div class="subpanel-toolbar" style="display:flex;gap:0.75rem;align-items:center;padding-top:0.7rem;padding-bottom:0.7rem;border-bottom:1px solid #e8e8ed;flex-wrap:wrap;">
-                    <div class="toggle-group">
-                        <button class="toggle-btn core-period-btn active" data-period="fall" onclick="setCorePeriod('fall')">BOY</button>
-                        <button class="toggle-btn core-period-btn" data-period="winter" onclick="setCorePeriod('winter')">MOY</button>
-                        <button class="toggle-btn core-period-btn" data-period="spring" onclick="setCorePeriod('spring')">EOY</button>
-                        <button class="toggle-btn core-period-btn" data-period="all" onclick="setCorePeriod('all')">All</button>
-                    </div>
-                    <div class="toggle-group">
-                        <button class="toggle-btn core-view-btn active" data-view="table" onclick="setCoreView('table')">Table</button>
-                        <button class="toggle-btn core-view-btn" data-view="chart" onclick="setCoreView('chart')">Student Growth</button>
-                    </div>
                     <div style="margin-left:auto;display:flex;align-items:center;gap:0.5rem;">
                         <button onclick="showEnterDataModal()" style="padding:0.35rem 0.85rem;border-radius:8px;border:1px solid #e8e8ed;background:#f5f5f7;color:#1d1d1f;font-family:inherit;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#e8e8ed'" onmouseout="this.style.background='#f5f5f7'">+ Enter New Data</button>
                     </div>
@@ -11776,7 +11766,7 @@ var CORE_CATS = [
 
 var coreData = { al1: null, al2: null, al34: null };
 var coreAL = 'all';
-var corePeriod = 'fall';
+var corePeriod = 'all';
 var coreViewMode = 'table';
 var coreSortCol = 'name';
 var coreSortDir = 1;
