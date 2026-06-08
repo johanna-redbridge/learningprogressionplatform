@@ -944,7 +944,7 @@
         .logo-tab-btn.active { opacity:1; border-bottom-color:#e8453c; }
         body.redacted .fp-gle-td { visibility:hidden; }
         .panel-subnav { position: sticky; top: var(--nav-h-2, 100px); z-index: 120; }
-        .subpanel-toolbar { position: sticky; top: var(--nav-h-3, 144px); z-index: 90; background: #fff; padding-left: max(1.25rem, calc((100vw - 1400px) / 2 + 1.25rem)); padding-right: max(1.25rem, calc((100vw - 1400px) / 2 + 1.25rem)); }
+        .subpanel-toolbar { position: sticky; top: var(--nav-h-3, 144px); z-index: 90; background: #fff; padding-left: 1.25rem; padding-right: 1.25rem; }
         #promo-xref-student-body { max-width: 1400px; margin: 0 auto; padding: 1.25rem 1.25rem; }
         #xref-filter-bar { position: sticky; top: var(--nav-h-2, 100px); z-index: 120; }
         #xref-comp-header { position: sticky; top: var(--nav-h-3, 144px); z-index: 90; background: #fff; }
@@ -1379,12 +1379,6 @@
             <div id="reading-panel-core">
                 <div class="subpanel-toolbar" style="display:flex;gap:0.75rem;align-items:center;padding-top:0.7rem;padding-bottom:0.7rem;border-bottom:1px solid #e8e8ed;flex-wrap:wrap;">
                     <div class="toggle-group">
-                        <button class="toggle-btn core-al-btn active" data-al="all" onclick="setCoreAL('all')">All</button>
-                        <button class="toggle-btn core-al-btn" data-al="al1" onclick="setCoreAL('al1')">AL1</button>
-                        <button class="toggle-btn core-al-btn" data-al="al2" onclick="setCoreAL('al2')">AL2</button>
-                        <button class="toggle-btn core-al-btn" data-al="al34" onclick="setCoreAL('al34')">AL3/4</button>
-                    </div>
-                    <div class="toggle-group">
                         <button class="toggle-btn core-period-btn active" data-period="fall" onclick="setCorePeriod('fall')">BOY</button>
                         <button class="toggle-btn core-period-btn" data-period="winter" onclick="setCorePeriod('winter')">MOY</button>
                         <button class="toggle-btn core-period-btn" data-period="spring" onclick="setCorePeriod('spring')">EOY</button>
@@ -1403,17 +1397,6 @@
             <!-- F&P -->
             <div id="reading-panel-fp" style="display:none;">
                 <div class="subpanel-toolbar" style="display:flex;gap:0.75rem;align-items:center;padding-top:0.7rem;padding-bottom:0.7rem;border-bottom:1px solid #e8e8ed;flex-wrap:wrap;">
-                    <div class="toggle-group">
-                        <button class="toggle-btn fp-al-btn active" data-al="all" onclick="setFpAL('all')">All</button>
-                        <button class="toggle-btn fp-al-btn" data-al="1" onclick="setFpAL('1')">AL1</button>
-                        <button class="toggle-btn fp-al-btn" data-al="2" onclick="setFpAL('2')">AL2</button>
-                        <button class="toggle-btn fp-al-btn" data-al="3" onclick="setFpAL('3')">AL3</button>
-                        <button class="toggle-btn fp-al-btn" data-al="4" onclick="setFpAL('4')">AL4</button>
-                    </div>
-                    <div class="toggle-group">
-                        <button class="toggle-btn fp-view-btn active" data-view="table" onclick="setFpViewMode('table')">Class View</button>
-                        <button class="toggle-btn fp-view-btn" data-view="growth" onclick="setFpViewMode('growth')">Student Growth</button>
-                    </div>
                     <div style="margin-left:auto;display:flex;align-items:center;gap:0.5rem;">
                         <button onclick="showEnterDataModal()" style="padding:0.35rem 0.85rem;border-radius:8px;border:1px solid #e8e8ed;background:#f5f5f7;color:#1d1d1f;font-family:inherit;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#e8e8ed'" onmouseout="this.style.background='#f5f5f7'">+ Enter New Data</button>
                     </div>
@@ -1449,17 +1432,6 @@
             <!-- MAP ELA -->
             <div id="reading-panel-map-ela" style="display:none;">
                 <div class="subpanel-toolbar" style="display:flex;gap:0.75rem;align-items:center;padding-top:0.7rem;padding-bottom:0.7rem;border-bottom:1px solid #e8e8ed;flex-wrap:wrap;">
-                    <div class="toggle-group">
-                        <button class="toggle-btn map-ela-view-btn active" data-view="class" onclick="setMapElaView('class')">Class</button>
-                        <button class="toggle-btn map-ela-view-btn" data-view="student" onclick="setMapElaView('student')">Student Growth</button>
-                    </div>
-                    <div class="toggle-group">
-                        <button class="toggle-btn map-ela-al-btn active" data-al="all" onclick="setMapElaAL('all')">All</button>
-                        <button class="toggle-btn map-ela-al-btn" data-al="1" onclick="setMapElaAL('1')">AL1</button>
-                        <button class="toggle-btn map-ela-al-btn" data-al="2" onclick="setMapElaAL('2')">AL2</button>
-                        <button class="toggle-btn map-ela-al-btn" data-al="3" onclick="setMapElaAL('3')">AL3</button>
-                        <button class="toggle-btn map-ela-al-btn" data-al="4" onclick="setMapElaAL('4')">AL4</button>
-                    </div>
                     <div style="margin-left:auto;display:flex;align-items:center;gap:0.5rem;">
                         <button onclick="showImportDataModal()" style="padding:0.35rem 0.85rem;border-radius:8px;border:1px solid #FF8200;background:#fff7f0;color:#FF8200;font-family:inherit;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#fff0e0'" onmouseout="this.style.background='#fff7f0'">↑ Import New Data</button>
                     </div>
@@ -5748,7 +5720,10 @@ function renderEarnedStudent(period, container) {
         } else if (earnedStudentSortCol === 'date') {
             var ad = ae && ae.date ? parseCellDate(ae.date) : '';
             var bd = be && be.date ? parseCellDate(be.date) : '';
-            v = !ad && !bd ? 0 : !ad ? 1 : !bd ? -1 : ad < bd ? -1 : ad > bd ? 1 : 0;
+            if (!ad && !bd) { v = 0; }
+            else if (!ad) { return 1; }
+            else if (!bd) { return -1; }
+            else { v = ad < bd ? -1 : ad > bd ? 1 : 0; }
         } else if (earnedStudentSortCol === 'artifact') {
             var ahA = !!(portfolioDriveArtifacts[studentId] || []).find(function(f){return f.creditId===a.id;});
             var bhA = !!(portfolioDriveArtifacts[studentId] || []).find(function(f){return f.creditId===b.id;});
@@ -5760,7 +5735,8 @@ function renderEarnedStudent(period, container) {
     function _thSort(col, label, center) {
         var active = earnedStudentSortCol === col;
         var style = 'cursor:pointer;user-select:none;' + (active ? 'text-decoration:underline;' : '') + (center ? 'text-align:center;' : '');
-        var click = 'if(earnedStudentSortCol===\'' + col + '\'){earnedStudentSortDir*=-1;}else{earnedStudentSortCol=\'' + col + '\';earnedStudentSortDir=1;}renderEarnedCredits();';
+        var _defDir = col === 'date' ? '-1' : '1';
+        var click = 'if(earnedStudentSortCol===\'' + col + '\'){earnedStudentSortDir*=-1;}else{earnedStudentSortCol=\'' + col + '\';earnedStudentSortDir=' + _defDir + ';}renderEarnedCredits();';
         return '<th style="' + style + '" onclick="' + click + '">' + label + '</th>';
     }
 
@@ -9840,7 +9816,7 @@ function _drawPromoCrossRef() {
         +'<svg width="28" height="10" style="flex-shrink:0;"><line x1="0" y1="5" x2="28" y2="5" stroke="#86efac" stroke-width="1.5" stroke-dasharray="5,3"/></svg>'
         +'+1.0 Growth Goal</span>'
         +'</div>';
-    var selHtml = '<div style="padding:0.6rem max(1.25rem,calc((100vw - 1400px)/2 + 1.25rem));display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-bottom:1px solid #e8e8ed;background:#f5f5f7;margin:'+_selM+';">'
+    var selHtml = '<div style="padding:0.6rem 1.25rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-bottom:1px solid #e8e8ed;background:#f5f5f7;margin:'+_selM+';">'
         +'<label style="font-size:.82rem;font-weight:600;color:#1d1d1f;">Student</label>'
         +'<select id="promo-xref-sel" onchange="promoXrefSel=this.value;_renderPromoXrefStudent();" style="padding:5px 10px;border-radius:8px;border:1px solid #d1d1d6;font-family:inherit;font-size:.82rem;">'
         +students.map(function(s){
@@ -12278,13 +12254,13 @@ function renderCore() {
     if (coreViewMode === 'chart') { renderCoreGrowthChart(students); return; }
     var p = corePeriod;
     var isAll = (p === 'all');
-    // colgroup: student 14%, goal 7%, 2 growth 6% each, period 2.5%(All), 13 cats share rest, known 4%
-    var fixedPct = 14 + 7 + 6 + 6 + (isAll ? 2.5 : 0) + 4;
+    // colgroup: student 14%, AL 5%, goal 7%, boymoy 6%, period 2.5%(All), 13 cats share rest, known 4%
+    var fixedPct = 14 + 5 + 7 + 6 + (isAll ? 2.5 : 0) + 4;
     var catPct   = ((100 - fixedPct) / CORE_CATS.length).toFixed(1);
     var colgroup = '<colgroup>'
         + '<col style="width:14%">'
+        + '<col style="width:5%">'
         + '<col style="width:7%">'
-        + '<col style="width:6%">'
         + '<col style="width:6%">'
         + (isAll ? '<col style="width:2.5%">' : '')
         + CORE_CATS.map(function() { return '<col style="width:' + catPct + '%">'; }).join('')
@@ -12304,6 +12280,11 @@ function renderCore() {
             var ag=(af!==null&&aw!==null)?aw-af:-999, bg=(bf!==null&&bw!==null)?bw-bf:-999;
             return d*(ag-bg);
         }
+        if (coreSortCol === 'al') {
+            var alA = studentAutonomyLevel[a.name] || '';
+            var alB = studentAutonomyLevel[b.name] || '';
+            return d * alA.localeCompare(alB);
+        }
         if (coreSortCol === 'goal') return d * (getCoreGleGoal(a) - getCoreGleGoal(b));
         if (coreSortCol.indexOf('cat_')===0) {
             var ci=parseInt(coreSortCol.slice(4),10);
@@ -12322,9 +12303,9 @@ function renderCore() {
     var html = '<div class="core-table-wrap" style="margin:1.25rem;"><table class="core-table">'
         + colgroup + '<thead><tr>';
     html += cTh('name','Student','text-align:left;','core-name-col');
+    html += cTh('al','AL','text-align:center;font-size:0.6rem;');
     html += cTh('goal','EOY Goal<br><span style="font-weight:400;color:rgba(255,255,255,0.6);font-size:0.55rem;">words</span>','font-size:0.6rem;white-space:normal;line-height:1.2;overflow:hidden;');
     html += cTh('boymoy','BOY→MOY<br><span style="font-weight:400;color:rgba(255,255,255,0.6);font-size:0.55rem;">growth</span>','font-size:0.65rem;white-space:nowrap;line-height:1.3;');
-    html += '<th style="font-size:0.65rem;white-space:nowrap;line-height:1.3;">MOY→EOY<br><span style="font-weight:400;color:rgba(255,255,255,0.6);font-size:0.55rem;">growth</span></th>';
     if (isAll) html += '<th style="font-size:0.55rem;color:rgba(255,255,255,0.7);font-weight:500;overflow:hidden;"></th>';
     CORE_CATS.forEach(function(cat, ci) {
         html += '<th title="' + cat.full + '" onclick="setCoreSort(\'cat_'+ci+'\')" style="cursor:pointer;user-select:none;overflow:hidden;">'
@@ -12345,7 +12326,9 @@ function renderCore() {
         // "Known %" uses most recent available period
         var knownTotal = springT !== null ? springT : (winterT !== null ? winterT : fallT);
 
+        var sAlLevel = studentAutonomyLevel[s.name] || '—';
         html += '<tr><td class="core-name-col">' + fullName(s.name).replace(/</g, '&lt;') + '</td>';
+        html += '<td style="padding:3px 5px;text-align:center;font-size:0.72rem;color:#64748b;">' + sAlLevel + '</td>';
 
         // GLE Goal pie — find best available GLE/goal across periods
         var gleVal = '', gleGoalVal = '';
@@ -12366,10 +12349,6 @@ function renderCore() {
         // BOY→MOY: plain number only
         html += '<td style="padding:3px 5px;vertical-align:middle;text-align:center;">'
             + coreBoyMoyHtml(fallT, winterT) + '</td>';
-
-        // MOY→EOY: no data yet
-        html += '<td style="padding:3px 5px;vertical-align:middle;text-align:center;">'
-            + '<span style="font-size:0.68rem;color:#aeaeb2;">no data yet</span>' + '</td>';
 
         if (isAll) {
             html += '<td style="padding:2px 4px;vertical-align:middle;white-space:nowrap;">'
@@ -12862,16 +12841,12 @@ function renderFPGrowthView() {
         fpLongSelected = student.name;
 
         var selHtml = '<div style="padding:.75rem 1.25rem;background:#f5f5f7;border-bottom:1px solid #e8e8ed;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">'
-            + (fpWholeSchoolMode ? '' :
-                '<label style="font-size:.82rem;font-weight:600;color:#1d1d1f;">Student</label>'
-                + '<select id="fp-long-sel" style="padding:5px 10px;border-radius:8px;border:1px solid #d1d1d6;font-family:inherit;font-size:.82rem;">'
-                + students.map(function(s){ return '<option value="' + s.name.replace(/"/g,'&quot;') + '"' + (s.name===sel?' selected':'') + '>' + fullName(s.name).replace(/</g,'&lt;') + (s.al?' — AL'+s.al:'') + '</option>'; }).join('')
-                + '</select>'
-                + _sdTierHtml(readingTierData, student.name))
-            + '<button onclick="fpWholeSchoolMode=!fpWholeSchoolMode;renderFPGrowthView();" style="padding:5px 14px;border-radius:8px;border:1.5px solid #FFC8BB;font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer;'
-            + (fpWholeSchoolMode ? 'background:#FFC8BB;color:#1d1d1f;' : 'background:#fff;color:#1d1d1f;')
-            + '">Average Growth</button>'
-            + (fpWholeSchoolMode ? '' : '<span style="font-size:.72rem;color:#94a3b8;margin-left:4px;">Click any student name in the table to jump here</span>')
+            + '<button onclick="setFpViewMode(\'table\')" style="padding:4px 14px;background:#f5f5f7;border:1px solid #d1d1d6;border-radius:8px;font-size:0.78rem;color:#3a3a3c;cursor:pointer;font-family:inherit;">← Back to Class</button>'
+            + '<label style="font-size:.82rem;font-weight:600;color:#1d1d1f;">Student</label>'
+            + '<select id="fp-long-sel" style="padding:5px 10px;border-radius:8px;border:1px solid #d1d1d6;font-family:inherit;font-size:.82rem;">'
+            + students.map(function(s){ return '<option value="' + s.name.replace(/"/g,'&quot;') + '"' + (s.name===sel?' selected':'') + '>' + fullName(s.name).replace(/</g,'&lt;') + (s.al?' — AL'+s.al:'') + '</option>'; }).join('')
+            + '</select>'
+            + _sdTierHtml(readingTierData, student.name)
             + '</div>';
 
         var cardTitle = fpWholeSchoolMode
@@ -13473,8 +13448,12 @@ function doRenderMapTable(el, students, periods, scoresFn, pctsFn, sortCfg) {
     students.forEach(function(s, si) {
         var rb = si % 2 === 0 ? '#fff' : '#fafafa';
         var scores = scoresFn(s), pcts = pctsFn(s);
+        var _nameClick = (sortCfg && sortCfg.onStudentClick)
+            ? ' onclick="' + sortCfg.onStudentClick + '(\'' + s.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')"'
+            : '';
+        var _nameCursor = (sortCfg && sortCfg.onStudentClick) ? 'cursor:pointer;' : '';
         bodyRows += '<tr>'
-            + '<td data-redact="name" style="padding:5px 8px;font-size:0.75rem;color:#1d1d1f;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;position:sticky;left:0;background:' + rb + ';z-index:1;" title="' + fullName(s.name).replace(/"/g,'&quot;') + '">' + fullName(s.name).replace(/</g,'&lt;') + '</td>'
+            + '<td data-redact="name"' + _nameClick + ' style="padding:5px 8px;font-size:0.75rem;color:#1d1d1f;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;position:sticky;left:0;background:' + rb + ';z-index:1;' + _nameCursor + '" title="' + fullName(s.name).replace(/"/g,'&quot;') + '">' + fullName(s.name).replace(/</g,'&lt;') + '</td>'
             + '<td style="text-align:center;font-size:0.72rem;color:#64748b;' + PH + '">' + (s.gle || '—') + '</td>'
             + '<td data-redact="al" style="text-align:center;font-size:0.72rem;color:#64748b;' + PH + '">' + (s.al || '—') + '</td>';
         yearOrder.forEach(function(yr) {
@@ -13806,7 +13785,7 @@ function renderMapElaTable() {
     doRenderMapTable(el, all, periods,
         function(s) { return s.elaScores; },
         function(s) { return s.elaPcts; },
-        { sortCol: mapElaSortCol, sortDir: mapElaSortDir, onSort: 'setMapElaSort' });
+        { sortCol: mapElaSortCol, sortDir: mapElaSortDir, onSort: 'setMapElaSort', onStudentClick: 'mapElaSelectStudent' });
 }
 
 /* ── MAP ELA Student Growth Graphs ──────────────────────────────────────────── */
@@ -13831,7 +13810,6 @@ function renderMapElaStudentGraphs() {
             return { label: label, avg: count ? sum / count : 0, count: count };
         }).filter(function(b) { return b.label; });
         var html = '<div style="padding:1rem 1.25rem 1.5rem;">'
-            + '<button onclick="mapElaAvgMode=false;renderMapElaStudentGraphs();" style="padding:5px 14px;border-radius:8px;border:1.5px solid #FFC8BB;background:#FFC8BB;color:#1d1d1f;font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer;margin-bottom:1.25rem;">Average Growth</button>'
             + '<div style="background:#fff;border-radius:14px;border:1px solid #e8e8ed;padding:1.25rem;max-width:720px;">'
             + '<div style="font-size:.82rem;font-weight:700;color:#1d1d1f;margin-bottom:.75rem;">Average MAP ELA Percentile </div>'
             + '<canvas id="map-ela-avg-canvas" width="680" height="260" style="width:100%;height:260px;display:block;"></canvas>'
@@ -13847,7 +13825,7 @@ function renderMapElaStudentGraphs() {
         var s = all.find(function(st) { return st.name === mapElaSelectedStudent; });
         if (!s) { mapElaSelectedStudent = ''; renderMapElaStudentGraphs(); return; }
         var html = '<div style="padding:1rem 1.25rem 1.5rem;">'
-            + '<button onclick="mapElaClearStudent()" style="display:inline-flex;align-items:center;gap:4px;padding:4px 14px;background:#f5f5f7;border:none;border-radius:8px;font-size:0.78rem;color:#3a3a3c;cursor:pointer;margin-bottom:1rem;">← All students</button>'
+            + '<button onclick="mapElaClearStudent()" style="display:inline-flex;align-items:center;gap:4px;padding:4px 14px;background:#f5f5f7;border:none;border-radius:8px;font-size:0.78rem;color:#3a3a3c;cursor:pointer;margin-bottom:1rem;">← Back to Class</button>'
             + '<div style="max-width:560px;">' + buildMapStudentCard(s, ep, 'ela', 'map-ela-chart') + '</div>'
             + '</div>';
         el.innerHTML = html;
@@ -13865,10 +13843,7 @@ function renderMapElaStudentGraphs() {
         var q = mapElaStudentSearch.toLowerCase();
         all = all.filter(function(s) { return fullName(s.name).toLowerCase().indexOf(q) !== -1; });
     }
-    var html = '<div style="padding:0.75rem 1.25rem 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">'
-        + '<button onclick="mapElaAvgMode=true;renderMapElaStudentGraphs();" style="padding:5px 14px;border-radius:8px;border:1.5px solid #FFC8BB;background:#fff;color:#1d1d1f;font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer;">Average Growth</button>'
-        + '</div>'
-        + '<div style="padding:0.5rem 1.25rem 0;"><input id="map-ela-search" type="text" placeholder="Search student…" value="' + mapElaStudentSearch.replace(/"/g,'&quot;') + '" '
+    var html = '<div style="padding:0.5rem 1.25rem 0;"><input id="map-ela-search" type="text" placeholder="Search student…" value="' + mapElaStudentSearch.replace(/"/g,'&quot;') + '" '
         + 'oninput="mapElaStudentSearch=this.value;renderMapElaStudentGraphs();" '
         + 'style="width:220px;padding:0.35rem 0.75rem;border:1.5px solid #d2d2d7;border-radius:20px;font-size:0.78rem;font-family:inherit;outline:none;box-sizing:border-box;" '
         + 'onfocus="this.style.borderColor=\'#FF8200\'" onblur="this.style.borderColor=\'#d2d2d7\'">'
@@ -13914,7 +13889,8 @@ function mapElaSelectStudent(name) {
 
 function mapElaClearStudent() {
     mapElaSelectedStudent = '';
-    renderMapElaStudentGraphs();
+    mapElaView = 'class';
+    renderMapElaTable();
 }
 
 /* ── Shared student card builder (math + ELA) ─────────────────────────────── */
