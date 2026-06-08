@@ -962,14 +962,14 @@
         #wd-last-updated { margin-left:auto; font-size:.7rem; color:#aeaeb2; }
         .wd-spinner { display:inline-block; width:28px; height:28px; border:3px solid #e2e8f0; border-top-color:#FF8200; border-radius:50%; animation:spin .7s linear infinite; margin-bottom:10px; }
         #wd-root .wd-card { background:#fff; border-radius:10px; box-shadow:0 1px 4px rgba(0,0,0,.08); padding:18px 22px; margin-bottom:18px; }
-        #wd-root .wd-section-title { font-size:.68rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#94a3b8; margin-bottom:10px; }
+        #wd-root .wd-section-title { font-size:.72rem; font-weight:700; letter-spacing:.01em; color:#94a3b8; margin-bottom:10px; }
         #wd-root .wd-kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-bottom:18px; }
         #wd-root .wd-kpi-card { padding:12px 16px; border-radius:10px; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,.08); }
-        #wd-root .wd-kpi-label { font-size:.63rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#94a3b8; margin-bottom:3px; }
+        #wd-root .wd-kpi-label { font-size:.65rem; font-weight:700; letter-spacing:.01em; color:#94a3b8; margin-bottom:3px; }
         #wd-root .wd-kpi-value { font-size:1.4rem; font-weight:800; line-height:1; color:#1a1a2e; }
         #wd-root .wd-kpi-sub { font-size:.7rem; color:#94a3b8; margin-top:2px; }
         #wd-root .wd-filter-bar { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:16px; }
-        #wd-root .wd-filter-bar label { font-weight:700; font-size:.7rem; color:#64748b; text-transform:uppercase; letter-spacing:.08em; }
+        #wd-root .wd-filter-bar label { font-weight:700; font-size:.7rem; color:#64748b; }
         #wd-root .wd-filter-bar select { padding:5px 10px; border-radius:8px; border:1px solid #d1d1d6; background:#fff; font-family:inherit; font-size:.8rem; color:#1a1a2e; cursor:pointer; }
         #wd-root .wd-tbl-wrap { overflow-x:auto; overflow-y:auto; max-height:65vh; border-radius:16px; border:1px solid #f0f0f0; }
         #wd-root table { width:100%; border-collapse:collapse; font-size:.8rem; }
@@ -16604,7 +16604,7 @@ function renderStudentView() {
     var el=document.getElementById('wd-view-student');
     var seasonScores=SEASONS.map(function(season){
         var d=s[season],v=d?d.avg:null,lbl={fall:'BOY',winter:'MOY',spring:'EOY'}[season]||season;
-        return'<div style="text-align:center"><div style="font-size:.63rem;color:#86868b;text-transform:uppercase;letter-spacing:.1em">'+lbl+'</div>'
+        return'<div style="text-align:center"><div style="font-size:.65rem;color:#86868b;">'+lbl+'</div>'
             +'<div style="font-size:1.4rem;font-weight:800;color:'+(v==null?'#86868b':v>0?'#1d1d1f':'#ff6961')+'">'+(d&&d.noWork?'—':fmtScore(v,1))+'</div>'
             +(v!=null&&v>0?'<div style="font-size:.66rem;color:#86868b">'+gradeBand(v)+'</div>':'')+'</div>';
     }).join('');
@@ -16648,7 +16648,7 @@ function renderStudentView() {
         +'</div><div style="display:flex;gap:12px">'+seasonScores+'</div></div>'
         +'<div style="margin-top:12px;padding-top:12px;border-top:1px solid #e5e5ea">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:7px">'
-        +'<div style="font-size:.66rem;color:#86868b;text-transform:uppercase;letter-spacing:.08em">'+gp.label+' Growth by Category</div>'
+        +'<div style="font-size:.68rem;color:#86868b;">'+gp.label+' Growth by Category</div>'
         +growthToggle+'</div>'
         +(growthChips?'<div style="display:flex;gap:6px;flex-wrap:wrap">'+growthChips+'</div>':'<div style="color:#86868b;font-size:.78rem;padding:3px 0">No data for this season pair yet.</div>')
         +'</div></div>'
@@ -16822,7 +16822,8 @@ function setRosterGrowth(col) { rosterGrowthCol=col; renderClassOverview(); }
 function setStudentGrowth(col) { studentGrowthCol=col; renderStudentView(); }
 function setCatDive(i) { catDiveIdx=i; renderCategoryView(); }
 
-return { init:init, switchView:switchView, setLevel:setLevel, setRosterGrowth:setRosterGrowth, setStudentGrowth:setStudentGrowth, setCatDive:setCatDive };
+function refresh() { levelCache = {}; initialized = false; init(); }
+return { init:init, refresh:refresh, switchView:switchView, setLevel:setLevel, setRosterGrowth:setRosterGrowth, setStudentGrowth:setStudentGrowth, setCatDive:setCatDive };
 })();
 
 /* ═══════════════════════════════════════════════════════════════
@@ -17460,7 +17461,7 @@ function renderWbAnalytics() {
     var el = document.getElementById('wb-content');
     var wd = document.getElementById('wd-root');
     if (el) el.style.display = 'none';
-    if (wd) { wd.style.display = ''; WD.init(); }
+    if (wd) { wd.style.display = ''; WD.refresh(); }
 }
 
 function updateStickyOffsets() {
