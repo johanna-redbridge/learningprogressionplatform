@@ -1478,7 +1478,7 @@
                         <button class="toggle-btn map-math-al-btn" data-al="4" onclick="setMapMathAL('4')">AL4</button>
                     </div>
                     <div style="margin-left:auto;display:flex;align-items:center;gap:0.5rem;">
-                        <button onclick="showImportDataModal()" style="padding:0.35rem 0.85rem;border-radius:8px;border:1px solid #FF8200;background:#fff7f0;color:#FF8200;font-family:inherit;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#fff0e0'" onmouseout="this.style.background='#fff7f0'">↑ Import New Data</button>
+                        <button onclick="showImportDataModal()" style="padding:0.35rem 0.85rem;border-radius:8px;border:1px solid #e8e8ed;background:#f5f5f7;color:#1d1d1f;font-family:inherit;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#e8e8ed'" onmouseout="this.style.background='#f5f5f7'">↑ Import New Data</button>
                     </div>
                 </div>
                 <div id="map-math-content" style="margin-top:1rem;"></div>
@@ -1509,7 +1509,7 @@
                     </select>
                     <div style="margin-left:auto;display:flex;align-items:center;gap:0.5rem;">
                         <button onclick="showEnterDataModal()" style="padding:0.35rem 0.85rem;border-radius:8px;border:1px solid #e8e8ed;background:#f5f5f7;color:#1d1d1f;font-family:inherit;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#e8e8ed'" onmouseout="this.style.background='#f5f5f7'">+ Enter New Data</button>
-                        <button onclick="showImportDataModal()" style="padding:0.35rem 0.85rem;border-radius:8px;border:1px solid #FF8200;background:#fff7f0;color:#FF8200;font-family:inherit;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#fff0e0'" onmouseout="this.style.background='#fff7f0'">↑ Import New Data</button>
+                        <button onclick="showImportDataModal()" style="padding:0.35rem 0.85rem;border-radius:8px;border:1px solid #e8e8ed;background:#f5f5f7;color:#1d1d1f;font-family:inherit;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#e8e8ed'" onmouseout="this.style.background='#f5f5f7'">↑ Import New Data</button>
                     </div>
                 </div>
                 <div id="comp-xref-header" style="display:none;flex-shrink:0;background:#fff;border-bottom:1px solid #e8e8ed;"></div>
@@ -1572,12 +1572,14 @@
 
             <!-- Writing Benchmark (new data panel) -->
             <div id="writing-panel-wb" style="display:none;">
-                <!-- view toggle bar -->
-                <div id="wb-view-bar" style="display:flex;gap:0.5rem;align-items:center;padding:0.6rem max(1.25rem,calc((100vw - 1400px)/2 + 1.25rem));border-bottom:1px solid #e8e8ed;background:#f5f5f7;">
-                    <div class="toggle-group">
-                        <button class="toggle-btn wb-view-btn active" data-view="overview" onclick="setWbView('overview')">Overview Growth</button>
-                        <button class="toggle-btn wb-view-btn" data-view="student-growth" onclick="setWbView('student-growth')">Student Growth</button>
-                        <button class="toggle-btn wb-view-btn" data-view="analytics" onclick="setWbView('analytics')">Analytics</button>
+                <!-- Writing toolbar -->
+                <div id="wb-view-bar" style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem max(1.25rem,calc((100vw - 1400px)/2 + 1.25rem));border-bottom:1px solid #e8e8ed;background:#f5f5f7;">
+                    <div id="wb-back-btn" style="display:none;">
+                        <button onclick="setWbView('overview')" style="padding:0.35rem 0.85rem;border-radius:8px;border:1px solid #e8e8ed;background:#f5f5f7;color:#1d1d1f;font-family:inherit;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#e8e8ed'" onmouseout="this.style.background='#f5f5f7'">← Back to Overview</button>
+                    </div>
+                    <div style="margin-left:auto;display:flex;align-items:center;gap:0.5rem;">
+                        <button id="wb-analytics-btn" onclick="setWbView(wbViewMode==='analytics'?'overview':'analytics')" style="padding:0.35rem 0.85rem;border-radius:8px;border:1px solid #e8e8ed;background:#f5f5f7;color:#1d1d1f;font-family:inherit;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#e8e8ed'" onmouseout="this.style.background='#f5f5f7'">Analytics</button>
+                        <button onclick="showEnterDataModal()" style="padding:0.35rem 0.85rem;border-radius:8px;border:1px solid #e8e8ed;background:#f5f5f7;color:#1d1d1f;font-family:inherit;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#e8e8ed'" onmouseout="this.style.background='#f5f5f7'">+ Enter New Data</button>
                     </div>
                 </div>
                 <div id="wb-filters" style="display:none;gap:0.75rem;align-items:center;padding-top:0.7rem;padding-bottom:0.7rem;border-bottom:1px solid #e8e8ed;flex-wrap:wrap;">
@@ -1601,7 +1603,7 @@
                         </div>
                         <div style="margin-left:auto;display:flex;align-items:center;gap:0.5rem;">
                             <button onclick="showEnterDataModal()" style="padding:0.35rem 0.85rem;border-radius:8px;border:1px solid #e8e8ed;background:#f5f5f7;color:#1d1d1f;font-family:inherit;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#e8e8ed'" onmouseout="this.style.background='#f5f5f7'">+ Enter New Data</button>
-                            <button onclick="showImportDataModal()" style="padding:0.35rem 0.85rem;border-radius:8px;border:1px solid #FF8200;background:#fff7f0;color:#FF8200;font-family:inherit;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#fff0e0'" onmouseout="this.style.background='#fff7f0'">↑ Import New Data</button>
+                            <button onclick="showImportDataModal()" style="padding:0.35rem 0.85rem;border-radius:8px;border:1px solid #e8e8ed;background:#f5f5f7;color:#1d1d1f;font-family:inherit;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#e8e8ed'" onmouseout="this.style.background='#f5f5f7'">↑ Import New Data</button>
                         </div>
                     </div>
                     <div id="wd-loading" style="padding:60px 28px;text-align:center;color:#94a3b8;">
@@ -5690,6 +5692,16 @@ function renderEarnedStudent(period, container) {
     var tableCredits = filteredCredits.slice();
     if (earnedCreditSearch) tableCredits = tableCredits.filter(function(c) { return c.title.toLowerCase().indexOf(earnedCreditSearch) !== -1; });
 
+    // Pre-compute display dates so sort matches the displayed date column
+    var _creditSortDates = {};
+    tableCredits.forEach(function(c) {
+        var e2 = hasEarned(studentId, c.id, period);
+        var art2 = artifacts[artifactKey(studentId, c.id)];
+        var dr = driveArtifactDateFor(studentId, c.title) || (art2 ? parseDateFromFilename(art2.name) : null);
+        var iso = dr && dr.iso ? dr.iso : (e2 && e2.date ? e2.date : '');
+        _creditSortDates[c.id] = iso ? parseCellDate(iso) : '';
+    });
+
     // Sort all credits by selected column
     tableCredits.sort(function(a, b) {
         var ae = hasEarned(studentId, a.id, period), be = hasEarned(studentId, b.id, period);
@@ -5706,8 +5718,8 @@ function renderEarnedStudent(period, container) {
             var bVal = be ? 0 : ba ? 1 : 2;
             v = aVal - bVal;
         } else if (earnedStudentSortCol === 'date') {
-            var ad = ae && ae.date ? parseCellDate(ae.date) : '';
-            var bd = be && be.date ? parseCellDate(be.date) : '';
+            var ad = _creditSortDates[a.id] || '';
+            var bd = _creditSortDates[b.id] || '';
             if (!ad && !bd) { v = 0; }
             else if (!ad) { return 1; }
             else if (!bd) { return -1; }
@@ -14307,7 +14319,7 @@ function renderSTMathTable() {
         });
         th += '</div>';
         th += '<div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:0.25rem;">';
-        th += '<button onclick="showImportDataModal()" style="padding:0.35rem 0.85rem;border-radius:8px;border:1px solid #FF8200;background:#fff7f0;color:#FF8200;font-family:inherit;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background=\'#fff0e0\'" onmouseout="this.style.background=\'#fff7f0\'">Import New Data</button>';
+        th += '<button onclick="showImportDataModal()" style="padding:0.35rem 0.85rem;border-radius:8px;border:1px solid #e8e8ed;background:#f5f5f7;color:#1d1d1f;font-family:inherit;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background=\'#e8e8ed\'" onmouseout="this.style.background=\'#f5f5f7\'">↑ Import New Data</button>';
         th += '<span style="font-size:0.65rem;color:#aeaeb2;white-space:nowrap;">Last updated: 05/14/2026</span>';
         th += '</div></div>';
         toolbar.innerHTML = th;
@@ -14612,7 +14624,7 @@ function doRenderBeastAcademy(el) {
     });
     html += '</div>';
     html += '<div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:0.25rem;">';
-    html += '<button onclick="showImportDataModal()" style="padding:0.35rem 0.85rem;border-radius:8px;border:1px solid #FF8200;background:#fff7f0;color:#FF8200;font-family:inherit;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background=\'#fff0e0\'" onmouseout="this.style.background=\'#fff7f0\'">↑ Import New Data</button>';
+    html += '<button onclick="showImportDataModal()" style="padding:0.35rem 0.85rem;border-radius:8px;border:1px solid #e8e8ed;background:#f5f5f7;color:#1d1d1f;font-family:inherit;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background=\'#e8e8ed\'" onmouseout="this.style.background=\'#f5f5f7\'">↑ Import New Data</button>';
     html += '<span style="font-size:0.65rem;color:#aeaeb2;white-space:nowrap;">Last updated: 05/14/2026</span>';
     html += '</div>';
     html += '</div>';
@@ -16985,11 +16997,18 @@ function parseWbLongCsv(text) {
     return students;
 }
 
+function wbSelectStudent(name) {
+    wbSgSelectedStudent = name;
+    wbAvgGrowthMode = false;
+    setWbView('student-growth');
+}
+
 function setWbView(view) {
     wbViewMode = view;
-    document.querySelectorAll('.wb-view-btn').forEach(function(b) {
-        b.classList.toggle('active', b.dataset.view === view);
-    });
+    var backBtn = document.getElementById('wb-back-btn');
+    if (backBtn) backBtn.style.display = view === 'student-growth' ? 'block' : 'none';
+    var analyticsBtn = document.getElementById('wb-analytics-btn');
+    if (analyticsBtn) analyticsBtn.textContent = view === 'analytics' ? '← Overview' : 'Analytics';
     renderWb();
 }
 
@@ -17145,9 +17164,9 @@ function doRenderWbOverview(el) {
     sorted.forEach(function(s, si) {
         var rb = si % 2 === 0 ? '#fff' : '#fafafa';
         bodyRows += '<tr>'
-            + '<td style="padding:5px 8px;font-size:0.75rem;color:#1d1d1f;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;position:sticky;left:0;background:' + rb + ';z-index:1;" title="' + fullName(s.name).replace(/"/g, '&quot;') + '">' + fullName(s.name).replace(/</g, '&lt;') + '</td>'
+            + '<td style="padding:5px 8px;font-size:0.75rem;color:#1d1d1f;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;position:sticky;left:0;background:' + rb + ';z-index:1;cursor:pointer;" onclick="wbSelectStudent(\'' + s.name.replace(/'/g, "\\'") + '\')" title="' + fullName(s.name).replace(/"/g, '&quot;') + '">' + fullName(s.name).replace(/</g, '&lt;') + '</td>'
             + '<td style="text-align:center;font-size:0.72rem;color:#64748b;' + PH + '">' + (s.al  || '—') + '</td>'
-            + '<td style="text-align:center;font-size:0.72rem;color:#64748b;' + PH + '">' + (s.gle || '—') + '</td>';
+            + '<td data-redact="gle" style="text-align:center;font-size:0.72rem;color:#64748b;' + PH + '">' + (s.gle || '—') + '</td>';
         WB_LONG_YEARS.forEach(function(y) {
             var yd  = s.years[y.key];
             var cur = y.key === '2025-26';
