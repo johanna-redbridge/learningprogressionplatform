@@ -24,14 +24,18 @@
 
         header {
             background: #fff;
-            padding: 0.5rem max(1.25rem, calc((100vw - 1400px) / 2 + 1.25rem));
             border-bottom: 1px solid #f0f0f0;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
             position: sticky;
             top: 0;
             z-index: 200;
+        }
+        .header-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0.5rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
         }
 
 
@@ -94,7 +98,7 @@
         .view-container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 0.3in 1.5in 4rem;
+            padding: 1.5rem 1.25rem 4rem;
         }
 
         .filters {
@@ -930,7 +934,8 @@
         .analytics-card-sub { font-size:0.78rem; color:#86868b; line-height:1.4; }
         .analytics-card-arrow { margin-top:1.1rem; font-size:0.78rem; color:#FF8200; font-weight:600; }
         /* ── Data sub-tabs ── */
-        .data-subtab-nav { display: flex; justify-content: flex-start; border-bottom: 2px solid #e8e8ed; padding: 0 max(1.25rem, calc((100vw - 1400px) / 2 + 1.25rem)); background: #fff; position: sticky; top: var(--nav-h-1, 57px); z-index: 150; }
+        .data-subtab-nav { display: block; border-bottom: 2px solid #e8e8ed; padding: 0; background: #fff; position: sticky; top: var(--nav-h-1, 57px); z-index: 150; }
+        .subnav-inner { max-width: 1400px; margin: 0 auto; display: flex; align-items: center; justify-content: flex-start; padding: 0 1.25rem; }
         .data-subtab-btn { padding: 0.55rem 1rem; font-size: 0.82rem; font-weight: 500; border: none; background: none; cursor: pointer; color: #86868b; border-bottom: 2px solid transparent; margin-bottom: -2px; font-family: inherit; transition: color 0.15s; white-space: nowrap; }
         .data-subtab-btn:hover { color: #1d1d1f; }
         .data-subtab-btn.active { color: #FF8200; border-bottom-color: #FF8200; }
@@ -940,7 +945,7 @@
         body.redacted .fp-gle-td { visibility:hidden; }
         .panel-subnav { position: sticky; top: var(--nav-h-2, 100px); z-index: 120; }
         .subpanel-toolbar { position: sticky; top: var(--nav-h-3, 144px); z-index: 90; background: #fff; padding-left: max(1.25rem, calc((100vw - 1400px) / 2 + 1.25rem)); padding-right: max(1.25rem, calc((100vw - 1400px) / 2 + 1.25rem)); }
-        #promo-xref-student-body { max-width: 1400px; margin: 0 auto; padding: 1.25rem max(1.25rem, calc((100vw - 1400px) / 2 + 1.25rem)); }
+        #promo-xref-student-body { max-width: 1400px; margin: 0 auto; padding: 1.25rem 1.25rem; }
         #xref-filter-bar { position: sticky; top: var(--nav-h-2, 100px); z-index: 120; }
         #xref-comp-header { position: sticky; top: var(--nav-h-3, 144px); z-index: 90; background: #fff; }
         #xref-read-header { position: sticky; top: var(--nav-h-3, 144px); z-index: 90; background: #fff; }
@@ -950,7 +955,7 @@
 
         /* ── Writing Dashboard scoped styles ── */
         #wd-root { font-family: -apple-system, 'DM Sans', system-ui, sans-serif; color: #1a1a2e; }
-        #wd-nav { display:flex; gap:0.6rem; flex-wrap:wrap; align-items:center; background:#f5f5f7; padding:0.55rem 1.25rem; border-bottom:1px solid #e8e8ed; position: sticky; top: var(--nav-h-2, 100px); z-index: 120; }
+        #wd-nav { display:flex; gap:0.6rem; flex-wrap:wrap; align-items:center; background:#f5f5f7; padding:0.55rem max(1.25rem,calc((100vw - 1400px)/2 + 1.25rem)); border-bottom:1px solid #e8e8ed; position: sticky; top: var(--nav-h-2, 100px); z-index: 120; }
         .wd-nav-btn { padding:0.4rem 0.9rem; border-radius:8px; border:none; cursor:pointer; font-family:inherit; font-size:0.72rem; font-weight:500; background:transparent; color:#86868b; transition:all 0.25s ease; white-space:nowrap; }
         .wd-nav-btn:hover { color:#1d1d1f; }
         .wd-nav-btn.active { background:#e8e8ed; color:#1d1d1f; box-shadow:0 1px 4px rgba(0,0,0,0.08); }
@@ -1029,6 +1034,7 @@
 
 <span style="font-family:'TT Norms Pro';position:absolute;visibility:hidden;pointer-events:none;font-size:0;">a</span>
 <header>
+  <div class="header-inner">
     <div class="header-brand">
         <img id="app-logo-header" src="https://drive.google.com/thumbnail?id=1-bF7UTdKzEtoby0_ZIW8HtMe0-4n1MgX&sz=w400" alt="Logo" class="header-logo">
         <h1>Learning Progression Platform</h1>
@@ -1051,6 +1057,7 @@
             </span>
         </div>
     </div>
+  </div>
 </header>
 
 <!-- TAB 1: Learning Credits (Available / Earned / Draft sub-tabs) -->
@@ -1082,9 +1089,11 @@
     </div>
 
     <!-- Back nav (shown when a subtab is open) -->
-    <div class="data-subtab-nav" id="lc-back-nav" style="display:none;padding-left:max(1.25rem, calc((100vw - 1400px) / 2 + 1.25rem));padding-right:max(1.25rem, calc((100vw - 1400px) / 2 + 1.25rem));">
+    <div class="data-subtab-nav" id="lc-back-nav" style="display:none;">
+      <div class="subnav-inner">
         <button onclick="showLCLanding()" style="padding:0.55rem 0.9rem;border:none;background:none;cursor:pointer;font-size:0.82rem;font-family:inherit;color:#86868b;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;" onmouseover="this.style.color='#1d1d1f'" onmouseout="this.style.color='#86868b'">&larr; Back</button>
         <span id="lc-back-nav-title" style="padding:0.55rem 0.5rem;font-size:0.82rem;font-weight:600;color:#1d1d1f;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-2px;"></span>
+      </div>
     </div>
 
     <!-- Available sub-panel -->
@@ -1270,6 +1279,7 @@
 
         <!-- Nav bar for non-reading dashboards -->
         <div class="data-subtab-nav" id="data-subtab-nav" style="display:none;">
+          <div class="subnav-inner">
             <button onclick="showAnalyticsLanding()" style="padding:0.55rem 0.9rem;border:none;background:none;cursor:pointer;font-size:0.82rem;font-family:inherit;color:#86868b;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;" onmouseover="this.style.color='#1d1d1f'" onmouseout="this.style.color='#86868b'">&larr; Back</button>
             <button class="data-subtab-btn active" data-subtab="reading" onclick="switchDataSubtab('reading')">Reading</button>
             <button class="data-subtab-btn" data-subtab="comp" onclick="switchDataSubtab('comp')">Computation</button>
@@ -1277,9 +1287,11 @@
             <button class="data-subtab-btn" data-subtab="lc" onclick="switchDataSubtab('lc')">Credit</button>
             <button class="data-subtab-btn" data-subtab="promotion" onclick="switchDataSubtab('promotion')">Promotion</button>
             <button class="data-subtab-btn" data-subtab="redbridge" onclick="switchDataSubtab('redbridge')">Redbridge</button>
+          </div>
         </div>
         <!-- Nav bar for Reading dashboard only -->
         <div class="data-subtab-nav" id="reading-nav" style="display:none;">
+          <div class="subnav-inner">
             <button onclick="showAnalyticsLanding()" style="padding:0.55rem 0.9rem;border:none;background:none;cursor:pointer;font-size:0.82rem;font-family:inherit;color:#86868b;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;" onmouseover="this.style.color='#1d1d1f'" onmouseout="this.style.color='#86868b'">&larr; Back</button>
             <span style="padding:0.55rem 0.5rem;font-size:0.82rem;font-weight:600;color:#1d1d1f;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-2px;">Reading</span>
             <span style="width:1px;background:#e8e8ed;margin:4px 8px;align-self:stretch;"></span>
@@ -1290,9 +1302,11 @@
             <button id="reading-logo-map" class="logo-tab-btn reading-view-btn" data-view="map-ela" onclick="switchReadingSubtab('map-ela')"><img src="nwea%20map%20logo.png" alt="MAP ELA" style="height:24px;object-fit:contain;display:block;"></button>
             <button id="reading-logo-core" class="logo-tab-btn reading-view-btn" data-view="core" onclick="switchReadingSubtab('core')"><img src="CORE%20logo.png" alt="CORE" style="height:24px;object-fit:contain;display:block;"></button>
             <button id="reading-logo-lexia" class="logo-tab-btn reading-view-btn" data-view="lexia" onclick="switchReadingSubtab('lexia')"><img src="Lexia%20Logo.png" alt="Lexia" style="height:24px;object-fit:contain;display:block;"></button>
+          </div>
         </div>
         <!-- Nav bar for Computation dashboard -->
         <div class="data-subtab-nav" id="comp-nav" style="display:none;">
+          <div class="subnav-inner">
             <button onclick="showAnalyticsLanding()" style="padding:0.55rem 0.9rem;border:none;background:none;cursor:pointer;font-size:0.82rem;font-family:inherit;color:#86868b;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;" onmouseover="this.style.color='#1d1d1f'" onmouseout="this.style.color='#86868b'">&larr; Back</button>
             <span style="padding:0.55rem 0.5rem;font-size:0.82rem;font-weight:600;color:#1d1d1f;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-2px;">Computation</span>
             <span style="width:1px;background:#e8e8ed;margin:4px 8px;align-self:stretch;"></span>
@@ -1304,9 +1318,11 @@
             <button id="comp-logo-map" class="logo-tab-btn math-view-btn" data-view="map-math" onclick="switchMathSubtab('map-math')"><img src="nwea%20map%20logo.png" alt="MAP Math" style="height:24px;object-fit:contain;display:block;"></button>
             <button id="comp-logo-ba" class="logo-tab-btn math-view-btn" data-view="beast-academy" onclick="switchMathSubtab('beast-academy')"><img src="beast%20academy%20logo.png" alt="Beast Academy" style="height:24px;object-fit:contain;display:block;"></button>
             <button id="comp-logo-stmath" class="logo-tab-btn math-view-btn" data-view="stmath" onclick="switchMathSubtab('stmath')"><img src="STmath%20logo.png" alt="STmath" style="height:24px;object-fit:contain;display:block;"></button>
+          </div>
         </div>
         <!-- Nav bar for Writing dashboard -->
         <div class="data-subtab-nav" id="writing-nav" style="display:none;">
+          <div class="subnav-inner">
             <button onclick="showAnalyticsLanding()" style="padding:0.55rem 0.9rem;border:none;background:none;cursor:pointer;font-size:0.82rem;font-family:inherit;color:#86868b;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;" onmouseover="this.style.color='#1d1d1f'" onmouseout="this.style.color='#86868b'">&larr; Back</button>
             <span style="padding:0.55rem 0.5rem;font-size:0.82rem;font-weight:600;color:#1d1d1f;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-2px;">Writing</span>
             <span style="width:1px;background:#e8e8ed;margin:4px 8px;align-self:stretch;"></span>
@@ -1314,28 +1330,37 @@
             <button id="writing-sub-survey-btn" class="data-subtab-btn" onclick="switchWritingSubtab('survey')">Writing Survey</button>
             <span style="width:1px;background:#e8e8ed;margin:4px 8px;align-self:stretch;"></span>
             <button id="writing-logo-wb" class="logo-tab-btn writing-sub-btn active" data-wsub="wb" onclick="switchWritingSubtab('wb')"><img src="Writing%20Benchmark%20logo.png" alt="Writing Benchmark" style="height:24px;object-fit:contain;display:block;"></button>
+          </div>
         </div>
         <!-- Nav bar for Credit dashboard -->
         <div class="data-subtab-nav" id="lc-nav" style="display:none;">
+          <div class="subnav-inner">
             <button onclick="showAnalyticsLanding()" style="padding:0.55rem 0.9rem;border:none;background:none;cursor:pointer;font-size:0.82rem;font-family:inherit;color:#86868b;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;" onmouseover="this.style.color='#1d1d1f'" onmouseout="this.style.color='#86868b'">&larr; Back</button>
             <span style="padding:0.55rem 0.5rem;font-size:0.82rem;font-weight:600;color:#1d1d1f;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-2px;">Credit</span>
             <span style="width:1px;background:#e8e8ed;margin:4px 8px;align-self:stretch;"></span>
             <button class="data-subtab-btn lc-analytics-sub-btn active" data-lcsub="ccss" onclick="switchLCAnalyticsSubtab('ccss')">CCSS Overview</button>
+          </div>
         </div>
         <!-- Nav bar for Promotion dashboard -->
         <div class="data-subtab-nav" id="promotion-nav" style="display:none;">
+          <div class="subnav-inner">
             <button onclick="showAnalyticsLanding()" style="padding:0.55rem 0.9rem;border:none;background:none;cursor:pointer;font-size:0.82rem;font-family:inherit;color:#86868b;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;" onmouseover="this.style.color='#1d1d1f'" onmouseout="this.style.color='#86868b'">&larr; Back</button>
             <span style="padding:0.55rem 0.5rem;font-size:0.82rem;font-weight:600;color:#1d1d1f;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-2px;">Promotion</span>
+          </div>
         </div>
         <!-- Nav bar for Redbridge dashboard -->
         <div class="data-subtab-nav" id="redbridge-nav" style="display:none;">
+          <div class="subnav-inner">
             <button onclick="showAnalyticsLanding()" style="padding:0.55rem 0.9rem;border:none;background:none;cursor:pointer;font-size:0.82rem;font-family:inherit;color:#86868b;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;" onmouseover="this.style.color='#1d1d1f'" onmouseout="this.style.color='#86868b'">&larr; Back</button>
             <span style="padding:0.55rem 0.5rem;font-size:0.82rem;font-weight:600;color:#1d1d1f;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-2px;">Red Bridge</span>
+          </div>
         </div>
         <!-- Nav bar for Student Dashboard -->
         <div class="data-subtab-nav" id="student-dashboard-nav" style="display:none;">
+          <div class="subnav-inner">
             <button onclick="showAnalyticsLanding()" style="padding:0.55rem 0.9rem;border:none;background:none;cursor:pointer;font-size:0.82rem;font-family:inherit;color:#86868b;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;" onmouseover="this.style.color='#1d1d1f'" onmouseout="this.style.color='#86868b'">&larr; Back</button>
             <span style="padding:0.55rem 0.5rem;font-size:0.82rem;font-weight:600;color:#1d1d1f;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-2px;">Student Dashboard</span>
+          </div>
         </div>
 
         <!-- ── Redbridge Dashboard ── -->
@@ -1447,7 +1472,7 @@
             </div>
             <!-- Cross Reference (Reading) -->
             <div id="reading-panel-xref-read" style="display:none;">
-                <div style="display:flex;gap:0.6rem;align-items:center;padding:0.55rem 1.25rem;border-bottom:1px solid #e8e8ed;background:#f5f5f7;flex-wrap:wrap;">
+                <div style="display:flex;gap:0.6rem;align-items:center;padding:0.55rem max(1.25rem,calc((100vw - 1400px)/2 + 1.25rem));border-bottom:1px solid #e8e8ed;background:#f5f5f7;flex-wrap:wrap;">
                     <span style="font-size:0.82rem;font-weight:600;color:#1d1d1f;">Student:</span>
                     <select id="read-xref-sel" onchange="setReadXrefStudent(this.value)" class="redact-select" style="padding:0.3rem 0.6rem;border:1px solid #d2d2d7;border-radius:7px;font-size:0.82rem;background:#fff;cursor:pointer;max-width:200px;">
                         <option value="">— Select Student —</option>
@@ -1466,7 +1491,7 @@
             <!-- Benchmark -->
             <div id="math-panel-benchmark">
                 <!-- Benchmark view toggle bar -->
-                <div id="bench-view-bar" style="display:flex;gap:0.5rem;align-items:center;padding:0.6rem 1.25rem;border-bottom:1px solid #e8e8ed;background:#f5f5f7;">
+                <div id="bench-view-bar" style="display:flex;gap:0.5rem;align-items:center;padding:0.6rem max(1.25rem,calc((100vw - 1400px)/2 + 1.25rem));border-bottom:1px solid #e8e8ed;background:#f5f5f7;">
                     <div class="toggle-group">
                         <button class="toggle-btn bench-view-btn active" data-view="overview" onclick="setBenchView('overview')">Overview Growth</button>
                         <button class="toggle-btn bench-view-btn" data-view="drilldown" onclick="setBenchView('drilldown')">Drilldown</button>
@@ -1517,7 +1542,7 @@
             </div>
             <!-- Cross Reference (Computation) -->
             <div id="math-panel-xref-comp" style="display:none;">
-                <div style="display:flex;gap:0.6rem;align-items:center;padding:0.55rem 1.25rem;border-bottom:1px solid #e8e8ed;background:#f5f5f7;flex-wrap:wrap;">
+                <div style="display:flex;gap:0.6rem;align-items:center;padding:0.55rem max(1.25rem,calc((100vw - 1400px)/2 + 1.25rem));border-bottom:1px solid #e8e8ed;background:#f5f5f7;flex-wrap:wrap;">
                     <span style="font-size:0.82rem;font-weight:600;color:#1d1d1f;">Student:</span>
                     <select id="comp-xref-sel" onchange="setCompXrefStudent(this.value)" class="redact-select" style="padding:0.3rem 0.6rem;border:1px solid #d2d2d7;border-radius:7px;font-size:0.82rem;background:#fff;cursor:pointer;max-width:200px;">
                         <option value="">— Select Student —</option>
@@ -1537,7 +1562,7 @@
             <!-- CCSS panel -->
             <div id="lc-ccss-panel">
             <!-- filter bar -->
-            <div id="xref-filter-bar" style="display:flex;gap:0.6rem;align-items:center;padding:0.55rem 1.25rem;border-bottom:1px solid #e8e8ed;background:#f5f5f7;flex-wrap:wrap;row-gap:0.45rem;justify-content:flex-start;">
+            <div id="xref-filter-bar" style="display:flex;gap:0.6rem;align-items:center;padding:0.55rem max(1.25rem,calc((100vw - 1400px)/2 + 1.25rem));border-bottom:1px solid #e8e8ed;background:#f5f5f7;flex-wrap:wrap;row-gap:0.45rem;justify-content:flex-start;">
                 <span style="font-size:0.82rem;font-weight:700;color:#1d1d1f;">CCSS - LC Overview</span>
                 <select id="xref-student-sel" onchange="xrefSetStudent(this.value)" style="padding:0.3rem 0.6rem;border:1px solid #d2d2d7;border-radius:7px;font-size:0.82rem;background:#fff;cursor:pointer;max-width:180px;">
                     <option value="">— Select Student —</option>
@@ -1576,7 +1601,7 @@
 
             <!-- Writing Survey panel -->
             <div id="writing-panel-survey" style="display:none;">
-                <div id="survey-filter-bar" style="display:flex;gap:0.5rem;align-items:center;padding:0.55rem 1.25rem;border-bottom:1px solid #e8e8ed;background:#f5f5f7;flex-wrap:wrap;">
+                <div id="survey-filter-bar" style="display:flex;gap:0.5rem;align-items:center;padding:0.55rem max(1.25rem,calc((100vw - 1400px)/2 + 1.25rem));border-bottom:1px solid #e8e8ed;background:#f5f5f7;flex-wrap:wrap;">
                     <span style="font-size:0.72rem;font-weight:600;color:#6b7280;">AL</span>
                     <div id="survey-al-btns" class="toggle-group">
                         <button class="toggle-btn survey-al-btn active" data-al="all" onclick="setSurveyAL('all')">All</button>
@@ -1588,7 +1613,7 @@
             <!-- Writing Benchmark (new data panel) -->
             <div id="writing-panel-wb" style="display:none;">
                 <!-- view toggle bar -->
-                <div id="wb-view-bar" style="display:flex;gap:0.5rem;align-items:center;padding:0.6rem 1.25rem;border-bottom:1px solid #e8e8ed;background:#f5f5f7;">
+                <div id="wb-view-bar" style="display:flex;gap:0.5rem;align-items:center;padding:0.6rem max(1.25rem,calc((100vw - 1400px)/2 + 1.25rem));border-bottom:1px solid #e8e8ed;background:#f5f5f7;">
                     <div class="toggle-group">
                         <button class="toggle-btn wb-view-btn active" data-view="overview" onclick="setWbView('overview')">Overview Growth</button>
                         <button class="toggle-btn wb-view-btn" data-view="student-growth" onclick="setWbView('student-growth')">Student Growth</button>
