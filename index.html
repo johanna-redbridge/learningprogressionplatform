@@ -1589,13 +1589,6 @@
                 <div id="wd-root" style="display:none;">
                     <div id="wd-nav">
                         <div class="toggle-group">
-                            <button class="wd-nav-btn" data-level="all" onclick="WD.setLevel('all')">All</button>
-                            <button class="wd-nav-btn active" data-level="al1" onclick="WD.setLevel('al1')">AL1</button>
-                            <button class="wd-nav-btn" data-level="al2" onclick="WD.setLevel('al2')">AL2</button>
-                            <button class="wd-nav-btn" data-level="al34" onclick="WD.setLevel('al34')">AL3/4</button>
-                            <button class="wd-nav-btn" data-level="ms" onclick="WD.setLevel('ms')">MS</button>
-                        </div>
-                        <div class="toggle-group">
                             <button class="wd-nav-btn active" data-view="class" onclick="WD.switchView('class')">Overview</button>
                             <button class="wd-nav-btn" data-view="student" onclick="WD.switchView('student')">Student</button>
                             <button class="wd-nav-btn" data-view="groups" onclick="WD.switchView('groups')">All Levels</button>
@@ -16399,7 +16392,8 @@ function parseLevelCsv(text, levelKey) {
                    : seasonRaw.indexOf('spring') !== -1 ? 'spring'
                    : seasonRaw.indexOf('fall')   !== -1 ? 'fall' : null;
         if (name) {
-            current = { name:name, al:cfg.label, goal:cfg.goalCol !== null ? (parseFloat(row[cfg.goalCol]) || null) : null, fall:null, winter:null, spring:null };
+            var gleVal = (row[18] || '').trim();
+            current = { name:name, al:cfg.label, gle:gleVal, goal:cfg.goalCol !== null ? (parseFloat(row[cfg.goalCol]) || null) : null, fall:null, winter:null, spring:null };
             students.push(current);
         }
         if (!current || !season) continue;
@@ -16522,64 +16516,57 @@ function attachSortListeners(tableId, stateKey, renderFn) {
 
 // ── Render: Class Overview ──
 function renderClassOverview() {
-    var students = APP.students;
-    var hasFall=seasonHasOccurred(students,'fall'), hasWinter=seasonHasOccurred(students,'winter'), hasSpring=seasonHasOccurred(students,'spring');
-    var catData=CATS.map(function(label,ci){return{label:label,ci:ci,
-        fw:hasFall&&hasWinter?avgGrowth(students,'fall','winter',ci):null,
-        ws:hasWinter&&hasSpring?avgGrowth(students,'winter','spring',ci):null,
-        fs:hasFall&&hasSpring?avgGrowth(students,'fall','spring',ci):null};});
-    var overallFW=hasFall&&hasWinter?avgGrowth(students,'fall','winter',-1):null;
-    var overallWS=hasWinter&&hasSpring?avgGrowth(students,'winter','spring',-1):null;
-    var overallFS=hasFall&&hasSpring?avgGrowth(students,'fall','spring',-1):null;
-    var sortedCat=sortRows(catData,sortState.cat.col,sortState.cat.dir,function(r,c){return{label:r.label,fw:r.fw,ws:r.ws,fs:r.fs}[c];});
-    var rosterData=students.map(function(s){return Object.assign({},s,{
-        fallAvg:s.fall?s.fall.avg:null,
-        winterAvg:s.winter?s.winter.avg:null,
-        springAvg:s.spring?s.spring.avg:null,
-        fw:growthDiff(s.fall?s.fall.avg:null,s.winter?s.winter.avg:null),
-        ws:growthDiff(s.winter?s.winter.avg:null,s.spring?s.spring.avg:null),
-        fs:growthDiff(s.fall?s.fall.avg:null,s.spring?s.spring.avg:null)});});
-    var sortedRoster=sortRows(rosterData,sortState.roster.col,sortState.roster.dir,function(r,c){return{name:r.name,goal:r.goal,fallAvg:r.fallAvg,winterAvg:r.winterAvg,springAvg:r.springAvg,fw:r.fw,ws:r.ws,fs:r.fs}[c];});
-    var gcFW=growthColors(overallFW,'half'),gcWS=growthColors(overallWS,'half'),gcFS=growthColors(overallFS,'full');
-    var html='<div class="wd-kpi-grid">'
-        +'<div class="wd-kpi-card" style="background:'+gcFW.bg+'"><div class="wd-kpi-label" style="color:'+gcFW.text+'">BOY→MOY Growth</div><div class="wd-kpi-value" style="color:'+gcFW.text+'">'+(overallFW!=null?gcFW.symbol+' '+(overallFW>0?'+':'')+overallFW.toFixed(1):'—')+'</div><div class="wd-kpi-sub">avg of diffs</div></div>'
-        +'<div class="wd-kpi-card" style="background:'+gcWS.bg+'"><div class="wd-kpi-label" style="color:'+gcWS.text+'">MOY→EOY Growth</div><div class="wd-kpi-value" style="color:'+gcWS.text+'">'+(overallWS!=null?gcWS.symbol+' '+(overallWS>0?'+':'')+overallWS.toFixed(1):'No data yet')+'</div>'+(overallWS!=null?'<div class="wd-kpi-sub">avg of diffs</div>':'')+'</div>'
-        +'<div class="wd-kpi-card" style="background:'+gcFS.bg+'"><div class="wd-kpi-label" style="color:'+gcFS.text+'">BOY→EOY Growth</div><div class="wd-kpi-value" style="color:'+gcFS.text+'">'+(overallFS!=null?gcFS.symbol+' '+(overallFS>0?'+':'')+overallFS.toFixed(1):'No data yet')+'</div>'+(overallFS!=null?'<div class="wd-kpi-sub">avg of diffs</div>':'')+'</div>'
-        +'</div>'
-        +'<div class="wd-card"><div class="wd-section-title">Avg Growth by Category — click header to sort</div><div class="wd-tbl-wrap"><table id="wd-tbl-cat"><thead><tr>'
-        +makeSortTh('Category','label','cat')+makeSortTh('BOY→MOY','fw','cat',true)+makeSortTh('MOY→EOY','ws','cat',true)+makeSortTh('BOY→EOY','fs','cat',true)
-        +'</tr></thead><tbody>'
-        +'<tr style="background:#f8f6f2"><td><strong>Overall Avg</strong></td>'
-        +'<td class="center">'+diffBadge(0,overallFW,'half',true)+'</td>'
-        +'<td class="center">'+diffBadge(0,overallWS,'half',true)+'</td>'
-        +'<td class="center">'+diffBadge(0,overallFS,'full',true)+'</td></tr>'
-        +sortedCat.map(function(row,i){return'<tr style="background:'+(i%2?'#fafafa':'#fff')+'">'
-            +'<td>'+row.label+'</td>'
-            +'<td class="center">'+diffBadge(0,row.fw,'half',true)+'</td>'
-            +'<td class="center">'+diffBadge(0,row.ws,'half',true)+'</td>'
-            +'<td class="center">'+diffBadge(0,row.fs,'full',true)+'</td></tr>';}).join('')
-        +'</tbody></table></div></div>'
-        +'<div class="wd-card">'
-        +'<div class="wd-section-title" style="margin-bottom:10px">All Students Snapshot</div>'
-        +'<div class="wd-tbl-wrap"><table id="wd-tbl-roster"><thead><tr>'
-        +makeSortTh('Student','name','roster')
-        +(currentLevelCfg().hasGoal?makeSortTh('Goal','goal','roster',true):'')
-        +makeSortTh('BOY→MOY','fw','roster',true)
-        +makeSortTh('MOY→EOY','ws','roster',true)
-        +makeSortTh('BOY→EOY','fs','roster',true)
-        +'</tr></thead><tbody>'
-        +sortedRoster.map(function(s,i){
-            return'<tr style="background:'+(i%2?'#fafafa':'#fff')+'">'
-                +'<td data-redact="name"><strong>'+fullName(s.name).replace(/</g,'&lt;')+'</strong></td>'
-                +(currentLevelCfg().hasGoal?'<td class="center"><span class="wd-goal-tag">'+(s.goal||'—')+'</span></td>':'')
-                +'<td class="center">'+diffBadge(0,s.fw,'half',true)+'</td>'
-                +'<td class="center">'+(hasSpring?diffBadge(0,s.ws,'half',true):'<span style="color:#94a3b8;font-size:.75rem">No data yet</span>')+'</td>'
-                +'<td class="center">'+(hasSpring?diffBadge(0,s.fs,'full',true):'<span style="color:#94a3b8;font-size:.75rem">No data yet</span>')+'</td></tr>';
-        }).join('')
-        +'</tbody></table></div></div>';
-    document.getElementById('wd-view-class').innerHTML=html;
-    attachSortListeners('wd-tbl-cat','cat',renderClassOverview);
-    attachSortListeners('wd-tbl-roster','roster',renderClassOverview);
+    var lsStudents = (levelCache['al1']||[]).concat(levelCache['al2']||[]).concat(levelCache['al34']||[]);
+    var msStudents = levelCache['ms'] || [];
+
+    function latestSeason(s) { return s.spring || s.winter || s.fall || null; }
+
+    function scoreTd(v) {
+        if (v === null || v === undefined) return '<td class="center" style="padding:4px 5px;color:#c7c7cc;font-size:.7rem;">—</td>';
+        var col = scoreColor(v);
+        return '<td class="center" style="padding:4px 5px;background:'+col+';font-size:.72rem;font-weight:600;">'+fmtScore(v,1)+'</td>';
+    }
+
+    function buildSection(students, cats, title) {
+        if (!students.length) return '';
+        var alOrder = {'AL1':1,'AL2':2,'AL3/4':3,'MS':4};
+        var sorted = students.slice().sort(function(a,b){
+            var ao=alOrder[a.al]||9, bo=alOrder[b.al]||9;
+            return ao!==bo ? ao-bo : a.name.localeCompare(b.name);
+        });
+        var TH = 'padding:6px 7px;color:#fff;white-space:nowrap;font-size:.66rem;font-weight:700;';
+        var html = '<div class="wd-card" style="margin-bottom:1rem;">'
+            +'<div class="wd-section-title" style="margin-bottom:8px;">'+title+'</div>'
+            +'<div class="wd-tbl-wrap"><table style="width:100%;border-collapse:collapse;font-size:.78rem;">'
+            +'<thead><tr style="background:#5c5b5a;">'
+            +'<th style="'+TH+'text-align:left;">Student</th>'
+            +'<th style="'+TH+'text-align:center;">AL</th>'
+            +'<th style="'+TH+'text-align:center;">GLE</th>';
+        cats.forEach(function(cat){
+            html += '<th style="'+TH+'text-align:center;">'+cat+'</th>';
+        });
+        html += '<th style="'+TH+'text-align:center;border-left:2px solid rgba(255,255,255,0.25);">Avg</th>'
+            +'</tr></thead><tbody>';
+        sorted.forEach(function(s, i) {
+            var d = latestSeason(s);
+            html += '<tr style="background:'+(i%2?'#fafafa':'#fff')+'">'
+                +'<td data-redact="name" style="padding:5px 8px;font-weight:600;white-space:nowrap;">'+fullName(s.name).replace(/</g,'&lt;')+'</td>'
+                +'<td class="center" style="padding:5px 7px;color:#64748b;font-size:.72rem;">'+s.al+'</td>'
+                +'<td class="center" style="padding:5px 7px;color:#64748b;font-size:.72rem;">'+(s.gle||'—')+'</td>';
+            cats.forEach(function(cat, ci) {
+                var v = (d && d.scores && d.scores[ci] !== undefined) ? d.scores[ci] : null;
+                html += scoreTd(v);
+            });
+            html += '<td class="center" style="padding:5px 7px;font-weight:700;border-left:2px solid #e8e8ed;">'+(d&&d.avg!=null?fmtScore(d.avg,1):'—')+'</td>'
+                +'</tr>';
+        });
+        html += '</tbody></table></div></div>';
+        return html;
+    }
+
+    var html = buildSection(lsStudents, WD_CATS_LOWER, 'Lower School — Writing on Demand');
+    html += buildSection(msStudents, WD_CATS_MS, 'Middle School — Writing on Demand');
+    document.getElementById('wd-view-class').innerHTML = html;
 }
 
 // ── Render: Individual Student ──
@@ -16757,13 +16744,25 @@ function onReady() {
 
 // ── Public API ──
 function init() {
-    if (initialized && levelCache[currentLevel]) { renderCurrentView(); return; }
+    var allLoaded = ['al1','al2','al34','ms'].every(function(k){ return levelCache[k]; });
+    if (initialized && allLoaded) { renderCurrentView(); return; }
     initialized = true;
-    loadLevel(currentLevel, function(students) {
-        APP.students = students;
-        CATS = currentLevelCfg().cats;
-        selectedStudent = students.length ? students[0].name : '';
-        onReady();
+    var keys = ['al1','al2','al34','ms'], done = 0;
+    var loadEl = document.getElementById('wd-loading'), mainEl = document.getElementById('wd-main');
+    if (loadEl) loadEl.style.display = '';
+    if (mainEl) mainEl.style.display = 'none';
+    keys.forEach(function(key) {
+        loadLevel(key, function() {
+            done++;
+            if (done === keys.length) {
+                var ls = (levelCache['al1']||[]).concat(levelCache['al2']||[]).concat(levelCache['al34']||[]);
+                ls.sort(function(a,b){ return a.name.localeCompare(b.name); });
+                APP.students = ls;
+                CATS = WD_CATS_LOWER;
+                selectedStudent = ls.length ? ls[0].name : '';
+                onReady();
+            }
+        });
     });
 }
 function currentLevelCfg() {
