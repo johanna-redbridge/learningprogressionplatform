@@ -16347,6 +16347,7 @@ var studentGrowthCol = 'fw';
 var selectedStudent = '';
 var catDiveIdx = 0;
 var catDiveALFilter = 'all';
+var _extCb = null;
 var sortState = {
     cat:     { col:'label', dir:'asc' },
     roster:  { col:'name',  dir:'asc' },
@@ -16839,6 +16840,7 @@ function onReady() {
     if (loadEl) loadEl.style.display = 'none';
     if (mainEl) mainEl.style.display = 'block';
     renderCurrentView();
+    if (_extCb) { var cb = _extCb; _extCb = null; cb(); }
 }
 
 // ── Public API ──
@@ -16909,7 +16911,14 @@ function setStudentGrowth(col) { studentGrowthCol=col; renderStudentView(); }
 function setCatDive(i) { catDiveIdx=i; catDiveALFilter='all'; renderCategoryView(); }
 
 function refresh() { levelCache = {}; tierCache = null; initialized = false; init(); }
-return { init:init, refresh:refresh, switchView:switchView, setLevel:setLevel, setRosterGrowth:setRosterGrowth, setStudentGrowth:setStudentGrowth, setCatDive:setCatDive, alDD:_wdALDD };
+function getData() { return { levelCache: levelCache, tierCache: tierCache }; }
+function ensureLoaded(cb) {
+    var allLoaded = ['al1','al2','al34','ms'].every(function(k){ return levelCache[k]; }) && !!tierCache;
+    if (allLoaded) { cb(); return; }
+    _extCb = cb;
+    if (!initialized) init();
+}
+return { init:init, refresh:refresh, switchView:switchView, setLevel:setLevel, setRosterGrowth:setRosterGrowth, setStudentGrowth:setStudentGrowth, setCatDive:setCatDive, alDD:_wdALDD, getData:getData, ensureLoaded:ensureLoaded };
 })();
 
 /* ═══════════════════════════════════════════════════════════════
@@ -17544,10 +17553,122 @@ function renderWbDrilldown() {
 }
 
 function renderWbAnalytics() {
+    _wbShowContent();
     var el = document.getElementById('wb-content');
-    var wd = document.getElementById('wd-root');
-    if (el) el.style.display = 'none';
-    if (wd) { wd.style.display = ''; WD.refresh(); }
+    if (!el) return;
+    el.innerHTML = '<p style="padding:2rem;text-align:center;color:#aeaeb2;font-size:0.9rem;">Loading Writing on Demand data…</p>';
+    WD.ensureLoaded(function() {
+        var d = WD.getData();
+        var lc = d.levelCache;
+        var tiers = d.tierCache || {};
+        var lsStu = (lc['al1']||[]).concat(lc['al2']||[]).concat(lc['al34']||[]);
+        lsStu.sort(function(a,b){ return a.name.localeCompare(b.name); });
+        var msStu = lc['ms'] || [];
+        var WD_MAX = 6, BH = 26, BW = 9;
+
+        function bColor(sc) {
+            if (sc >= 5) return '#5a9e5a'; if (sc >= 4) return '#a8df9e';
+            if (sc >= 3) return '#F8D66D'; if (sc >= 2) return '#ffb54c';
+            return '#ff6961';
+        }
+        function barCell(s, ci) {
+            var pds = [{key:'fall',eoy:false},{key:'winter',eoy:false},{key:'spring',eoy:true}];
+            var cols = [], any = false;
+            pds.forEach(function(pd) {
+                var sc = s[pd.key] ? s[pd.key].scores[ci] : null;
+                if (sc === null || sc === undefined) {
+                    cols.push({bg:'#e2e2e7',pct:0,lbl:'',eoy:pd.eoy});
+                } else {
+                    cols.push({bg:pd.eoy?'#c4c4cc':bColor(sc), pct:Math.max((sc/WD_MAX)*100,5), lbl:sc.toFixed(1), eoy:pd.eoy});
+                    any = true;
+                }
+            });
+            if (!any) return '<span style="color:#c7c7cc;font-size:0.7rem;">&ndash;</span>';
+            var o = '<div style="display:flex;align-items:flex-start;gap:2px;justify-content:center;padding:2px 1px;">';
+            cols.forEach(function(c) {
+                o += '<div style="display:flex;flex-direction:column;align-items:center;gap:1px;">'
+                    +'<div style="width:'+BW+'px;height:'+BH+'px;background:#efefef;border-radius:2px;overflow:hidden;position:relative;">'
+                    +(c.pct>0?'<div style="position:absolute;bottom:0;width:100%;height:'+c.pct+'%;background:'+c.bg+';border-radius:2px 2px 0 0;"></div>':'')
+                    +'</div>'
+                    +(c.lbl?'<span style="font-size:0.42rem;color:'+(c.eoy?'#a0a0a8':'#3a3a3c')+';line-height:1.1;text-align:center;">'+c.lbl+'</span>':'')
+                    +'</div>';
+            });
+            return o+'</div>';
+        }
+        function tierBadge(v) {
+            if (!v) return '<span style="color:#c7c7cc;font-size:0.65rem;">—</span>';
+            var t = v.trim().toLowerCase();
+            var sty = (t==='tier 1'||t==='1') ? 'background:#dcfce7;color:#15803d;'
+                    : (t==='tier 2'||t==='2') ? 'background:#fef9c3;color:#854d0e;'
+                    : (t==='tier 3'||t==='3') ? 'background:#fee2e2;color:#b91c1c;'
+                    : 'background:#f3f4f6;color:#374151;';
+            return '<span style="display:inline-block;padding:1px 5px;border-radius:4px;font-size:0.63rem;font-weight:600;'+sty+'">'+v+'</span>';
+        }
+        function buildSection(stu, cats, title) {
+            if (!stu.length) return '';
+            var TH = 'background:#3a3a3c;color:#fff;font-size:0.6rem;font-weight:600;padding:0.35rem 0.2rem;text-align:center;border:1px solid #555;vertical-align:bottom;line-height:1.2;white-space:normal;';
+            var h = '<div style="font-size:0.85rem;font-weight:700;color:#1d1d1f;padding:1.25rem 1.25rem 0.4rem;">'+title+'</div>';
+            h += '<div style="overflow-x:auto;margin:0 1.25rem 1.5rem;border-radius:12px;border:1px solid #e2e2e7;">';
+            h += '<table style="width:100%;border-collapse:collapse;">';
+            h += '<thead><tr>';
+            h += '<th style="'+TH+'text-align:left;min-width:110px;">Student</th>';
+            h += '<th style="'+TH+'width:34px;">AL</th>';
+            h += '<th style="'+TH+'width:34px;">GLE</th>';
+            cats.forEach(function(cat) {
+                h += '<th style="'+TH+'min-width:54px;">'+cat
+                    +'<div style="display:flex;gap:2px;justify-content:center;margin-top:3px;">'
+                    +'<span style="width:9px;text-align:center;font-size:0.45rem;color:rgba(255,255,255,0.65);font-weight:600;">B</span>'
+                    +'<span style="width:9px;text-align:center;font-size:0.45rem;color:rgba(255,255,255,0.65);font-weight:600;">M</span>'
+                    +'<span style="width:9px;text-align:center;font-size:0.45rem;color:rgba(255,255,255,0.4);font-weight:600;">E</span>'
+                    +'</div></th>';
+            });
+            h += '<th style="'+TH+'">+1.0<br>goal</th>';
+            h += '<th style="'+TH+'">GLE<br>goal</th>';
+            h += '<th style="'+TH+'">BOY<br>Tier</th>';
+            h += '<th style="'+TH+'">MOY<br>Tier</th>';
+            h += '<th style="'+TH+'">EOY<br>Tier</th>';
+            h += '</tr></thead><tbody>';
+            stu.forEach(function(s, i) {
+                var tr = tiers[(s.name||'').toLowerCase()] || {};
+                var bg = i%2===0?'#fff':'#f9fafb';
+                var TD = 'border:1px solid #e8e8ed;padding:1px 1px;vertical-align:middle;text-align:center;background:'+bg+';';
+                h += '<tr>';
+                h += '<td style="'+TD+'text-align:left;padding:3px 8px;font-weight:500;">'+fullName(s.name)+'</td>';
+                h += '<td style="'+TD+'font-size:0.68rem;color:#64748b;">'+s.al+'</td>';
+                h += '<td style="'+TD+'font-size:0.68rem;">'+s.gle+'</td>';
+                cats.forEach(function(_, ci) { h += '<td style="'+TD+'">'+barCell(s,ci)+'</td>'; });
+                var boyAvg = s.fall ? s.fall.avg : null;
+                h += '<td style="'+TD+'font-size:0.7rem;font-weight:600;">'+(boyAvg!==null?(boyAvg+1).toFixed(1):'—')+'</td>';
+                h += '<td style="'+TD+'font-size:0.7rem;">'+(s.goal||'—')+'</td>';
+                h += '<td style="'+TD+'">'+tierBadge(tr.boy)+'</td>';
+                h += '<td style="'+TD+'">'+tierBadge(tr.moy)+'</td>';
+                h += '<td style="'+TD+'"><span style="color:#c7c7cc;font-size:0.63rem;">—</span></td>';
+                h += '</tr>';
+            });
+            // Growth rows
+            var GR = 'background:#f0f4f8;border:1px solid #d0d7de;padding:4px 6px;font-weight:700;font-size:0.7rem;';
+            function growRow(lbl, fk, tk) {
+                h += '<tr>';
+                h += '<td colspan="3" style="'+GR+'text-align:left;line-height:1.35;">'+lbl+'</td>';
+                cats.forEach(function(_, ci) {
+                    var diffs = stu.filter(function(s2){ return s2[fk]&&s2[tk]&&s2[fk].scores[ci]!=null&&s2[tk].scores[ci]!=null; })
+                                   .map(function(s2){ return s2[tk].scores[ci]-s2[fk].scores[ci]; });
+                    var avg = diffs.length ? diffs.reduce(function(a,b){return a+b;},0)/diffs.length : null;
+                    var txt = avg!==null?(avg>=0?'+':'')+avg.toFixed(2):'—';
+                    var col = avg===null?'#aeaeb2':avg>0?'#15803d':avg<0?'#b91c1c':'#374151';
+                    h += '<td style="background:#f0f4f8;border:1px solid #d0d7de;padding:3px 1px;text-align:center;font-weight:700;font-size:0.66rem;color:'+col+';">'+txt+'</td>';
+                });
+                h += '<td colspan="6" style="background:#f0f4f8;border:1px solid #d0d7de;"></td></tr>';
+            }
+            growRow('BOY → MOY<br>growth','fall','winter');
+            growRow('MOY → EOY<br>growth','winter','spring');
+            h += '</tbody></table></div>';
+            return h;
+        }
+        var html = buildSection(lsStu, WD_CATS_LOWER, 'Lower School — Writing on Demand');
+        html += buildSection(msStu, WD_CATS_MS, 'Middle School — Writing on Demand');
+        el.innerHTML = html || '<p style="padding:2rem;text-align:center;color:#aeaeb2;">No data available.</p>';
+    });
 }
 
 function updateStickyOffsets() {
