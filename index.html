@@ -9329,8 +9329,10 @@ function _renderPromoView() {
 
 function _promoStats(label) {
     var d = promoAllData[label]||[];
+    var mkAL = function(){ return {1:0,2:0,3:0,4:0}; };
     var s = { n:d.length, midAtt:0, midSuc:0, eoyAtt:0, eoySuc:0,
-              alBoy:{1:0,2:0,3:0,4:0}, alMOY:{1:0,2:0,3:0,4:0}, alEOY:{1:0,2:0,3:0,4:0} };
+              alBoy:mkAL(), alMOY:mkAL(), alEOY:mkAL(),
+              midAttByAL:mkAL(), midSucByAL:mkAL(), eoyAttByAL:mkAL(), eoySucByAL:mkAL() };
     d.forEach(function(r){
         if (r.midAttempted===true){ s.midAtt++; if(r.midSuccess===true) s.midSuc++; }
         if (r.eoyAttempted===true){ s.eoyAtt++; if(r.eoySuccess===true) s.eoySuc++; }
@@ -9339,6 +9341,11 @@ function _promoStats(label) {
         if (mAL>=1&&mAL<=4) s.alMOY[mAL]++;
         var eAL=r.eoySuccess===true?Math.min(mAL+1,4):mAL;
         if (eAL>=1&&eAL<=4) s.alEOY[eAL]++;
+        var al = r.boyAL;
+        if (al>=1&&al<=4) {
+            if (r.midAttempted===true){ s.midAttByAL[al]++; if(r.midSuccess===true) s.midSucByAL[al]++; }
+            if (r.eoyAttempted===true){ s.eoyAttByAL[al]++; if(r.eoySuccess===true) s.eoySucByAL[al]++; }
+        }
     });
     return s;
 }
@@ -9376,32 +9383,6 @@ function _renderPromoOverview() {
         +'<div style="background:#5c5b5a;color:#fff;padding:0.55rem 1rem;font-size:.8rem;font-weight:700;">Promotion Success Rate Over Time</div>'
         +'<canvas id="promo-rate-c" style="width:100%;height:180px;display:block;"></canvas></div>';
 
-    html += '<div style="background:#fff;border-radius:14px;border:1px solid #e8e8ed;overflow:hidden;">'
-        +'<div style="background:#5c5b5a;color:#fff;padding:0.55rem 1rem;font-size:.8rem;font-weight:700;">Year-by-Year Summary</div>'
-        +'<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:.78rem;">'
-        +'<thead><tr style="background:#5c5b5a;">'
-        +['Year','Students','MOY Attempt','MOY Success','MOY Rate','EOY Attempt','EOY Success','EOY Rate','Promoted','Success Rate'].map(function(h){
-            return '<th style="padding:7px 10px;text-align:'+(h==='Year'?'left':'center')+';font-weight:700;color:#ffffff;">'+h+'</th>';
-        }).join('')+'</tr></thead><tbody>';
-    ys.forEach(function(y,i){
-        var s=y.s;
-        var mr=s.midAtt?Math.round(s.midSuc/s.midAtt*100)+'%':'—';
-        var er=s.eoyAtt?Math.round(s.eoySuc/s.eoyAtt*100)+'%':'—';
-        var promoted=s.midSuc+s.eoySuc;
-        var sr=s.n?Math.round(promoted/s.n*100)+'%':'—';
-        html+='<tr style="border-top:1px solid #e8e8ed;'+(i%2?'background:#fafafa;':'')+'">'
-            +'<td style="padding:6px 10px;font-weight:600;">'+y.label+'</td>'
-            +'<td style="padding:6px 10px;text-align:center;">'+s.n+'</td>'
-            +'<td style="padding:6px 10px;text-align:center;">'+s.midAtt+'</td>'
-            +'<td style="padding:6px 10px;text-align:center;">'+s.midSuc+'</td>'
-            +'<td style="padding:6px 10px;text-align:center;font-weight:700;">'+mr+'</td>'
-            +'<td style="padding:6px 10px;text-align:center;">'+s.eoyAtt+'</td>'
-            +'<td style="padding:6px 10px;text-align:center;">'+s.eoySuc+'</td>'
-            +'<td style="padding:6px 10px;text-align:center;font-weight:700;">'+er+'</td>'
-            +'<td style="padding:6px 10px;text-align:center;font-weight:700;">'+promoted+'</td>'
-            +'<td style="padding:6px 10px;text-align:center;font-weight:700;">'+sr+'</td></tr>';
-    });
-    html += '</tbody></table></div></div>';
 
     // ── Box 1: Attempt-to-success ratio by AL split by MOY and EOY ──
     var alStatsMOY = {1:{att:0,suc:0,n:0},2:{att:0,suc:0,n:0},3:{att:0,suc:0,n:0},4:{att:0,suc:0,n:0}};
@@ -9603,30 +9584,37 @@ function _drawPromoAttChart(canvas, ys) {
     var dpr=window.devicePixelRatio||1, W=canvas.width, H=canvas.height;
     canvas.width=W*dpr; canvas.height=H*dpr; canvas.style.width=W+'px'; canvas.style.height=H+'px';
     var ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
-    var pL=40,pR=16,pT=34,pB=46, plotW=W-pL-pR, plotH=H-pT-pB;
+    var pL=40,pR=16,pT=34,pB=52, plotW=W-pL-pR, plotH=H-pT-pB;
     ctx.fillStyle='#fafafa'; ctx.fillRect(0,0,W,H);
     var maxV=0; ys.forEach(function(y){maxV=Math.max(maxV,y.s.midAtt,y.s.midSuc,y.s.eoyAtt,y.s.eoySuc);});
     maxV=Math.max(maxV,4)*1.25;
     function yOf(v){return pT+plotH*(1-v/maxV);}
     for(var g=0;g<=4;g++){var gv=maxV*g/4,gy=yOf(gv);ctx.strokeStyle='#ebebf0';ctx.lineWidth=1;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(pL,gy);ctx.lineTo(pL+plotW,gy);ctx.stroke();ctx.fillStyle='#8e8e93';ctx.font='9px -apple-system,sans-serif';ctx.textAlign='right';ctx.fillText(Math.round(gv),pL-4,gy+3);}
-    var colors=['#93c5fd','#1d4ed8','#fdba74','#ea580c'];
-    var lbls=['MOY Attempt','MOY Success','EOY Attempt','EOY Success'];
+    var barKeys=['midAttByAL','midSucByAL','eoyAttByAL','eoySucByAL'];
+    var barTotals=['midAtt','midSuc','eoyAtt','eoySuc'];
+    var subLbls=['MOY Att','MOY Suc','EOY Att','EOY Suc'];
     var n=ys.length, gW=plotW/n, bw=gW*0.17, gap=gW*0.025;
     ys.forEach(function(y,i){
         var cx=pL+(i+0.5)*gW;
-        var vals=[y.s.midAtt,y.s.midSuc,y.s.eoyAtt,y.s.eoySuc];
         var totW=4*bw+3*gap;
-        vals.forEach(function(v,bi){
+        barKeys.forEach(function(bk,bi){
             var bx=cx-totW/2+bi*(bw+gap);
-            var by=yOf(v),bh=pT+plotH-by; if(bh<1)bh=1;
-            ctx.fillStyle=colors[bi];
-            if(ctx.roundRect){ctx.beginPath();ctx.roundRect(bx,by,bw,bh,[2,2,0,0]);ctx.fill();}else{ctx.fillRect(bx,by,bw,bh);}
-            if(v>0){ctx.fillStyle='#1d1d1f';ctx.font='bold 9px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillText(v,bx+bw/2,by-3);}
+            var cumY=pT+plotH;
+            var total=y.s[barTotals[bi]];
+            [1,2,3,4].forEach(function(al){
+                var cnt=(y.s[bk]&&y.s[bk][al])||0; if(!cnt)return;
+                var bh=plotH*cnt/maxV; cumY-=bh;
+                ctx.fillStyle=PROMO_AL_LIGHT[al];
+                ctx.fillRect(bx,cumY,bw,bh);
+                ctx.strokeStyle='rgba(255,255,255,0.5)';ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(bx,cumY+bh);ctx.lineTo(bx+bw,cumY+bh);ctx.stroke();
+            });
+            if(total>0){ctx.fillStyle='#1d1d1f';ctx.font='bold 9px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillText(total,bx+bw/2,yOf(total)-3);}
+            ctx.fillStyle='#86868b';ctx.font='7px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillText(subLbls[bi],bx+bw/2,pT+plotH+13);
         });
-        ctx.fillStyle='#64748b';ctx.font='10px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillText(y.label,cx,pT+plotH+16);
+        ctx.fillStyle='#64748b';ctx.font='10px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillText(y.label,cx,pT+plotH+28);
     });
     var lx=pL;
-    colors.forEach(function(c,i){ctx.fillStyle=c;ctx.fillRect(lx,pT-20,9,9);ctx.fillStyle='#3a3a3c';ctx.font='9px -apple-system,sans-serif';ctx.textAlign='left';ctx.fillText(lbls[i],lx+12,pT-13);lx+=ctx.measureText(lbls[i]).width+22;});
+    [1,2,3,4].forEach(function(al){ctx.fillStyle=PROMO_AL_LIGHT[al];ctx.fillRect(lx,pT-20,9,9);ctx.fillStyle='#3a3a3c';ctx.font='9px -apple-system,sans-serif';ctx.textAlign='left';ctx.fillText('AL'+al,lx+12,pT-13);lx+=36;});
     ctx.strokeStyle='#d1d1d6';ctx.lineWidth=1;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(pL,pT);ctx.lineTo(pL,pT+plotH);ctx.lineTo(pL+plotW,pT+plotH);ctx.stroke();
 }
 
