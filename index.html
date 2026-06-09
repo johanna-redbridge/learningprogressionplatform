@@ -1961,7 +1961,12 @@ function editEarnedDate(studentId, creditId) {
 function editAttemptedDate(studentId, creditId) {
     var entry = attempted.find(function(a) { return a.studentId === studentId && a.creditId === creditId; });
     if (!entry) return;
-    openDateModal(entry.date, function(date) { entry.date = date; renderEarnedCredits(); });
+    openDateModal(entry.date, function(date) {
+        entry.date = date;
+        var el = document.querySelector('[data-att-date="' + studentId + '_' + creditId + '"]');
+        if (el) { el.textContent = date ? formatDate(date) : ''; }
+        else { renderEarnedCredits(); }
+    });
 }
 
 // ───────── BADGE FILE MAPPING ─────────
@@ -5766,7 +5771,7 @@ function renderEarnedStudent(period, container) {
             if (att) {
                 var afd = formatDate(att.date);
                 html += '<span class="earned-icon attempted-icon" style="cursor:pointer;" onclick="toggleAttempted(\'' + studentId + '\',\'' + c.id + '\')">a</span>';
-                if (afd) html += '<div style="font-size:0.65rem;color:#555;margin-top:1px;cursor:pointer;" onclick="editAttemptedDate(\'' + studentId + '\',\'' + c.id + '\')">' + afd + '</div>';
+                if (afd) html += '<div data-att-date="' + studentId + '_' + c.id + '" style="font-size:0.65rem;color:#555;margin-top:1px;cursor:pointer;" onclick="editAttemptedDate(\'' + studentId + '\',\'' + c.id + '\')">' + afd + '</div>';
             } else {
                 html += '<span class="earned-icon earned-no" style="cursor:pointer;" onclick="startAttempt(\'' + studentId + '\',\'' + c.id + '\')"></span>';
             }
