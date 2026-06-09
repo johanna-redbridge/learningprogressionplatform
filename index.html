@@ -17637,6 +17637,7 @@ function renderWbDrilldown() {
 var _wbACache = null; // { lsStu, tiers }
 var _wbASortCol = 'student';
 var _wbASortDir = 1;
+var _wbCatAlFilter = 'all';
 function wbASort(col) {
     if (_wbASortCol === col) { _wbASortDir *= -1; } else { _wbASortCol = col; _wbASortDir = 1; }
     _buildWbTable();
@@ -17781,7 +17782,8 @@ function _buildWbTable() {
     el.innerHTML = h || '<p style="padding:2rem;text-align:center;color:#aeaeb2;">No data available.</p>';
 }
 
-function renderWbCategoryDetail(ci) {
+function renderWbCategoryDetail(ci, alFilter) {
+    if (alFilter !== undefined) _wbCatAlFilter = alFilter;
     var el = document.getElementById('wb-content');
     if (!el || !_wbACache) return;
     var _CATS = ['Intros','Transitions','Ending','Sequencing/Org','Elaboration','Voice/Craft','Spelling','Grammar','Overall'];
@@ -17806,9 +17808,24 @@ function renderWbCategoryDetail(ci) {
     }
     var TH = 'background:#3a3a3c;color:#fff;font-size:0.6rem;font-weight:600;padding:0.35rem 0.5rem;text-align:center;border:1px solid #555;vertical-align:bottom;';
     var _optHtml = _CATS.map(function(c,i){ return '<option value="'+i+'"'+(i===ci?' selected':'')+'>'+c+'</option>'; }).join('');
-    var h = '<div style="display:flex;align-items:center;gap:0.6rem;padding:1.25rem 1.25rem 0.75rem;">'
+    // AL toggle bar
+    var alLabels = [];
+    _wbACache.lsStu.forEach(function(s){ if (alLabels.indexOf(s.al)<0) alLabels.push(s.al); });
+    alLabels.sort();
+    function _alBtn(label, val) {
+        var active = _wbCatAlFilter === val;
+        var bg = active ? '#3a3a3c' : '#f0f0f5';
+        var color = active ? '#fff' : '#3a3a3c';
+        return '<button onclick="_wbCatAlFilter=\''+val+'\';renderWbCategoryDetail('+ci+')" style="border:none;border-radius:6px;padding:4px 11px;font-size:0.78rem;font-weight:500;cursor:pointer;background:'+bg+';color:'+color+';">'+label+'</button>';
+    }
+    var _toggleBar = '<div style="display:flex;gap:4px;align-items:center;">'
+        + _alBtn('All','all')
+        + alLabels.map(function(al){ return _alBtn(al, al); }).join('')
+        + '</div>';
+    var h = '<div style="display:flex;align-items:center;gap:0.75rem;padding:1.25rem 1.25rem 0.75rem;flex-wrap:wrap;">'
         +'<span style="font-size:0.85rem;font-weight:600;color:#1d1d1f;">Category:</span>'
         +'<select onchange="renderWbCategoryDetail(parseInt(this.value))" style="border:1px solid #d0d0d8;border-radius:8px;padding:5px 12px;font-size:0.85rem;cursor:pointer;background:#fff;font-weight:500;">'+_optHtml+'</select>'
+        + _toggleBar
         +'</div>';
     // Single table for all ALs so columns share the same widths
     h += '<div style="overflow-x:auto;margin:0 1.25rem 1.5rem;border-radius:12px;border:1px solid #e2e2e7;">';
@@ -17828,6 +17845,7 @@ function renderWbCategoryDetail(ci) {
     h += '</tr></thead><tbody>';
     var GA = 'background:#dde1e8;border:1px solid #c8cdd6;padding:5px 6px;font-weight:700;font-size:0.68rem;text-align:center;vertical-align:middle;';
     ['AL1','AL2','AL3/4'].forEach(function(alLabel) {
+        if (_wbCatAlFilter !== 'all' && alLabel !== _wbCatAlFilter) return;
         var stu = _wbACache.lsStu.filter(function(s){ return s.al===alLabel; });
         if (!stu.length) return;
         stu.sort(function(a,b){ return a.name.localeCompare(b.name); });
