@@ -17634,10 +17634,158 @@ function renderWbDrilldown() {
     el.innerHTML = '<p style="padding:2.5rem;color:#aeaeb2;text-align:center;font-size:0.9rem;">Drilldown view coming soon.</p>';
 }
 
+var _wbACache = null; // { lsStu, tiers }
+var _wbASortCol = 'student';
+var _wbASortDir = 1;
+function wbASort(col) {
+    if (_wbASortCol === col) { _wbASortDir *= -1; } else { _wbASortCol = col; _wbASortDir = 1; }
+    _buildWbTable();
+}
+function _buildWbTable() {
+    var el = document.getElementById('wb-content');
+    if (!el || !_wbACache) return;
+    var tiers = _wbACache.tiers;
+    var _CATS = ['Intros','Transitions','Ending','Sequencing/Org','Elaboration','Voice/Craft','Spelling','Grammar','Overall'];
+    var WD_MAX = 6, BH = 26, BW = 9;
+    function bColor(sc) {
+        if (sc>=5) return '#5a9e5a'; if (sc>=4) return '#a8df9e';
+        if (sc>=3) return '#F8D66D'; if (sc>=2) return '#ffb54c'; return '#ff6961';
+    }
+    function barCell(s, ci) {
+        var pds = [{key:'fall',eoy:false},{key:'winter',eoy:false},{key:'spring',eoy:true}];
+        var cols = [], any = false;
+        pds.forEach(function(pd) {
+            var sc = s[pd.key] ? s[pd.key].scores[ci] : null;
+            if (sc===null||sc===undefined) { cols.push({bg:'#e2e2e7',pct:0,lbl:'',eoy:pd.eoy}); }
+            else { cols.push({bg:pd.eoy?'#c4c4cc':bColor(sc),pct:Math.max((sc/WD_MAX)*100,5),lbl:sc.toFixed(1),eoy:pd.eoy}); any=true; }
+        });
+        if (!any) return '<span style="color:#c7c7cc;font-size:0.7rem;">&ndash;</span>';
+        var o = '<div style="display:flex;align-items:flex-start;gap:2px;justify-content:center;padding:2px 1px;">';
+        cols.forEach(function(c) {
+            o += '<div style="display:flex;flex-direction:column;align-items:center;gap:1px;">'
+                +'<div style="width:'+BW+'px;height:'+BH+'px;background:#efefef;border-radius:2px;overflow:hidden;position:relative;">'
+                +(c.pct>0?'<div style="position:absolute;bottom:0;width:100%;height:'+c.pct+'%;background:'+c.bg+';border-radius:2px 2px 0 0;"></div>':'')
+                +'</div>'+(c.lbl?'<span style="font-size:0.42rem;color:'+(c.eoy?'#a0a0a8':'#3a3a3c')+';line-height:1.1;text-align:center;">'+c.lbl+'</span>':'')+'</div>';
+        });
+        return o+'</div>';
+    }
+    function tierBadge(v) {
+        if (!v) return '<span style="color:#c7c7cc;font-size:0.65rem;">—</span>';
+        var t = v.trim().toLowerCase();
+        var sty = (t==='tier 1'||t==='1')?'background:#dcfce7;color:#15803d;':(t==='tier 2'||t==='2')?'background:#fef9c3;color:#854d0e;':(t==='tier 3'||t==='3')?'background:#fee2e2;color:#b91c1c;':'background:#f3f4f6;color:#374151;';
+        return '<span style="display:inline-block;padding:1px 5px;border-radius:4px;font-size:0.63rem;font-weight:600;'+sty+'">'+v+'</span>';
+    }
+    function tierNum(v) {
+        if (!v) return 99;
+        var t = v.trim().toLowerCase();
+        return (t==='tier 1'||t==='1')?1:(t==='tier 2'||t==='2')?2:(t==='tier 3'||t==='3')?3:99;
+    }
+    function catScore(s, ci) {
+        if (s.spring&&s.spring.scores[ci]!=null) return s.spring.scores[ci];
+        if (s.winter&&s.winter.scores[ci]!=null) return s.winter.scores[ci];
+        if (s.fall&&s.fall.scores[ci]!=null) return s.fall.scores[ci];
+        return null;
+    }
+    // Sort
+    var sorted = _wbACache.lsStu.slice().sort(function(a, b) {
+        var v = 0, col = _wbASortCol;
+        if (col === 'student') { v = a.name.localeCompare(b.name); }
+        else if (col === 'al') { v = (a.al||'').localeCompare(b.al||''); }
+        else if (col === 'gle') { v = (parseFloat(a.gle)||0) - (parseFloat(b.gle)||0); }
+        else if (col === 'goal_plus') {
+            var aa = a.fall?a.fall.avg+1:null, bb = b.fall?b.fall.avg+1:null;
+            v = (aa==null?-999:aa)-(bb==null?-999:bb);
+        } else if (col === 'goal_gle') { v = (a.goal||0)-(b.goal||0); }
+        else if (col === 'avg_boy') { var _ab=a.fall?a.fall.avg:null,_bb=b.fall?b.fall.avg:null; v=(_ab==null?-999:_ab)-(_bb==null?-999:_bb); }
+        else if (col === 'avg_moy') { var _am=a.winter?a.winter.avg:null,_bm=b.winter?b.winter.avg:null; v=(_am==null?-999:_am)-(_bm==null?-999:_bm); }
+        else if (col === 'avg_eoy') { var _ae=a.spring?a.spring.avg:null,_be=b.spring?b.spring.avg:null; v=(_ae==null?-999:_ae)-(_be==null?-999:_be); }
+        else if (col === 'tier_boy') { v = tierNum((tiers[(a.name||'').toLowerCase()]||{}).boy)-tierNum((tiers[(b.name||'').toLowerCase()]||{}).boy); }
+        else if (col === 'tier_moy') { v = tierNum((tiers[(a.name||'').toLowerCase()]||{}).moy)-tierNum((tiers[(b.name||'').toLowerCase()]||{}).moy); }
+        else if (col.indexOf('cat')=== 0) {
+            var ci = parseInt(col.slice(3));
+            var sa = catScore(a,ci), sb = catScore(b,ci);
+            v = (sa==null?-999:sa)-(sb==null?-999:sb);
+        }
+        return v * _wbASortDir || a.name.localeCompare(b.name);
+    });
+    function th(col, label, extra) {
+        var active = _wbASortCol === col;
+        var arr = active ? '<span style="font-size:0.55em;margin-left:2px;opacity:0.8;">'+(_wbASortDir>0?'▲':'▼')+'</span>' : '';
+        return '<th style="background:#3a3a3c;color:#fff;font-size:0.6rem;font-weight:600;padding:0.35rem 0.2rem;text-align:center;border:1px solid #555;vertical-align:bottom;line-height:1.2;white-space:normal;cursor:pointer;user-select:none;'+(extra||'')+'" onclick="wbASort(\''+col+'\')">'+label+arr+'</th>';
+    }
+    var TH = 'background:#3a3a3c;color:#fff;font-size:0.6rem;font-weight:600;padding:0.35rem 0.2rem;text-align:center;border:1px solid #555;vertical-align:bottom;line-height:1.2;white-space:normal;cursor:pointer;user-select:none;';
+    var h = '<div style="font-size:0.85rem;font-weight:700;color:#1d1d1f;padding:1.25rem 1.25rem 0.4rem;">Writing on Demand</div>';
+    h += '<div style="overflow-x:auto;margin:0 1.25rem 1.5rem;border-radius:12px;border:1px solid #e2e2e7;">';
+    h += '<table style="width:100%;border-collapse:collapse;"><thead><tr>';
+    h += th('student','Student','text-align:left;min-width:110px;');
+    h += th('al','AL','width:34px;');
+    h += th('gle','GLE','width:34px;');
+    _CATS.forEach(function(cat, ci) {
+        h += '<th style="'+TH+'min-width:54px;" onclick="wbASort(\'cat'+ci+'\')">'+cat
+            +((_wbASortCol==='cat'+ci)?'<span style="font-size:0.45em;margin-left:1px;">'+(_wbASortDir>0?'▲':'▼')+'</span>':'')
+            +'<div style="display:flex;gap:2px;justify-content:center;margin-top:3px;">'
+            +'<span style="width:9px;text-align:center;font-size:0.45rem;color:rgba(255,255,255,0.65);font-weight:600;">B</span>'
+            +'<span style="width:9px;text-align:center;font-size:0.45rem;color:rgba(255,255,255,0.65);font-weight:600;">M</span>'
+            +'<span style="width:9px;text-align:center;font-size:0.45rem;color:rgba(255,255,255,0.4);font-weight:600;">E</span>'
+            +'</div></th>';
+    });
+    h += th('avg_boy','BOY<br>avg');
+    h += th('avg_moy','MOY<br>avg');
+    h += th('avg_eoy','EOY<br>avg');
+    h += th('goal_plus','+1.0<br>goal');
+    h += th('goal_gle','GLE<br>goal');
+    h += th('tier_boy','BOY<br>Tier');
+    h += th('tier_moy','MOY<br>Tier');
+    h += '<th style="'+TH+'">EOY<br>Tier</th>';
+    h += '</tr></thead><tbody>';
+    sorted.forEach(function(s, i) {
+        var tr = tiers[(s.name||'').toLowerCase()] || {};
+        var bg = i%2===0?'#fff':'#f9fafb';
+        var TD = 'border:1px solid #e8e8ed;padding:1px 1px;vertical-align:middle;text-align:center;background:'+bg+';';
+        h += '<tr>';
+        h += '<td style="'+TD+'text-align:left;padding:3px 8px;font-weight:500;">'+fullName(s.name)+'</td>';
+        h += '<td style="'+TD+'font-size:0.68rem;color:#64748b;">'+s.al+'</td>';
+        h += '<td style="'+TD+'font-size:0.68rem;">'+s.gle+'</td>';
+        _CATS.forEach(function(_, ci) { h += '<td style="'+TD+'">'+barCell(s,ci)+'</td>'; });
+        var boyAvg = s.fall ? s.fall.avg : null;
+        var moyAvg = s.winter ? s.winter.avg : null;
+        var eoyAvg = s.spring ? s.spring.avg : null;
+        function fmtAvg(v) { return v!==null?'<span style="font-size:0.72rem;font-weight:600;">'+v.toFixed(1)+'</span>':'<span style="color:#c7c7cc;font-size:0.63rem;">—</span>'; }
+        h += '<td style="'+TD+'">' + fmtAvg(boyAvg) + '</td>';
+        h += '<td style="'+TD+'">' + fmtAvg(moyAvg) + '</td>';
+        h += '<td style="'+TD+'">' + fmtAvg(eoyAvg) + '</td>';
+        h += '<td style="'+TD+'font-size:0.7rem;font-weight:600;">'+(boyAvg!==null?(boyAvg+1).toFixed(1):'—')+'</td>';
+        h += '<td style="'+TD+'font-size:0.7rem;">'+(s.goal||'—')+'</td>';
+        h += '<td style="'+TD+'">'+tierBadge(tr.boy)+'</td>';
+        h += '<td style="'+TD+'">'+tierBadge(tr.moy)+'</td>';
+        h += '<td style="'+TD+'"><span style="color:#c7c7cc;font-size:0.63rem;">—</span></td>';
+        h += '</tr>';
+    });
+    // Growth rows
+    var GR = 'background:#f0f4f8;border:1px solid #d0d7de;padding:4px 6px;font-weight:700;font-size:0.7rem;';
+    function growRow(lbl, fk, tk) {
+        h += '<tr><td colspan="3" style="'+GR+'text-align:left;line-height:1.35;">'+lbl+'</td>';
+        _CATS.forEach(function(_, ci) {
+            var diffs = sorted.filter(function(s2){ return s2[fk]&&s2[tk]&&s2[fk].scores[ci]!=null&&s2[tk].scores[ci]!=null; })
+                              .map(function(s2){ return s2[tk].scores[ci]-s2[fk].scores[ci]; });
+            var avg = diffs.length ? diffs.reduce(function(a,b){return a+b;},0)/diffs.length : null;
+            var txt = avg!==null?(avg>=0?'+':'')+avg.toFixed(2):'—';
+            var col = avg===null?'#aeaeb2':avg>0?'#15803d':avg<0?'#b91c1c':'#374151';
+            h += '<td style="background:#f0f4f8;border:1px solid #d0d7de;padding:3px 1px;text-align:center;font-weight:700;font-size:0.66rem;color:'+col+';">'+txt+'</td>';
+        });
+        h += '<td colspan="9" style="background:#f0f4f8;border:1px solid #d0d7de;"></td></tr>';
+    }
+    growRow('BOY → MOY<br>growth','fall','winter');
+    growRow('MOY → EOY<br>growth','winter','spring');
+    h += '</tbody></table></div>';
+    el.innerHTML = h;
+}
+
 function renderWbAnalytics() {
     _wbShowContent();
     var el = document.getElementById('wb-content');
     if (!el) return;
+    if (_wbACache) { _buildWbTable(); return; }
     el.innerHTML = '<p style="padding:2rem;text-align:center;color:#aeaeb2;font-size:0.9rem;">Loading Writing on Demand data…</p>';
 
     var _SB = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQLiHMlbP5cDwnbNqYFilbU2gKYOwLkGF1dJAUScpnBhh7wjJWUAp3Z4xX9Bt1pLZb0pLMlBBJUAKxi/pub?gid=';
@@ -17700,110 +17848,8 @@ function renderWbAnalytics() {
       .then(function(results) {
         var lsStu = results[0].concat(results[1]).concat(results[2]);
         lsStu.sort(function(a,b){ return a.name.localeCompare(b.name); });
-        var tiers = results[3];
-        var WD_MAX = 6, BH = 26, BW = 9;
-
-        function bColor(sc) {
-            if (sc >= 5) return '#5a9e5a'; if (sc >= 4) return '#a8df9e';
-            if (sc >= 3) return '#F8D66D'; if (sc >= 2) return '#ffb54c';
-            return '#ff6961';
-        }
-        function barCell(s, ci) {
-            var pds = [{key:'fall',eoy:false},{key:'winter',eoy:false},{key:'spring',eoy:true}];
-            var cols = [], any = false;
-            pds.forEach(function(pd) {
-                var sc = s[pd.key] ? s[pd.key].scores[ci] : null;
-                if (sc === null || sc === undefined) {
-                    cols.push({bg:'#e2e2e7',pct:0,lbl:'',eoy:pd.eoy});
-                } else {
-                    cols.push({bg:pd.eoy?'#c4c4cc':bColor(sc), pct:Math.max((sc/WD_MAX)*100,5), lbl:sc.toFixed(1), eoy:pd.eoy});
-                    any = true;
-                }
-            });
-            if (!any) return '<span style="color:#c7c7cc;font-size:0.7rem;">&ndash;</span>';
-            var o = '<div style="display:flex;align-items:flex-start;gap:2px;justify-content:center;padding:2px 1px;">';
-            cols.forEach(function(c) {
-                o += '<div style="display:flex;flex-direction:column;align-items:center;gap:1px;">'
-                    +'<div style="width:'+BW+'px;height:'+BH+'px;background:#efefef;border-radius:2px;overflow:hidden;position:relative;">'
-                    +(c.pct>0?'<div style="position:absolute;bottom:0;width:100%;height:'+c.pct+'%;background:'+c.bg+';border-radius:2px 2px 0 0;"></div>':'')
-                    +'</div>'
-                    +(c.lbl?'<span style="font-size:0.42rem;color:'+(c.eoy?'#a0a0a8':'#3a3a3c')+';line-height:1.1;text-align:center;">'+c.lbl+'</span>':'')
-                    +'</div>';
-            });
-            return o+'</div>';
-        }
-        function tierBadge(v) {
-            if (!v) return '<span style="color:#c7c7cc;font-size:0.65rem;">—</span>';
-            var t = v.trim().toLowerCase();
-            var sty = (t==='tier 1'||t==='1') ? 'background:#dcfce7;color:#15803d;'
-                    : (t==='tier 2'||t==='2') ? 'background:#fef9c3;color:#854d0e;'
-                    : (t==='tier 3'||t==='3') ? 'background:#fee2e2;color:#b91c1c;'
-                    : 'background:#f3f4f6;color:#374151;';
-            return '<span style="display:inline-block;padding:1px 5px;border-radius:4px;font-size:0.63rem;font-weight:600;'+sty+'">'+v+'</span>';
-        }
-        function buildSection(stu, cats, title) {
-            if (!stu.length) return '';
-            var TH = 'background:#3a3a3c;color:#fff;font-size:0.6rem;font-weight:600;padding:0.35rem 0.2rem;text-align:center;border:1px solid #555;vertical-align:bottom;line-height:1.2;white-space:normal;';
-            var h = '<div style="font-size:0.85rem;font-weight:700;color:#1d1d1f;padding:1.25rem 1.25rem 0.4rem;">'+title+'</div>';
-            h += '<div style="overflow-x:auto;margin:0 1.25rem 1.5rem;border-radius:12px;border:1px solid #e2e2e7;">';
-            h += '<table style="width:100%;border-collapse:collapse;">';
-            h += '<thead><tr>';
-            h += '<th style="'+TH+'text-align:left;min-width:110px;">Student</th>';
-            h += '<th style="'+TH+'width:34px;">AL</th>';
-            h += '<th style="'+TH+'width:34px;">GLE</th>';
-            cats.forEach(function(cat) {
-                h += '<th style="'+TH+'min-width:54px;">'+cat
-                    +'<div style="display:flex;gap:2px;justify-content:center;margin-top:3px;">'
-                    +'<span style="width:9px;text-align:center;font-size:0.45rem;color:rgba(255,255,255,0.65);font-weight:600;">B</span>'
-                    +'<span style="width:9px;text-align:center;font-size:0.45rem;color:rgba(255,255,255,0.65);font-weight:600;">M</span>'
-                    +'<span style="width:9px;text-align:center;font-size:0.45rem;color:rgba(255,255,255,0.4);font-weight:600;">E</span>'
-                    +'</div></th>';
-            });
-            h += '<th style="'+TH+'">+1.0<br>goal</th>';
-            h += '<th style="'+TH+'">GLE<br>goal</th>';
-            h += '<th style="'+TH+'">BOY<br>Tier</th>';
-            h += '<th style="'+TH+'">MOY<br>Tier</th>';
-            h += '<th style="'+TH+'">EOY<br>Tier</th>';
-            h += '</tr></thead><tbody>';
-            stu.forEach(function(s, i) {
-                var tr = tiers[(s.name||'').toLowerCase()] || {};
-                var bg = i%2===0?'#fff':'#f9fafb';
-                var TD = 'border:1px solid #e8e8ed;padding:1px 1px;vertical-align:middle;text-align:center;background:'+bg+';';
-                h += '<tr>';
-                h += '<td style="'+TD+'text-align:left;padding:3px 8px;font-weight:500;">'+fullName(s.name)+'</td>';
-                h += '<td style="'+TD+'font-size:0.68rem;color:#64748b;">'+s.al+'</td>';
-                h += '<td style="'+TD+'font-size:0.68rem;">'+s.gle+'</td>';
-                cats.forEach(function(_, ci) { h += '<td style="'+TD+'">'+barCell(s,ci)+'</td>'; });
-                var boyAvg = s.fall ? s.fall.avg : null;
-                h += '<td style="'+TD+'font-size:0.7rem;font-weight:600;">'+(boyAvg!==null?(boyAvg+1).toFixed(1):'—')+'</td>';
-                h += '<td style="'+TD+'font-size:0.7rem;">'+(s.goal||'—')+'</td>';
-                h += '<td style="'+TD+'">'+tierBadge(tr.boy)+'</td>';
-                h += '<td style="'+TD+'">'+tierBadge(tr.moy)+'</td>';
-                h += '<td style="'+TD+'"><span style="color:#c7c7cc;font-size:0.63rem;">—</span></td>';
-                h += '</tr>';
-            });
-            // Growth rows
-            var GR = 'background:#f0f4f8;border:1px solid #d0d7de;padding:4px 6px;font-weight:700;font-size:0.7rem;';
-            function growRow(lbl, fk, tk) {
-                h += '<tr>';
-                h += '<td colspan="3" style="'+GR+'text-align:left;line-height:1.35;">'+lbl+'</td>';
-                cats.forEach(function(_, ci) {
-                    var diffs = stu.filter(function(s2){ return s2[fk]&&s2[tk]&&s2[fk].scores[ci]!=null&&s2[tk].scores[ci]!=null; })
-                                   .map(function(s2){ return s2[tk].scores[ci]-s2[fk].scores[ci]; });
-                    var avg = diffs.length ? diffs.reduce(function(a,b){return a+b;},0)/diffs.length : null;
-                    var txt = avg!==null?(avg>=0?'+':'')+avg.toFixed(2):'—';
-                    var col = avg===null?'#aeaeb2':avg>0?'#15803d':avg<0?'#b91c1c':'#374151';
-                    h += '<td style="background:#f0f4f8;border:1px solid #d0d7de;padding:3px 1px;text-align:center;font-weight:700;font-size:0.66rem;color:'+col+';">'+txt+'</td>';
-                });
-                h += '<td colspan="6" style="background:#f0f4f8;border:1px solid #d0d7de;"></td></tr>';
-            }
-            growRow('BOY → MOY<br>growth','fall','winter');
-            growRow('MOY → EOY<br>growth','winter','spring');
-            h += '</tbody></table></div>';
-            return h;
-        }
-        var html = buildSection(lsStu, _CATS, 'Writing on Demand — AL1 / AL2 / AL3–4');
-        el.innerHTML = html || '<p style="padding:2rem;text-align:center;color:#aeaeb2;">No data available.</p>';
+        _wbACache = { lsStu: lsStu, tiers: results[3] };
+        _buildWbTable();
       }).catch(function(err) {
         el.innerHTML = '<p style="padding:2rem;text-align:center;color:#ff3b30;font-size:0.9rem;">Error loading data: '+(err&&err.message?err.message:err)+'</p>';
       });
