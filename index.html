@@ -5723,10 +5723,11 @@ function renderEarnedStudent(period, container) {
 
     function _thSort(col, label, center) {
         var active = earnedStudentSortCol === col;
-        var style = 'cursor:pointer;user-select:none;' + (active ? 'text-decoration:underline;' : '') + (center ? 'text-align:center;' : '');
+        var style = 'cursor:pointer;user-select:none;' + (center ? 'text-align:center;' : '');
         var _defDir = col === 'date' ? '-1' : '1';
         var click = 'if(earnedStudentSortCol===\'' + col + '\'){earnedStudentSortDir*=-1;}else{earnedStudentSortCol=\'' + col + '\';earnedStudentSortDir=' + _defDir + ';}renderEarnedCredits();';
-        return '<th style="' + style + '" onclick="' + click + '">' + label + '</th>';
+        var indicator = active ? '<span style="font-size:0.65em;opacity:0.8;margin-left:2px;">' + (earnedStudentSortDir < 0 ? '▼' : '▲') + '</span>' : '';
+        return '<th style="' + style + '" onclick="' + click + '">' + label + indicator + '</th>';
     }
 
     if (tableCredits.length === 0) {
@@ -16923,7 +16924,49 @@ function ensureLoaded(cb) {
     _extCb = cb;
     if (!_wdLoading) { levelCache = {}; tierCache = null; initialized = false; init(); }
 }
-return { init:init, refresh:refresh, switchView:switchView, setLevel:setLevel, setRosterGrowth:setRosterGrowth, setStudentGrowth:setStudentGrowth, setCatDive:setCatDive, alDD:_wdALDD, getData:getData, ensureLoaded:ensureLoaded };
+function fetchAllData(cb) {
+    var lKeys = ['al1','al2','al34','ms'];
+    var allCached = lKeys.every(function(k){ return levelCache[k]; }) && !!tierCache;
+    if (allCached) { cb({ levelCache: levelCache, tierCache: tierCache }); return; }
+    var total = lKeys.length + 1;
+    var doneCount = 0;
+    var outLC = {};
+    var outTC = null;
+    function onDone() {
+        doneCount++;
+        if (doneCount === total) cb({ levelCache: outLC, tierCache: outTC || {} });
+    }
+    if (tierCache) {
+        outTC = tierCache; onDone();
+    } else {
+        fetch(WD_TIER_URL)
+            .then(function(r){ return r.text(); })
+            .then(function(text){
+                var map = {};
+                parseCsvText(text).forEach(function(row){
+                    var name = (row[1]||'').trim();
+                    if (name) map[name.toLowerCase()] = { boy:(row[5]||'').trim(), moy:(row[7]||'').trim() };
+                });
+                tierCache = map; outTC = map; onDone();
+            })
+            .catch(function(){ tierCache = {}; outTC = {}; onDone(); });
+    }
+    lKeys.forEach(function(key) {
+        if (levelCache[key]) {
+            outLC[key] = levelCache[key]; onDone();
+        } else {
+            var url = SHEET_BASE + LEVELS[key].gid + '&single=true&output=csv';
+            fetch(url)
+                .then(function(r){ return r.text(); })
+                .then(function(text){
+                    var students = parseLevelCsv(text, key);
+                    levelCache[key] = students; outLC[key] = students; onDone();
+                })
+                .catch(function(){ levelCache[key] = []; outLC[key] = []; onDone(); });
+        }
+    });
+}
+return { init:init, refresh:refresh, switchView:switchView, setLevel:setLevel, setRosterGrowth:setRosterGrowth, setStudentGrowth:setStudentGrowth, setCatDive:setCatDive, alDD:_wdALDD, getData:getData, ensureLoaded:ensureLoaded, fetchAllData:fetchAllData };
 })();
 
 /* ═══════════════════════════════════════════════════════════════
@@ -17562,8 +17605,7 @@ function renderWbAnalytics() {
     var el = document.getElementById('wb-content');
     if (!el) return;
     el.innerHTML = '<p style="padding:2rem;text-align:center;color:#aeaeb2;font-size:0.9rem;">Loading Writing on Demand data…</p>';
-    WD.ensureLoaded(function() {
-        var d = WD.getData();
+    WD.fetchAllData(function(d) {
         var lc = d.levelCache;
         var tiers = d.tierCache || {};
         var lsStu = (lc['al1']||[]).concat(lc['al2']||[]).concat(lc['al34']||[]);
