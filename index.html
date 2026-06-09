@@ -17639,11 +17639,68 @@ function renderWbAnalytics() {
     var el = document.getElementById('wb-content');
     if (!el) return;
     el.innerHTML = '<p style="padding:2rem;text-align:center;color:#aeaeb2;font-size:0.9rem;">Loading Writing on Demand data…</p>';
-    WD.fetchAllData(function(d) {
-        var lc = d.levelCache;
-        var tiers = d.tierCache || {};
-        var lsStu = (lc['al1']||[]).concat(lc['al2']||[]).concat(lc['al34']||[]);
+
+    var _SB = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQLiHMlbP5cDwnbNqYFilbU2gKYOwLkGF1dJAUScpnBhh7wjJWUAp3Z4xX9Bt1pLZb0pLMlBBJUAKxi/pub?gid=';
+    var _TU = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRvA3HUXEnfrsThbgpHRNPiZs4-L5lRFT8wSuqjsFGAJV_2kEGQW9wJAJazlDFJuQ/pub?gid=1472378993&single=true&output=csv';
+    var _LEVELS = { al1:{gid:'736032062',label:'AL1'}, al2:{gid:'1841539554',label:'AL2'}, al34:{gid:'453010400',label:'AL3/4'} };
+    var _CATS = ['Intros','Transitions','Ending','Sequencing/Org','Elaboration','Voice/Craft','Spelling','Grammar','Overall'];
+
+    function _csv(text) {
+        var rows = [], row = [], cur = '', inQ = false;
+        text = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+        for (var i = 0; i < text.length; i++) {
+            var ch = text[i];
+            if (inQ) { if (ch==='"'){ if(text[i+1]==='"'){cur+='"';i++;}else inQ=false; } else cur+=ch; }
+            else if (ch==='"') inQ=true;
+            else if (ch===',') { row.push(cur.trim()); cur=''; }
+            else if (ch==='\n') { row.push(cur.trim()); if(row.some(function(c){return c!=='';}))rows.push(row); row=[]; cur=''; }
+            else cur+=ch;
+        }
+        row.push(cur.trim());
+        if (row.some(function(c){return c!=='';})) rows.push(row);
+        return rows;
+    }
+    function _parseLevel(text, label) {
+        var rows = _csv(text), students = [], current = null, sRow = 0;
+        var SEAS = ['fall','winter','spring'];
+        for (var i = 3; i < rows.length; i++) {
+            var row = rows[i];
+            if (!row) continue;
+            var name = (row[0]||'').trim();
+            if (name) {
+                sRow = 0;
+                current = { name:name, al:label, gle:(row[18]||'').trim(), goal:parseFloat(row[1])||null, fall:null, winter:null, spring:null };
+                students.push(current);
+            } else if (current) { sRow++; }
+            if (!current || sRow > 2) continue;
+            var cats = [];
+            for (var c = 6; c <= 14; c++) { var v=(row[c]||'').trim(); cats.push(v===''||v.toUpperCase()==='N/A'?null:parseFloat(v)); }
+            var avg = null, last = cats[cats.length-1];
+            if (last!=null&&!isNaN(last)&&last>0) { avg=last; }
+            else { var vv=cats.filter(function(x){return x!=null&&!isNaN(x)&&x>0;}); if(vv.length) avg=vv.reduce(function(a,b){return a+b;},0)/vv.length; }
+            current[SEAS[sRow]] = { avg:avg, scores:cats };
+        }
+        return students;
+    }
+    function _parseTiers(text) {
+        var map = {}, rows = _csv(text);
+        rows.forEach(function(r){ var n=(r[1]||'').trim(); if(n) map[n.toLowerCase()]={boy:(r[5]||'').trim(),moy:(r[7]||'').trim()}; });
+        return map;
+    }
+
+    var fetchLevel = function(key) {
+        return fetch(_SB + _LEVELS[key].gid + '&single=true&output=csv')
+            .then(function(r){ return r.text(); })
+            .then(function(t){ return _parseLevel(t, _LEVELS[key].label); })
+            .catch(function(){ return []; });
+    };
+    var fetchTiers = fetch(_TU).then(function(r){return r.text();}).then(_parseTiers).catch(function(){return {};});
+
+    Promise.all([fetchLevel('al1'), fetchLevel('al2'), fetchLevel('al34'), fetchTiers])
+      .then(function(results) {
+        var lsStu = results[0].concat(results[1]).concat(results[2]);
         lsStu.sort(function(a,b){ return a.name.localeCompare(b.name); });
+        var tiers = results[3];
         var WD_MAX = 6, BH = 26, BW = 9;
 
         function bColor(sc) {
@@ -17745,9 +17802,11 @@ function renderWbAnalytics() {
             h += '</tbody></table></div>';
             return h;
         }
-        var html = buildSection(lsStu, WD_CATS_LOWER, 'Writing on Demand — AL1 / AL2 / AL3–4');
+        var html = buildSection(lsStu, _CATS, 'Writing on Demand — AL1 / AL2 / AL3–4');
         el.innerHTML = html || '<p style="padding:2rem;text-align:center;color:#aeaeb2;">No data available.</p>';
-    });
+      }).catch(function(err) {
+        el.innerHTML = '<p style="padding:2rem;text-align:center;color:#ff3b30;font-size:0.9rem;">Error loading data: '+(err&&err.message?err.message:err)+'</p>';
+      });
 }
 
 function updateStickyOffsets() {
