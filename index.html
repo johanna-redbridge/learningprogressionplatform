@@ -1488,6 +1488,7 @@
             <!-- Fact Fluency -->
             <div id="math-panel-fact-fluency" style="display:none;">
                 <div id="fact-fluency-toolbar" style="display:flex;gap:0.75rem;align-items:center;padding-top:0.7rem;padding-bottom:0.7rem;border-bottom:1px solid #e8e8ed;flex-wrap:wrap;"></div>
+                <div id="ff-gle-bar" style="display:none;gap:0.5rem;align-items:center;padding:0.4rem 0.75rem;border-bottom:1px solid #e8e8ed;background:#f9fafb;flex-wrap:wrap;"></div>
                 <div id="fact-fluency-content"></div>
             </div>
             <!-- STmath -->
@@ -14371,16 +14372,25 @@ function renderFactFluencyTable() {
             });
             th += '</div>';
         }
-        if (gles.length > 1) {
-            th += '<span style="font-size:0.72rem;font-weight:600;color:#6b7280;padding:0 2px;">GLE</span>';
-            th += '<div class="toggle-group">';
-            th += '<button class="toggle-btn ff-gle-btn' + (ffGleFilter==='all'?' active':'') + '" onclick="ffGleFilter=\'all\';renderFactFluencyTable()">All</button>';
-            gles.forEach(function(g) {
-                th += '<button class="toggle-btn ff-gle-btn' + (ffGleFilter===g?' active':'') + '" onclick="ffGleFilter=\'' + g.replace(/'/g,"\\'") + '\';renderFactFluencyTable()">' + g.replace(/</g,'&lt;') + '</button>';
-            });
-            th += '</div>';
-        }
         toolbar.innerHTML = th;
+    }
+
+    var gleBar = document.getElementById('ff-gle-bar');
+    if (gleBar) {
+        if (gles.length > 1) {
+            var gb = '<span style="font-size:0.72rem;font-weight:600;color:#6b7280;">GLE</span>';
+            gb += '<div class="toggle-group">';
+            gb += '<button class="toggle-btn ff-gle-btn' + (ffGleFilter==='all'?' active':'') + '" onclick="ffGleFilter=\'all\';renderFactFluencyTable()">All</button>';
+            gles.forEach(function(g) {
+                gb += '<button class="toggle-btn ff-gle-btn' + (ffGleFilter===g?' active':'') + '" onclick="ffGleFilter=\'' + g.replace(/'/g,"\\'") + '\';renderFactFluencyTable()">' + g.replace(/</g,'&lt;') + '</button>';
+            });
+            gb += '</div>';
+            gleBar.innerHTML = gb;
+            gleBar.style.display = 'flex';
+        } else {
+            gleBar.innerHTML = '';
+            gleBar.style.display = 'none';
+        }
     }
 
     // Filter students
@@ -14472,15 +14482,15 @@ function renderFactFluencyTable() {
     });
     html += '</tr>';
 
-    // Sub-header: B / M / E legend
+    // Sub-header: B / M / E labels aligned with bars
     html += '<tr style="background:#4a4948;">';
     html += '<th colspan="' + fixedCols + '" style="position:sticky;top:32px;z-index:11;background:#4a4948;border-bottom:1px solid #3a3a3c;"></th>';
     activeOps.forEach(function() {
-        html += '<th style="position:sticky;top:32px;z-index:11;background:#4a4948;padding:0.2rem 0.6rem;text-align:center;font-size:0.6rem;border-bottom:1px solid #3a3a3c;border-left:2px solid rgba(255,255,255,0.2);">'
-            + '<span style="display:inline-flex;gap:5px;">'
-            + '<span style="color:#b0e0b0;">BOY</span>'
-            + '<span style="color:#a0c8f0;">MOY</span>'
-            + '<span style="color:#909098;">EOY</span>'
+        html += '<th style="position:sticky;top:32px;z-index:11;background:#4a4948;padding:0.2rem 0.4rem;text-align:center;font-size:0.62rem;font-weight:700;border-bottom:1px solid #3a3a3c;border-left:2px solid rgba(255,255,255,0.2);">'
+            + '<span style="display:inline-flex;gap:2px;padding:0 1px;">'
+            + '<span style="width:9px;text-align:center;color:#b0e0b0;">B</span>'
+            + '<span style="width:9px;text-align:center;color:#a0c8f0;">M</span>'
+            + '<span style="width:9px;text-align:center;color:#909098;">E</span>'
             + '</span></th>';
     });
     html += '</tr></thead><tbody>';
