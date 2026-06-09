@@ -2468,8 +2468,6 @@ function handleArtifactDrop(e, studentId, creditId) {
         var credit = credits.find(function(cr) { return cr.id === creditId; });
         var earnedEntry = earned.find(function(en) { return en.studentId === studentId && en.creditId === creditId; });
         var dateStr = (earnedEntry && earnedEntry.date) ? earnedEntry.date : new Date().toISOString().substring(0, 10);
-        // Auto-set the earned date from the upload date if not already set
-        if (earnedEntry && !earnedEntry.date) { earnedEntry.date = dateStr; }
         var dt = new Date(dateStr + 'T00:00:00');
         var m = dt.getMonth() + 1, dy = dt.getDate(), yr = String(dt.getFullYear()).slice(-2);
         var datePart = (m < 10 ? '0' + m : m) + '-' + (dy < 10 ? '0' + dy : dy) + '-' + yr;
@@ -17931,15 +17929,19 @@ function renderWbCategoryDetail(ci, alFilter) {
         var bAvg=alAvg(stu,'fall'), mAvg=alAvg(stu,'winter'), eAvg=alAvg(stu,'spring');
         var _stuGoals = stu.map(function(s){ return s.goal; }).filter(function(g){ return g && g > 0; });
         var avgGoal = _stuGoals.length ? _stuGoals.reduce(function(a,b){return a+b;},0)/_stuGoals.length : null;
+        var bmDiff = (bAvg!==null&&mAvg!==null) ? (mAvg-bAvg) : null;
+        var meDiff = (mAvg!==null&&eAvg!==null) ? (eAvg-mAvg) : null;
+        var bmCell = bmDiff!==null ? '<span style="font-size:0.75rem;font-weight:700;color:#1d1d1f;">'+(bmDiff>=0?'+':'')+bmDiff.toFixed(1)+'</span>' : '<span style="color:#c7c7cc;font-size:0.62rem;">no data yet</span>';
+        var meCell = meDiff!==null ? '<span style="font-size:0.75rem;font-weight:700;color:#1d1d1f;">'+(meDiff>=0?'+':'')+meDiff.toFixed(1)+'</span>' : '<span style="color:#c7c7cc;font-size:0.62rem;">no data yet</span>';
         h += '<tr>'
             +'<td style="'+GA+'text-align:left;padding:5px 10px;color:#374151;">Class avg</td>'
             +'<td style="'+GA+'"></td>'
             +'<td style="'+GA+'"></td>'
-            +'<td style="'+GA+'">'+scoreCell(bAvg,'boy',avgGoal)+'</td>'
-            +'<td style="'+GA+'">'+scoreCell(mAvg,'moy',avgGoal)+'</td>'
-            +'<td style="'+GA+'">'+scoreCell(eAvg,'eoy',avgGoal)+'</td>'
-            +'<td style="'+GA+'">'+trendCell(bAvg,mAvg)+'</td>'
-            +'<td style="'+GA+'">'+trendCell(mAvg,eAvg)+'</td>'
+            +'<td style="'+GA+'"></td>'
+            +'<td style="'+GA+'"></td>'
+            +'<td style="'+GA+'"></td>'
+            +'<td style="'+GA+'">'+bmCell+'</td>'
+            +'<td style="'+GA+'">'+meCell+'</td>'
             +'</tr>';
     });
     h += '</tbody></table></div>';
