@@ -16387,30 +16387,63 @@ function parseLevelCsv(text, levelKey) {
     var cfg = LEVELS[levelKey];
     var rows = parseCsvText(text);
     var students = [], current = null;
+    // LS levels: 3 consecutive rows per student (BOY→fall, MOY→winter, EOY→spring)
+    // identified by row position, not a season-label column
+    var LS_SEASONS = ['fall', 'winter', 'spring'];
+    var isLS = levelKey !== 'ms';
+    var studentRow = 0; // position within the current student's 3-row block
     for (var i = 3; i < rows.length; i++) {
         var row = rows[i];
-        if (!row || row.length < cfg.avgCol + 1) continue;
+        if (!row) continue;
         var name = (row[0] || '').trim();
-        var seasonRaw = (row[cfg.seasonCol] || '').trim().toLowerCase();
-        var season = seasonRaw.indexOf('winter') !== -1 ? 'winter'
-                   : seasonRaw.indexOf('spring') !== -1 ? 'spring'
-                   : seasonRaw.indexOf('fall')   !== -1 ? 'fall' : null;
-        if (name) {
-            var gleVal = (row[18] || '').trim();
-            current = { name:name, al:cfg.label, gle:gleVal, goal:cfg.goalCol !== null ? (parseFloat(row[cfg.goalCol]) || null) : null, fall:null, winter:null, spring:null };
-            students.push(current);
+        var season;
+        if (isLS) {
+            if (name) {
+                // BOY row: read goal (col B) and GLE (col S)
+                studentRow = 0;
+                current = {
+                    name: name,
+                    al: cfg.label,
+                    gle: (row[18] || '').trim(),
+                    goal: cfg.goalCol !== null ? (parseFloat(row[cfg.goalCol]) || null) : null,
+                    fall: null, winter: null, spring: null
+                };
+                students.push(current);
+            } else if (current) {
+                studentRow++;
+            }
+            if (!current || studentRow > 2) continue;
+            season = LS_SEASONS[studentRow];
+        } else {
+            // MS: name in col A starts student; season from text column
+            if (name) {
+                current = { name:name, al:cfg.label, gle:(row[18]||'').trim(), goal:cfg.goalCol!==null?(parseFloat(row[cfg.goalCol])||null):null, fall:null, winter:null, spring:null };
+                students.push(current);
+            }
+            if (!current) continue;
+            var sr = (row[cfg.seasonCol] || '').trim().toLowerCase();
+            season = sr.indexOf('winter')!==-1?'winter':sr.indexOf('spring')!==-1?'spring':sr.indexOf('fall')!==-1?'fall':null;
+            if (!season) continue;
         }
-        if (!current || !season) continue;
-        var avgRaw = (row[cfg.avgCol] || '').trim();
-        var avg = (avgRaw && avgRaw !== '#DIV/0!') ? parseFloat(avgRaw) : null;
-        if (avg === null || isNaN(avg)) continue;
+        // Parse category scores from configured columns
         var cats = [];
         for (var c = cfg.catStart; c <= cfg.catEnd; c++) {
-            var v = (row[c] || '').trim().toUpperCase();
-            cats.push(v === 'N/A' || v === '' ? null : parseFloat(row[c]));
+            var v = (row[c] || '').trim();
+            cats.push(v === '' || v.toUpperCase() === 'N/A' ? null : parseFloat(v));
         }
+        // avg: use the Overall/last category if valid, else mean of all valid cats
+        var avg = null;
+        var last = cats[cats.length - 1];
+        if (last != null && !isNaN(last) && last > 0) {
+            avg = last;
+        } else {
+            var valid = cats.filter(function(x){ return x != null && !isNaN(x) && x > 0; });
+            if (valid.length) avg = valid.reduce(function(a,b){return a+b;},0) / valid.length;
+        }
+        // Skip rows with no category data at all
+        if (avg === null && cats.every(function(x){ return x == null; })) continue;
         var notes = cfg.notesCol !== null ? (row[cfg.notesCol] || '').trim() : '';
-        current[season] = { avg:avg, scores:cats, hw:row.length > cfg.hwCol ? (parseFloat(row[cfg.hwCol]) || null) : null, notes:notes, genre:(row[cfg.genreCol]||'').trim(), instructional:notes.toLowerCase().indexOf('instructional') !== -1, noWork:false };
+        current[season] = { avg:avg, scores:cats, hw:null, notes:notes, genre:(row[cfg.genreCol]||'').trim(), instructional:notes.toLowerCase().indexOf('instructional')!==-1, noWork:false };
     }
     return students;
 }
@@ -17611,7 +17644,6 @@ function renderWbAnalytics() {
         var tiers = d.tierCache || {};
         var lsStu = (lc['al1']||[]).concat(lc['al2']||[]).concat(lc['al34']||[]);
         lsStu.sort(function(a,b){ return a.name.localeCompare(b.name); });
-        var msStu = lc['ms'] || [];
         var WD_MAX = 6, BH = 26, BW = 9;
 
         function bColor(sc) {
@@ -17713,8 +17745,7 @@ function renderWbAnalytics() {
             h += '</tbody></table></div>';
             return h;
         }
-        var html = buildSection(lsStu, WD_CATS_LOWER, 'Lower School — Writing on Demand');
-        html += buildSection(msStu, WD_CATS_MS, 'Middle School — Writing on Demand');
+        var html = buildSection(lsStu, WD_CATS_LOWER, 'Writing on Demand — AL1 / AL2 / AL3–4');
         el.innerHTML = html || '<p style="padding:2rem;text-align:center;color:#aeaeb2;">No data available.</p>';
     });
 }
