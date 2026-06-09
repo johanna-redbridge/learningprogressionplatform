@@ -14548,7 +14548,7 @@ function renderFactFluencyTable() {
     }
 
     var preGoalCols = ffGroupFilter === 'all' ? 4 : 3; // Student, (Group,) AL, GLE
-    var fixedCols = preGoalCols + 3; // + Goal B / M / E
+    var fixedCols = preGoalCols + 5; // + Goal B/M/E + BOY→MOY + MOY→EOY
 
     function ffGoalAvgPct(s, grade, period) {
         var rel = ffGradeOps(ops, grade);
@@ -14570,6 +14570,14 @@ function renderFactFluencyTable() {
         var col = pct >= 100 ? '#5a9e5a' : pct >= 50 ? '#c4a434' : '#c05050';
         return '<span style="font-size:0.68rem;font-weight:700;color:' + col + ';">' + pct + '%</span>';
     }
+
+    function ffGrowthCell(from, to) {
+        if (from === null || to === null) return '<span style="color:#c4c4c6;font-size:0.68rem;">—</span>';
+        var diff = to - from;
+        var sign = diff > 0 ? '+' : '';
+        var col = diff > 0 ? '#3b82f6' : diff < 0 ? '#c05050' : '#86868b';
+        return '<span style="font-size:0.68rem;font-weight:700;color:' + col + ';">' + sign + diff + 'pp</span>';
+    }
     var html = '<div style="overflow-x:auto;overflow-y:auto;max-height:65vh;border-radius:16px;border:1px solid #f0f0f0;">';
     html += '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
 
@@ -14582,6 +14590,8 @@ function renderFactFluencyTable() {
     html += ffTh('al',    'AL',    'text-align:center;');
     html += ffTh('gle',   'GLE',   'text-align:center;');
     html += '<th colspan="3" style="position:sticky;top:0;z-index:12;background:#5c5b5a;padding:0.5rem 0.6rem;font-weight:600;font-size:0.72rem;color:#fff;white-space:nowrap;text-align:center;border-left:2px solid rgba(255,255,255,0.15);">Goal</th>';
+    html += '<th style="position:sticky;top:0;z-index:12;background:#5c5b5a;padding:0.5rem 0.4rem;font-weight:600;font-size:0.65rem;color:#fff;white-space:nowrap;text-align:center;border-left:2px solid rgba(255,255,255,0.15);">BOY→MOY</th>';
+    html += '<th style="position:sticky;top:0;z-index:12;background:#5c5b5a;padding:0.5rem 0.4rem;font-weight:600;font-size:0.65rem;color:#fff;white-space:nowrap;text-align:center;border-left:1px solid rgba(255,255,255,0.1);">MOY→EOY</th>';
     activeOps.forEach(function(op) {
         var globalIdx = ops.indexOf(op);
         var short = ffShortLabel(op.label);
@@ -14596,6 +14606,8 @@ function renderFactFluencyTable() {
     html += goalSubTh + 'B</th>';
     html += goalSubTh + 'M</th>';
     html += goalSubTh + 'E</th>';
+    html += '<th style="position:sticky;top:32px;z-index:11;background:#4a4948;border-bottom:1px solid #3a3a3c;border-left:2px solid rgba(255,255,255,0.1);"></th>';
+    html += '<th style="position:sticky;top:32px;z-index:11;background:#4a4948;border-bottom:1px solid #3a3a3c;border-left:1px solid rgba(255,255,255,0.07);"></th>';
     activeOps.forEach(function() {
         html += '<th style="position:sticky;top:32px;z-index:11;background:#4a4948;padding:0.2rem 0.4rem;text-align:center;font-size:0.62rem;font-weight:700;border-bottom:1px solid #3a3a3c;border-left:2px solid rgba(255,255,255,0.2);">'
             + '<span style="display:inline-flex;gap:2px;padding:0 1px;">'
@@ -14619,9 +14631,13 @@ function renderFactFluencyTable() {
         var _ffGrade = ffGleToGrade(s.gle);
         var _goalTdStyle = 'padding:0.35rem 0.25rem;text-align:center;';
         var _goalBorderStyle = 'border-left:2px solid #e8e8ed;';
-        html += '<td style="' + _goalTdStyle + _goalBorderStyle + '">' + ffGoalCell(_ffGrade ? ffGoalAvgPct(s, _ffGrade, 'boy') : null) + '</td>';
-        html += '<td style="' + _goalTdStyle + '">' + ffGoalCell(_ffGrade ? ffGoalAvgPct(s, _ffGrade, 'moy') : null) + '</td>';
+        var _boyAvg = _ffGrade ? ffGoalAvgPct(s, _ffGrade, 'boy') : null;
+        var _moyAvg = _ffGrade ? ffGoalAvgPct(s, _ffGrade, 'moy') : null;
+        html += '<td style="' + _goalTdStyle + _goalBorderStyle + '">' + ffGoalCell(_boyAvg) + '</td>';
+        html += '<td style="' + _goalTdStyle + '">' + ffGoalCell(_moyAvg) + '</td>';
         html += '<td style="' + _goalTdStyle + '"><span style="color:#c4c4c6;font-size:0.68rem;">—</span></td>';
+        html += '<td style="padding:0.35rem 0.3rem;text-align:center;border-left:2px solid #e8e8ed;">' + ffGrowthCell(_boyAvg, _moyAvg) + '</td>';
+        html += '<td style="padding:0.35rem 0.3rem;text-align:center;border-left:1px solid #f0f0f0;"><span style="color:#c4c4c6;font-size:0.68rem;">—</span></td>';
         activeOps.forEach(function(op) {
             var globalIdx = ops.indexOf(op);
             var f = s.facts[globalIdx];
