@@ -5780,6 +5780,8 @@ function renderEarnedStudent(period, container) {
             }
             html += '</div></td>';
             // Earned column
+            var aKey = artifactKey(studentId, c.id);
+            var art = artifacts[aKey];
             var fd = e ? formatDate(e.date) : '';
             var dateDisplay = fd;
             html += '<td style="text-align:center;">';
