@@ -17649,6 +17649,7 @@ var _wbACache = null; // { lsStu, tiers }
 var _wbASortCol = 'student';
 var _wbASortDir = 1;
 var _wbCatAlFilter = 'all';
+var _wbMainAlFilter = 'all';
 function wbASort(col) {
     if (_wbASortCol === col) { _wbASortDir *= -1; } else { _wbASortCol = col; _wbASortDir = 1; }
     _buildWbTable();
@@ -17656,8 +17657,17 @@ function wbASort(col) {
 function _buildWbTable() {
     var el = document.getElementById('wb-content');
     if (!el || !_wbACache) return;
+    // Populate AL toggle in the view bar
     var _ct = document.getElementById('wb-cat-toolbar');
-    if (_ct) { _ct.style.display = 'none'; _ct.innerHTML = ''; }
+    if (_ct) {
+        _ct.style.display = 'flex';
+        var _alOpts = ['all','AL1','AL2','AL3','AL4'];
+        var _alLabels = ['All','AL1','AL2','AL3','AL4'];
+        _ct.innerHTML = _alOpts.map(function(val, i) {
+            var active = _wbMainAlFilter === val;
+            return '<button onclick="_wbMainAlFilter=\''+val+'\';_buildWbTable()" style="border:none;border-radius:6px;padding:4px 11px;font-size:0.78rem;font-weight:500;cursor:pointer;background:'+(active?'#3a3a3c':'#e8e8ed')+';color:'+(active?'#fff':'#3a3a3c')+';">'+_alLabels[i]+'</button>';
+        }).join('');
+    }
     var tiers = _wbACache.tiers;
     var _CATS = ['Intros','Transitions','Ending','Sequencing/Org','Elaboration','Voice/Craft','Spelling','Grammar','Overall'];
     var WD_MAX = 6, BH = 26, BW = 9;
@@ -17791,7 +17801,8 @@ function _buildWbTable() {
         return h;
     }
 
-    var h = buildAlTable('AL1') + buildAlTable('AL2') + buildAlTable('AL3') + buildAlTable('AL4');
+    var _alShow = ['AL1','AL2','AL3','AL4'].filter(function(al){ return _wbMainAlFilter === 'all' || _wbMainAlFilter === al; });
+    var h = _alShow.map(buildAlTable).join('');
     el.innerHTML = h || '<p style="padding:2rem;text-align:center;color:#aeaeb2;">No data available.</p>';
 }
 
