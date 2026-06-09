@@ -1009,8 +1009,8 @@
         body.redacted [data-redact],
         body.redacted .core-name-col { background:#1c1c1e !important; color:transparent !important; border-radius:3px; user-select:none; }
         body.redacted [data-redact] * { visibility:hidden !important; }
-        body.redacted select { color:transparent !important; background:#1c1c1e !important; border-color:#1c1c1e !important; -webkit-appearance:none !important; -moz-appearance:none !important; appearance:none !important; }
-        body.redacted select option { color:transparent !important; }
+        body.redacted select.redact-select { color:transparent !important; background:#1c1c1e !important; border-color:#1c1c1e !important; -webkit-appearance:none !important; -moz-appearance:none !important; appearance:none !important; }
+        body.redacted select.redact-select option { color:transparent !important; }
         body.redacted input.redact-input { color:transparent !important; background:#1c1c1e !important; border-color:#1c1c1e !important; caret-color:transparent; }
         body.redacted .student-portrait { background:#1c1c1e !important; }
         body.redacted .student-portrait * { visibility:hidden !important; }
@@ -1108,7 +1108,7 @@
     <div id="lc-subtab-earned" class="lc-subtab-panel" style="display:none;">
         <div class="view-container">
             <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;flex-wrap:nowrap;">
-                <select id="earned-student-sel" style="padding:0.3rem 0.6rem;border:1px solid #d2d2d7;border-radius:7px;font-size:0.82rem;background:#fff;cursor:pointer;font-family:inherit;" onchange="selectEarnedStudent(this.value, this.options[this.selectedIndex].text)">
+                <select id="earned-student-sel" class="redact-select" style="padding:0.3rem 0.6rem;border:1px solid #d2d2d7;border-radius:7px;font-size:0.82rem;background:#fff;cursor:pointer;font-family:inherit;" onchange="selectEarnedStudent(this.value, this.options[this.selectedIndex].text)">
                     <option value="">— Select Student —</option>
                 </select>
                 <input type="hidden" id="st-student" value="">
@@ -1218,7 +1218,7 @@
 <div class="tab-content" id="tab-portfolio">
     <div class="view-container">
         <div id="portfolio-toolbar" style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1.5rem;">
-            <select id="portfolio-student-sel" style="padding:0.3rem 0.6rem;border:1px solid #d2d2d7;border-radius:7px;font-size:0.82rem;background:#fff;cursor:pointer;font-family:inherit;" onchange="navPortfolioStudent(this.value)">
+            <select id="portfolio-student-sel" class="redact-select" style="padding:0.3rem 0.6rem;border:1px solid #d2d2d7;border-radius:7px;font-size:0.82rem;background:#fff;cursor:pointer;font-family:inherit;" onchange="navPortfolioStudent(this.value)">
                 <option value="">— Select Student —</option>
             </select>
             <div style="flex:1;"></div>
@@ -1525,7 +1525,7 @@
             <!-- filter bar -->
             <div id="xref-filter-bar" style="display:flex;gap:0.6rem;align-items:center;padding:0.55rem max(1.25rem,calc((100vw - 1400px)/2 + 1.25rem));border-bottom:1px solid #e8e8ed;background:#f5f5f7;flex-wrap:wrap;row-gap:0.45rem;justify-content:flex-start;">
                 <span style="font-size:0.82rem;font-weight:700;color:#1d1d1f;">CCSS - LC Overview</span>
-                <select id="xref-student-sel" onchange="xrefSetStudent(this.value)" style="padding:0.3rem 0.6rem;border:1px solid #d2d2d7;border-radius:7px;font-size:0.82rem;background:#fff;cursor:pointer;max-width:180px;">
+                <select id="xref-student-sel" class="redact-select" onchange="xrefSetStudent(this.value)" style="padding:0.3rem 0.6rem;border:1px solid #d2d2d7;border-radius:7px;font-size:0.82rem;background:#fff;cursor:pointer;max-width:180px;">
                     <option value="">— Select Student —</option>
                 </select>
                 <div id="xref-area-toggle" style="display:none;align-items:center;gap:0.4rem;">
@@ -8109,7 +8109,7 @@ function renderReadingStudentOverview() {
     // ── selector bar ──
     var html = '<div style="padding:.75rem 1.25rem;background:#f5f5f7;border-bottom:1px solid #e8e8ed;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">'
         + '<label style="font-size:.82rem;font-weight:600;color:#1d1d1f;">Student</label>'
-        + '<select id="stu-ov-sel" onchange="readingOverviewStudent=this.value;renderReadingStudentOverview();" style="padding:5px 10px;border-radius:8px;border:1px solid #d1d1d6;font-family:inherit;font-size:.82rem;min-width:180px;">'
+        + '<select id="stu-ov-sel" class="redact-select" onchange="readingOverviewStudent=this.value;renderReadingStudentOverview();" style="padding:5px 10px;border-radius:8px;border:1px solid #d1d1d6;font-family:inherit;font-size:.82rem;min-width:180px;">'
         + nameList.map(function(n){ return '<option value="'+n.replace(/"/g,'&quot;')+'"'+(n===sel?' selected':'')+'>'+n+'</option>'; }).join('')
         + '</select>'
         + (readOvAL ? smallChipR(readOvAL, 'background:#fff3e0;color:#FF8200;') : '')
@@ -9389,7 +9389,7 @@ function _renderPromoOverview() {
     html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">'
         +'<div style="background:#fff;border-radius:14px;border:1px solid #e8e8ed;overflow:hidden;">'
         +'<div style="background:#5c5b5a;color:#fff;padding:0.55rem 1rem;font-size:.8rem;font-weight:700;">Attempts &amp; Successes by Year</div>'
-        +'<canvas id="promo-att-c" style="width:100%;height:230px;display:block;"></canvas></div>'
+        +'<div id="promo-att-c" style="width:100%;"></div>'
         +'<div style="background:#fff;border-radius:14px;border:1px solid #e8e8ed;overflow:hidden;">'
         +'<div style="background:#5c5b5a;color:#fff;padding:0.55rem 1rem;font-size:.8rem;font-weight:700;">AL Distribution by Year</div>'
         +'<canvas id="promo-al-c" style="width:100%;height:260px;display:block;"></canvas></div></div>';
@@ -9510,7 +9510,7 @@ function _renderPromoOverview() {
         var c1=document.getElementById('promo-att-c');
         var c2=document.getElementById('promo-al-c');
         var c3=document.getElementById('promo-rate-c');
-        if(c1){c1.width=c1.offsetWidth||400;c1.height=230;_drawPromoAttChart(c1,ys);}
+        if(c1){_drawPromoAttChart(c1,ys);}
         if(c2){c2.width=c2.offsetWidth||400;c2.height=260;_drawPromoALChart(c2,ys);}
         if(c3){c3.width=c3.offsetWidth||800;c3.height=180;_drawPromoRateChart(c3,ys);}
     });
@@ -9529,7 +9529,7 @@ function _renderPromoStudent() {
     if (!promoStudentSel || !byId[promoStudentSel]) promoStudentSel = students[0]&&students[0].id||'';
     var html = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;">'
         +'<label style="font-size:.82rem;font-weight:600;color:#1d1d1f;">Student</label>'
-        +'<select id="promo-stu-sel" onchange="promoStudentSel=this.value;_renderPromoStuDetail();" style="padding:5px 10px;border-radius:8px;border:1px solid #d1d1d6;font-family:inherit;font-size:.82rem;">';
+        +'<select id="promo-stu-sel" class="redact-select" onchange="promoStudentSel=this.value;_renderPromoStuDetail();" style="padding:5px 10px;border-radius:8px;border:1px solid #d1d1d6;font-family:inherit;font-size:.82rem;">';
     students.forEach(function(s){
         html+='<option value="'+s.id+'"'+(s.id===promoStudentSel?' selected':'')+'>'+s.name+'</option>';
     });
@@ -9595,42 +9595,65 @@ function _renderPromoStuDetail() {
 
 // ── Promotion chart helpers ──
 
-function _drawPromoAttChart(canvas, ys) {
-    var dpr=window.devicePixelRatio||1, W=canvas.width, H=canvas.height;
-    canvas.width=W*dpr; canvas.height=H*dpr; canvas.style.width=W+'px'; canvas.style.height=H+'px';
-    var ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
-    var pL=40,pR=16,pT=34,pB=52, plotW=W-pL-pR, plotH=H-pT-pB;
-    ctx.fillStyle='#fafafa'; ctx.fillRect(0,0,W,H);
-    var maxV=0; ys.forEach(function(y){maxV=Math.max(maxV,y.s.midAtt,y.s.midSuc,y.s.eoyAtt,y.s.eoySuc);});
-    maxV=Math.max(maxV,4)*1.25;
-    function yOf(v){return pT+plotH*(1-v/maxV);}
-    for(var g=0;g<=4;g++){var gv=maxV*g/4,gy=yOf(gv);ctx.strokeStyle='#ebebf0';ctx.lineWidth=1;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(pL,gy);ctx.lineTo(pL+plotW,gy);ctx.stroke();ctx.fillStyle='#8e8e93';ctx.font='9px -apple-system,sans-serif';ctx.textAlign='right';ctx.fillText(Math.round(gv),pL-4,gy+3);}
-    var barKeys=['midAttByAL','midSucByAL','eoyAttByAL','eoySucByAL'];
-    var barTotals=['midAtt','midSuc','eoyAtt','eoySuc'];
-    var subLbls=['MOY Att','MOY Suc','EOY Att','EOY Suc'];
-    var n=ys.length, gW=plotW/n, bw=gW*0.17, gap=gW*0.025;
-    ys.forEach(function(y,i){
-        var cx=pL+(i+0.5)*gW;
-        var totW=4*bw+3*gap;
-        barKeys.forEach(function(bk,bi){
-            var bx=cx-totW/2+bi*(bw+gap);
-            var cumY=pT+plotH;
-            var total=y.s[barTotals[bi]];
-            [1,2,3,4].forEach(function(al){
-                var cnt=(y.s[bk]&&y.s[bk][al])||0; if(!cnt)return;
-                var bh=plotH*cnt/maxV; cumY-=bh;
-                ctx.fillStyle=PROMO_AL_LIGHT[al];
-                ctx.fillRect(bx,cumY,bw,bh);
-                ctx.strokeStyle='rgba(255,255,255,0.5)';ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(bx,cumY+bh);ctx.lineTo(bx+bw,cumY+bh);ctx.stroke();
-            });
-            if(total>0){ctx.fillStyle='#1d1d1f';ctx.font='bold 9px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillText(total,bx+bw/2,yOf(total)-3);}
-            ctx.fillStyle='#86868b';ctx.font='7px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillText(subLbls[bi],bx+bw/2,pT+plotH+13);
+function _drawPromoAttChart(container, ys) {
+    container.innerHTML = '';
+    container.style.display = 'flex';
+    container.style.flexWrap = 'wrap';
+    container.style.gap = '8px';
+    container.style.padding = '10px 10px 4px';
+    var dpr = window.devicePixelRatio || 1;
+    var W = 132, H = 154;
+    ys.forEach(function(y) {
+        var cvs = document.createElement('canvas');
+        cvs.width = W*dpr; cvs.height = H*dpr;
+        cvs.style.width = W+'px'; cvs.style.height = H+'px';
+        cvs.style.display = 'block';
+        container.appendChild(cvs);
+        var ctx = cvs.getContext('2d'); ctx.scale(dpr,dpr);
+        var pL=4, pR=4, pT=20, pB=32, plotW=W-pL-pR, plotH=H-pT-pB;
+        ctx.fillStyle='#fafafa'; ctx.fillRect(0,0,W,H);
+        // Year title
+        ctx.fillStyle='#3a3a3c'; ctx.font='bold 10px -apple-system,sans-serif'; ctx.textAlign='center';
+        ctx.fillText(y.label, W/2, 13);
+        var numAL=4, gW=plotW/numAL, bGap=3, bw=Math.floor((gW-3*bGap)/2);
+        [1,2,3,4].forEach(function(al,ai) {
+            var gx=pL+ai*gW;
+            var moyAtt=(y.s.midAttByAL&&y.s.midAttByAL[al])||0;
+            var moySuc=(y.s.midSucByAL&&y.s.midSucByAL[al])||0;
+            var eoyAtt=(y.s.eoyAttByAL&&y.s.eoyAttByAL[al])||0;
+            var eoySuc=(y.s.eoySucByAL&&y.s.eoySucByAL[al])||0;
+            var bx1=gx+bGap, bx2=bx1+bw+bGap;
+            function drawBar(bx,att,suc,sucColor) {
+                if(!att){ctx.fillStyle='#e8e8ed';ctx.fillRect(bx,pT+plotH-3,bw,3);return;}
+                var rate=suc/att;
+                var sucH=Math.round(plotH*rate);
+                var failH=plotH-sucH;
+                ctx.fillStyle='#e8e8ed'; ctx.fillRect(bx,pT,bw,failH);
+                ctx.fillStyle=sucColor; ctx.fillRect(bx,pT+failH,bw,sucH);
+                var pct=Math.round(rate*100);
+                ctx.fillStyle='#1d1d1f'; ctx.font='bold 7px -apple-system,sans-serif'; ctx.textAlign='center';
+                if(failH>8) ctx.fillText(pct+'%',bx+bw/2,pT+failH-2);
+                else ctx.fillText(pct+'%',bx+bw/2,pT+failH+8);
+                ctx.fillStyle='#64748b'; ctx.font='7px -apple-system,sans-serif';
+                ctx.fillText(att,bx+bw/2,pT+plotH+11);
+            }
+            drawBar(bx1,moyAtt,moySuc,PROMO_AL_LIGHT[al]);
+            drawBar(bx2,eoyAtt,eoySuc,PROMO_AL_DARK[al]);
+            // AL label
+            ctx.fillStyle=PROMO_AL_DARK[al]; ctx.font='bold 8px -apple-system,sans-serif'; ctx.textAlign='center';
+            ctx.fillText('AL'+al,gx+gW/2,pT+plotH+24);
         });
-        ctx.fillStyle='#64748b';ctx.font='10px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillText(y.label,cx,pT+plotH+28);
+        // Axis
+        ctx.strokeStyle='#d1d1d6'; ctx.lineWidth=1; ctx.setLineDash([]);
+        ctx.beginPath(); ctx.moveTo(pL,pT); ctx.lineTo(pL,pT+plotH); ctx.lineTo(pL+plotW,pT+plotH); ctx.stroke();
     });
-    var lx=pL;
-    [1,2,3,4].forEach(function(al){ctx.fillStyle=PROMO_AL_LIGHT[al];ctx.fillRect(lx,pT-20,9,9);ctx.fillStyle='#3a3a3c';ctx.font='9px -apple-system,sans-serif';ctx.textAlign='left';ctx.fillText('AL'+al,lx+12,pT-13);lx+=36;});
-    ctx.strokeStyle='#d1d1d6';ctx.lineWidth=1;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(pL,pT);ctx.lineTo(pL,pT+plotH);ctx.lineTo(pL+plotW,pT+plotH);ctx.stroke();
+    // Legend row
+    var leg = document.createElement('div');
+    leg.style.cssText = 'width:100%;display:flex;gap:14px;padding:0 4px 8px;font-size:.68rem;color:#64748b;align-items:center;flex-wrap:wrap;';
+    leg.innerHTML = '<span style="display:flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;background:#93c5fd;border:1px solid #93c5fd;border-radius:2px;display:inline-block;"></span>Left bar = MOY</span>'
+        +'<span style="display:flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;background:#1d4ed8;border-radius:2px;display:inline-block;"></span>Right bar = EOY</span>'
+        +'<span style="color:#86868b;font-size:.63rem;">Bar height = success rate · Number = attempts</span>';
+    container.appendChild(leg);
 }
 
 function _drawPromoALChart(canvas, ys) {
@@ -9694,7 +9717,7 @@ function _drawPromoRateChart(canvas, ys) {
         });
         if(lastR!==null){ctx.fillStyle=color;ctx.font='bold 10px -apple-system,sans-serif';ctx.textAlign='left';ctx.fillText(lbl,xOf(lastI)+10,yOf(lastR)+4);}
     }
-    drawLine(ys.map(function(y){return y.s.midAtt?y.s.midSuc/y.s.midAtt*100:null;}),'#60a5fa','Mid');
+    drawLine(ys.map(function(y){return y.s.midAtt?y.s.midSuc/y.s.midAtt*100:null;}),'#60a5fa','MOY');
     drawLine(ys.map(function(y){return y.s.eoyAtt?y.s.eoySuc/y.s.eoyAtt*100:null;}),'#fb923c','EOY');
     ys.forEach(function(y,i){ctx.fillStyle='#8e8e93';ctx.font='10px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillText(y.label,xOf(i),pT+plotH+20);});
     ctx.strokeStyle='#d1d1d6';ctx.lineWidth=1;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(pL,pT);ctx.lineTo(pL,pT+plotH);ctx.lineTo(pL+plotW,pT+plotH);ctx.stroke();
@@ -9844,7 +9867,7 @@ function _drawPromoCrossRef() {
         +'</div>';
     var selHtml = '<div style="padding:0.6rem 1.25rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-bottom:1px solid #e8e8ed;background:#f5f5f7;margin:'+_selM+';">'
         +'<label style="font-size:.82rem;font-weight:600;color:#1d1d1f;">Student</label>'
-        +'<select id="promo-xref-sel" onchange="promoXrefSel=this.value;_renderPromoXrefStudent();" style="padding:5px 10px;border-radius:8px;border:1px solid #d1d1d6;font-family:inherit;font-size:.82rem;">'
+        +'<select id="promo-xref-sel" class="redact-select" onchange="promoXrefSel=this.value;_renderPromoXrefStudent();" style="padding:5px 10px;border-radius:8px;border:1px solid #d1d1d6;font-family:inherit;font-size:.82rem;">'
         +students.map(function(s){
             return '<option value="'+s.name.replace(/"/g,'&quot;')+'"'+(s.name===promoXrefSel?' selected':'')+'>'+s.name+'</option>';
         }).join('')
@@ -16690,7 +16713,7 @@ function renderStudentView() {
     var growthToggle='<div style="display:flex;border:1px solid #e5e5ea;border-radius:8px;overflow:hidden">'
         +[['fw','BOY→MOY'],['ws','MOY→EOY'],['fs','BOY→EOY']].map(function(p){return'<button onclick="WD.setStudentGrowth(\''+p[0]+'\')" style="padding:3px 9px;border:none;font-family:inherit;font-size:.7rem;font-weight:600;cursor:pointer;background:'+(studentGrowthCol===p[0]?'#e8e8ed':'transparent')+';color:'+(studentGrowthCol===p[0]?'#1d1d1f':'#86868b')+'">'+p[1]+'</button>';}).join('')+'</div>';
     el.innerHTML='<div class="wd-filter-bar"><label>Student</label>'
-        +'<select id="wd-sel-student">'
+        +'<select id="wd-sel-student" class="redact-select">'
         +APP.students.slice().sort(function(a,b){ return (a.name||'').localeCompare(b.name||''); })
         .map(function(st){return'<option value="'+st.name+'"'+(st.name===selectedStudent?' selected':'')+'>'+fullName(st.name).replace(/</g,'&lt;')+(st.goal?' — goal: '+st.goal:'')+'</option>';}).join('')
         +'</select></div>'
@@ -17474,7 +17497,7 @@ function renderWbStudentGrowth() {
 
     var html = '<div style="padding:0.75rem 1.25rem 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">'
         + '<label style="font-size:.82rem;font-weight:600;color:#1d1d1f;">Student</label>'
-        + '<select id="wb-sg-sel" onchange="wbSgSelectedStudent=this.value;wbAvgGrowthMode=false;renderWbStudentGrowth();"'
+        + '<select id="wb-sg-sel" class="redact-select" onchange="wbSgSelectedStudent=this.value;wbAvgGrowthMode=false;renderWbStudentGrowth();"'
         + ' style="padding:5px 10px;border-radius:8px;border:1px solid #d1d1d6;font-family:inherit;font-size:.82rem;">'
         + '<option value="">— All students —</option>'
         + allStudents.map(function(s){ return '<option value="' + s.name.replace(/"/g,'&quot;') + '"' + (s.name===wbSgSelectedStudent?' selected':'') + '>' + fullName(s.name).replace(/</g,'&lt;') + (s.al?' — AL'+s.al:'') + '</option>'; }).join('')
