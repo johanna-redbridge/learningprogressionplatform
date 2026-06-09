@@ -5703,11 +5703,15 @@ function renderEarnedStudent(period, container) {
             v = (subjects.indexOf(a.subject) - subjects.indexOf(b.subject)) || a.subject.localeCompare(b.subject);
         } else if (earnedStudentSortCol === 'stage') {
             v = (stageOrder.indexOf(a.stage) - stageOrder.indexOf(b.stage));
-        } else if (earnedStudentSortCol === 'status') {
-            var aVal = ae ? 0 : aa ? 1 : 2;
-            var bVal = be ? 0 : ba ? 1 : 2;
-            v = aVal - bVal;
-        } else if (earnedStudentSortCol === 'date') {
+        } else if (earnedStudentSortCol === 'attempted') {
+            var aAtt = isAttempted(studentId, a.id), bAtt = isAttempted(studentId, b.id);
+            var aAd = aAtt && aAtt.date ? aAtt.date : '';
+            var bAd = bAtt && bAtt.date ? bAtt.date : '';
+            if (!aAd && !bAd) { v = 0; }
+            else if (!aAd) { return 1; }
+            else if (!bAd) { return -1; }
+            else { v = aAd < bAd ? -1 : aAd > bAd ? 1 : 0; }
+        } else if (earnedStudentSortCol === 'earned' || earnedStudentSortCol === 'date') {
             var ad = _creditSortDates[a.id] || '';
             var bd = _creditSortDates[b.id] || '';
             if (!ad && !bd) { v = 0; }
@@ -5735,39 +5739,45 @@ function renderEarnedStudent(period, container) {
         html += '<p style="text-align:center;color:#86868b;padding:2rem;">No credits match the selected filters.</p>';
     } else {
         html += '<div class="progress-table-wrapper"><table><thead><tr>';
-        html += _thSort('credit','Credit',false) + _thSort('subject','Subject',false) + _thSort('stage','Stage',false) + _thSort('status','Status',true) + _thSort('date','Date',true) + _thSort('artifact','Artifact',true);
+        html += _thSort('credit','Credit',false) + _thSort('subject','Subject',false) + _thSort('stage','Stage',false) + _thSort('attempted','Attempted',true) + _thSort('earned','Earned',true) + _thSort('artifact','Artifact',true);
         html += '</tr></thead><tbody>';
 
         tableCredits.forEach(function(c) {
             var e = hasEarned(studentId, c.id, period);
-            var fd = e ? formatDate(e.date) : '';
+            var att = isAttempted(studentId, c.id);
             html += '<tr>';
             html += '<td style="font-weight:500;">' + c.title + '</td>';
             html += '<td><span class="tag ' + subjectTagClass(c.subject) + '" style="font-size:0.65rem;padding:0.1rem 0.4rem;">' + c.subject + '</span></td>';
             html += '<td style="font-size:0.78rem;color:#555;">' + (c.stage || '') + '</td>';
+            // Attempted column
             html += '<td style="text-align:center;">';
-            var att = !e && isAttempted(studentId, c.id);
-            if (e) {
-                html += '<span class="earned-icon earned-yes" style="cursor:pointer;" onclick="toggleEarned(\'' + studentId + '\',\'' + c.id + '\')">&#10003;</span>';
-            } else if (att) {
+            if (att) {
                 var afd = formatDate(att.date);
-                html += '<span class="earned-icon attempted-icon" style="cursor:pointer;" onclick="toggleEarned(\'' + studentId + '\',\'' + c.id + '\')"' + (afd ? ' title="Attempted ' + afd + '"' : '') + '>a</span>';
+                html += '<span class="earned-icon attempted-icon" style="cursor:pointer;" onclick="toggleEarned(\'' + studentId + '\',\'' + c.id + '\')">a</span>';
+                if (afd) html += '<div style="font-size:0.65rem;color:#555;margin-top:1px;cursor:pointer;" onclick="editAttemptedDate(\'' + studentId + '\',\'' + c.id + '\')">' + afd + '</div>';
             } else {
-                html += '<span class="earned-icon earned-no" style="cursor:pointer;" onclick="toggleEarned(\'' + studentId + '\',\'' + c.id + '\')"></span>';
+                html += '<span style="color:#d2d2d7;">—</span>';
             }
             html += '</td>';
+            // Earned column
             var aKey = artifactKey(studentId, c.id);
             var art = artifacts[aKey];
             var dateResult = driveArtifactDateFor(studentId, c.title)
                           || (art ? parseDateFromFilename(art.name) : null);
+            var fd = e ? formatDate(e.date) : '';
             var dateDisplay = dateResult ? (dateResult.iso ? formatDate(dateResult.iso) : formatDate(dateResult.display)) : (fd || '');
-            if (dateDisplay) {
-                html += '<td style="text-align:center;font-size:0.72rem;color:#555;white-space:nowrap;cursor:pointer;" onclick="editEarnedDate(\'' + studentId + '\',\'' + c.id + '\')" title="Edit date">' + dateDisplay + '</td>';
-            } else if (e) {
-                html += '<td style="text-align:center;font-size:0.72rem;white-space:nowrap;"><span style="color:#d2d2d7;cursor:pointer;" onclick="editEarnedDate(\'' + studentId + '\',\'' + c.id + '\')" title="Set earned date">+ date</span></td>';
+            html += '<td style="text-align:center;">';
+            if (e) {
+                html += '<span class="earned-icon earned-yes" style="cursor:pointer;" onclick="toggleEarned(\'' + studentId + '\',\'' + c.id + '\')">&#10003;</span>';
+                if (dateDisplay) {
+                    html += '<div style="font-size:0.65rem;color:#555;margin-top:1px;cursor:pointer;" onclick="editEarnedDate(\'' + studentId + '\',\'' + c.id + '\')">' + dateDisplay + '</div>';
+                } else {
+                    html += '<div style="font-size:0.65rem;color:#d2d2d7;margin-top:1px;cursor:pointer;" onclick="editEarnedDate(\'' + studentId + '\',\'' + c.id + '\')">+ date</div>';
+                }
             } else {
-                html += '<td style="text-align:center;"><span style="color:#d2d2d7;">—</span></td>';
+                html += '<span class="earned-icon earned-no" style="cursor:pointer;" onclick="toggleEarned(\'' + studentId + '\',\'' + c.id + '\')"></span>';
             }
+            html += '</td>';
             html += '<td style="text-align:center;">';
             if (art) {
                 html += '<div class="artifact-preview">';
