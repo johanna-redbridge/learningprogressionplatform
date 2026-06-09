@@ -17863,7 +17863,7 @@ function renderWbCategoryDetail(ci, alFilter) {
         return '#ff6961';
     }
     function scoreCell(val, period, goal) {
-        if (val===null||val===undefined) return '<span style="color:#c7c7cc;font-size:0.7rem;">N/A</span>';
+        if (val===null||val===undefined) return '<span style="color:#c7c7cc;font-size:0.62rem;">no data yet</span>';
         var bg;
         if (period === 'eoy') {
             bg = '#d0d0d8';
@@ -17874,7 +17874,7 @@ function renderWbCategoryDetail(ci, alFilter) {
         return '<div style="display:inline-block;padding:2px 10px;border-radius:5px;background:'+bg+';font-size:0.78rem;font-weight:700;color:#1d1d1f;">'+val.toFixed(1)+'</div>';
     }
     function trendCell(from, to) {
-        if (from===null||from===undefined||to===null||to===undefined) return '<span style="color:#c7c7cc;font-size:0.7rem;">N/A</span>';
+        if (from===null||from===undefined||to===null||to===undefined) return '<span style="color:#c7c7cc;font-size:0.62rem;">no data yet</span>';
         var diff = to - from;
         var col = diff>0?'#15803d':diff<0?'#b91c1c':'#374151';
         return '<span style="font-size:0.75rem;font-weight:700;color:'+col+'">'+(diff>=0?'+':'')+diff.toFixed(1)+'</span>';
