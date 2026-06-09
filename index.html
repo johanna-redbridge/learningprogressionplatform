@@ -17932,8 +17932,8 @@ function renderWbCategoryDetail(ci, alFilter) {
         var avgGoal = _stuGoals.length ? _stuGoals.reduce(function(a,b){return a+b;},0)/_stuGoals.length : null;
         var bmDiff = (bAvg!==null&&mAvg!==null) ? (mAvg-bAvg) : null;
         var meDiff = (mAvg!==null&&eAvg!==null) ? (eAvg-mAvg) : null;
-        var bmCell = bmDiff!==null ? '<span style="font-size:0.75rem;font-weight:700;color:#1d1d1f;">'+(bmDiff>=0?'+':'')+bmDiff.toFixed(1)+'</span>' : '<span style="color:#c7c7cc;font-size:0.62rem;">no data yet</span>';
-        var meCell = meDiff!==null ? '<span style="font-size:0.75rem;font-weight:700;color:#1d1d1f;">'+(meDiff>=0?'+':'')+meDiff.toFixed(1)+'</span>' : '<span style="color:#c7c7cc;font-size:0.62rem;">no data yet</span>';
+        var bmCell = bmDiff!==null ? '<span style="font-size:0.75rem;font-weight:700;color:#1d1d1f;">'+(bmDiff>=0?'+':'')+bmDiff.toFixed(2)+'</span>' : '<span style="color:#c7c7cc;font-size:0.62rem;">no data yet</span>';
+        var meCell = meDiff!==null ? '<span style="font-size:0.75rem;font-weight:700;color:#1d1d1f;">'+(meDiff>=0?'+':'')+meDiff.toFixed(2)+'</span>' : '<span style="color:#c7c7cc;font-size:0.62rem;">no data yet</span>';
         h += '<tr>'
             +'<td style="'+GA+'text-align:left;padding:5px 10px;color:#374151;">Class avg</td>'
             +'<td style="'+GA+'"></td>'
