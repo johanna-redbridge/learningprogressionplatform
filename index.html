@@ -1913,11 +1913,10 @@ var earnedGroupId = '';
 
 function toggleEarned(studentId, creditId) {
     var eidx = earned.findIndex(function(e) { return e.studentId === studentId && e.creditId === creditId; });
-    var today = new Date().toISOString().substring(0, 10);
     if (eidx !== -1) {
         earned.splice(eidx, 1);
     } else {
-        earned.push({ studentId: studentId, creditId: creditId, date: today });
+        earned.push({ studentId: studentId, creditId: creditId, date: '' });
     }
     earnedModified = true;
     renderEarnedCredits();
@@ -3108,6 +3107,8 @@ function loadEarnedFromSheet() {
 function parseCellDate(str) {
     if (!str) return '';
     str = str.trim();
+    // Strip trailing time component (Google Sheets exports "M/D/YYYY 0:00:00")
+    str = str.replace(/\s+\d{1,2}:\d{2}(:\d{2})?(\s*(AM|PM))?$/i, '').trim();
     if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
     // MM/YYYY or M/YYYY (month + year only)
     var mm = str.match(/^(\d{1,2})\/(\d{4})$/);
