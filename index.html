@@ -9601,93 +9601,126 @@ function _renderPromoStuDetail() {
 
 function _drawPromoAttChart(container, ys) {
     container.innerHTML = '';
-    container.style.display = 'flex';
-    container.style.flexWrap = 'wrap';
-    container.style.gap = '8px';
-    container.style.padding = '10px 10px 4px';
+    container.style.cssText = 'display:flex;flex-direction:column;gap:8px;padding:10px;';
     var dpr = window.devicePixelRatio || 1;
-    var W = 132, H = 198;
-    ys.forEach(function(y) {
-        var cvs = document.createElement('canvas');
+
+    function drawPeriodCanvas(cvs, attByAL, sucByAL) {
+        var W = cvs.offsetWidth || 320, H = 140;
         cvs.width = W*dpr; cvs.height = H*dpr;
         cvs.style.width = W+'px'; cvs.style.height = H+'px';
-        cvs.style.display = 'block';
-        container.appendChild(cvs);
         var ctx = cvs.getContext('2d'); ctx.scale(dpr,dpr);
-        var pL=4, pR=4, pT=20, pB=72, plotW=W-pL-pR, plotH=H-pT-pB;
+        var pL=28, pR=6, pT=14, pB=34, plotW=W-pL-pR, plotH=H-pT-pB;
         ctx.fillStyle='#fafafa'; ctx.fillRect(0,0,W,H);
-        // Year title
-        ctx.fillStyle='#3a3a3c'; ctx.font='bold 10px -apple-system,sans-serif'; ctx.textAlign='center';
-        ctx.fillText(y.label, W/2, 13);
-        var numAL=4, gW=plotW/numAL, bGap=3, bw=Math.floor((gW-3*bGap)/2);
-        [1,2,3,4].forEach(function(al,ai) {
-            var gx=pL+ai*gW;
-            var moyAtt=(y.s.midAttByAL&&y.s.midAttByAL[al])||0;
-            var moySuc=(y.s.midSucByAL&&y.s.midSucByAL[al])||0;
-            var eoyAtt=(y.s.eoyAttByAL&&y.s.eoyAttByAL[al])||0;
-            var eoySuc=(y.s.eoySucByAL&&y.s.eoySucByAL[al])||0;
-            var moyRate = moyAtt ? moySuc/moyAtt : null;
-            var eoyRate = eoyAtt ? eoySuc/eoyAtt : null;
+
+        var maxAtt=0;
+        [1,2,3,4].forEach(function(al){ maxAtt=Math.max(maxAtt,(attByAL&&attByAL[al])||0); });
+        maxAtt=Math.max(maxAtt,1);
+
+        // Y-axis gridlines (for attempt count)
+        for(var g=0;g<=maxAtt;g++){
+            var gy=pT+plotH*(1-g/maxAtt);
+            ctx.strokeStyle='#ebebf0'; ctx.lineWidth=0.5; ctx.setLineDash([]);
+            ctx.beginPath(); ctx.moveTo(pL,gy); ctx.lineTo(pL+plotW,gy); ctx.stroke();
+            if(g===0||g===maxAtt||g===Math.round(maxAtt/2)){
+                ctx.fillStyle='#8e8e93'; ctx.font='8px -apple-system,sans-serif'; ctx.textAlign='right';
+                ctx.fillText(g,pL-3,gy+3);
+            }
+        }
+
+        var numAL=4, gW=plotW/numAL, bGap=4, bw=Math.floor((gW-3*bGap)/2);
+
+        [1,2,3,4].forEach(function(al,ai){
+            var gx=pL+ai*gW, cx=gx+gW/2;
+            var att=(attByAL&&attByAL[al])||0;
+            var suc=(sucByAL&&sucByAL[al])||0;
+            var rate=att?suc/att:null;
             var bx1=gx+bGap, bx2=bx1+bw+bGap;
-            var cx=gx+gW/2;
-            function drawBar(bx,att,suc,sucColor,lbl) {
-                if(!att){
-                    ctx.fillStyle='#e8e8ed'; ctx.fillRect(bx,pT+plotH-3,bw,3);
-                    ctx.fillStyle='#aeaeb2'; ctx.font='7px -apple-system,sans-serif'; ctx.textAlign='center';
-                    ctx.fillText(lbl,bx+bw/2,pT+plotH+20);
-                    return;
-                }
-                var rate=suc/att;
-                var sucH=Math.round(plotH*rate);
-                var failH=plotH-sucH;
-                ctx.fillStyle='#e8e8ed'; ctx.fillRect(bx,pT,bw,failH);
-                ctx.fillStyle=sucColor; ctx.fillRect(bx,pT+failH,bw,sucH);
-                var pct=Math.round(rate*100);
-                ctx.fillStyle='#1d1d1f'; ctx.font='bold 7px -apple-system,sans-serif'; ctx.textAlign='center';
-                if(failH>9) ctx.fillText(pct+'%',bx+bw/2,pT+failH-2);
-                else ctx.fillText(pct+'%',bx+bw/2,pT+failH+9);
-                ctx.fillStyle='#64748b'; ctx.font='7px -apple-system,sans-serif';
-                ctx.fillText(att,bx+bw/2,pT+plotH+11);
-                ctx.fillStyle='#86868b'; ctx.font='7px -apple-system,sans-serif';
-                ctx.fillText(lbl,bx+bw/2,pT+plotH+20);
+
+            // Bar 1: attempt count — grey, scaled to maxAtt
+            var attH=Math.round(plotH*att/maxAtt);
+            if(att>0){
+                ctx.fillStyle='#9ca3af'; ctx.fillRect(bx1,pT+plotH-attH,bw,attH);
+                ctx.fillStyle='#374151'; ctx.font='bold 8px -apple-system,sans-serif'; ctx.textAlign='center';
+                ctx.fillText(att,bx1+bw/2,pT+plotH-attH-2);
+            } else {
+                ctx.fillStyle='#e8e8ed'; ctx.fillRect(bx1,pT+plotH-3,bw,3);
+                ctx.fillStyle='#aeaeb2'; ctx.font='8px -apple-system,sans-serif'; ctx.textAlign='center';
+                ctx.fillText('0',bx1+bw/2,pT+plotH-5);
             }
-            drawBar(bx1,moyAtt,moySuc,PROMO_AL_LIGHT[al],'MOY');
-            drawBar(bx2,eoyAtt,eoySuc,PROMO_AL_DARK[al],'EOY');
-            // Delta row: EOY rate - MOY rate
-            var deltaRateTxt='—', deltaRateCol='#aeaeb2';
-            var deltaAttTxt='', deltaAttCol='#aeaeb2';
-            if(moyRate!==null && eoyRate!==null){
-                var dr=Math.round((eoyRate-moyRate)*100);
-                deltaRateTxt=(dr>0?'+':'')+dr+'%';
-                deltaRateCol=dr>0?'#16a34a':dr<0?'#dc2626':'#64748b';
-            } else if(moyRate===null && eoyRate!==null){
-                deltaRateTxt='EOY only'; deltaRateCol='#64748b';
-            } else if(moyRate!==null && eoyRate===null){
-                deltaRateTxt='MOY only'; deltaRateCol='#64748b';
+            ctx.fillStyle='#64748b'; ctx.font='7px -apple-system,sans-serif'; ctx.textAlign='center';
+            ctx.fillText('n',bx1+bw/2,pT+plotH+11);
+
+            // Bar 2: success rate — AL dark color, scaled 0-100%
+            var rateH=rate!==null?Math.round(plotH*rate):0;
+            if(att>0){
+                ctx.fillStyle='#f1f5f9'; ctx.fillRect(bx2,pT,bw,plotH-rateH);
+                ctx.fillStyle=PROMO_AL_DARK[al]; ctx.fillRect(bx2,pT+plotH-rateH,bw,rateH);
+                var pct=Math.round((rate||0)*100);
+                ctx.fillStyle='#1d1d1f'; ctx.font='bold 8px -apple-system,sans-serif'; ctx.textAlign='center';
+                ctx.fillText(pct+'%',bx2+bw/2,pT+plotH-rateH-2);
+            } else {
+                ctx.fillStyle='#e8e8ed'; ctx.fillRect(bx2,pT+plotH-3,bw,3);
+                ctx.fillStyle='#aeaeb2'; ctx.font='7px -apple-system,sans-serif'; ctx.textAlign='center';
+                ctx.fillText('—',bx2+bw/2,pT+plotH-5);
             }
-            if(moyAtt||eoyAtt){
-                var da=eoyAtt-moyAtt;
-                deltaAttTxt='att '+(da>0?'+':'')+da;
-                deltaAttCol=da>0?'#2563eb':da<0?'#9333ea':'#64748b';
-            }
-            ctx.fillStyle=deltaRateCol; ctx.font='bold 7.5px -apple-system,sans-serif'; ctx.textAlign='center';
-            ctx.fillText(deltaRateTxt,cx,pT+plotH+33);
-            if(deltaAttTxt){
-                ctx.fillStyle=deltaAttCol; ctx.font='6.5px -apple-system,sans-serif';
-                ctx.fillText(deltaAttTxt,cx,pT+plotH+44);
-            }
+            ctx.fillStyle='#64748b'; ctx.font='7px -apple-system,sans-serif'; ctx.textAlign='center';
+            ctx.fillText('%',bx2+bw/2,pT+plotH+11);
+
             // AL label
-            ctx.fillStyle=PROMO_AL_DARK[al]; ctx.font='bold 8px -apple-system,sans-serif'; ctx.textAlign='center';
-            ctx.fillText('AL'+al,cx,pT+plotH+58);
+            ctx.fillStyle=PROMO_AL_DARK[al]; ctx.font='bold 8.5px -apple-system,sans-serif'; ctx.textAlign='center';
+            ctx.fillText('AL'+al,cx,pT+plotH+24);
         });
-        // Axis
+
+        // Axis border
         ctx.strokeStyle='#d1d1d6'; ctx.lineWidth=1; ctx.setLineDash([]);
         ctx.beginPath(); ctx.moveTo(pL,pT); ctx.lineTo(pL,pT+plotH); ctx.lineTo(pL+plotW,pT+plotH); ctx.stroke();
+    }
+
+    ys.forEach(function(y){
+        var card = document.createElement('div');
+        card.style.cssText = 'background:#fff;border:1px solid #e8e8ed;border-radius:10px;overflow:hidden;';
+
+        var hdr = document.createElement('div');
+        hdr.style.cssText = 'background:#f5f5f7;padding:4px 12px;font-size:.8rem;font-weight:700;color:#3a3a3c;border-bottom:1px solid #e8e8ed;';
+        hdr.textContent = y.label;
+        card.appendChild(hdr);
+
+        var body = document.createElement('div');
+        body.style.cssText = 'display:flex;align-items:stretch;';
+
+        function makeSection(label, color, attByAL, sucByAL) {
+            var sec = document.createElement('div');
+            sec.style.cssText = 'flex:1;padding:6px 6px 4px;min-width:0;';
+            var lbl = document.createElement('div');
+            lbl.style.cssText = 'font-size:.72rem;font-weight:700;color:'+color+';text-align:center;margin-bottom:4px;';
+            lbl.textContent = label;
+            var cvs = document.createElement('canvas');
+            cvs.style.cssText = 'display:block;width:100%;';
+            sec.appendChild(lbl); sec.appendChild(cvs);
+            sec._cvs = cvs; sec._att = attByAL; sec._suc = sucByAL;
+            return sec;
+        }
+
+        var moySec = makeSection('MOY','#3b82f6',y.s.midAttByAL,y.s.midSucByAL);
+        var divEl = document.createElement('div');
+        divEl.style.cssText = 'width:1px;background:#e8e8ed;margin:8px 0;flex-shrink:0;';
+        var eoySec = makeSection('EOY','#f97316',y.s.eoyAttByAL,y.s.eoySucByAL);
+
+        body.appendChild(moySec); body.appendChild(divEl); body.appendChild(eoySec);
+        card.appendChild(body);
+        container.appendChild(card);
+
+        // Draw after layout so offsetWidth is available
+        requestAnimationFrame(function(){
+            drawPeriodCanvas(moySec._cvs, moySec._att, moySec._suc);
+            drawPeriodCanvas(eoySec._cvs, eoySec._att, eoySec._suc);
+        });
     });
-    // Legend row
+
     var leg = document.createElement('div');
-    leg.style.cssText = 'width:100%;display:flex;gap:14px;padding:0 4px 8px;font-size:.68rem;color:#64748b;align-items:center;flex-wrap:wrap;';
-    leg.innerHTML = '<span style="color:#86868b;font-size:.63rem;">Bar = success rate · # = attempts · Δ rate = EOY−MOY success rate · Δ att = EOY−MOY attempts</span>';
+    leg.style.cssText = 'display:flex;gap:14px;padding:2px 2px 6px;font-size:.68rem;color:#64748b;align-items:center;flex-wrap:wrap;';
+    leg.innerHTML = '<span style="display:flex;align-items:center;gap:3px;"><span style="width:9px;height:9px;background:#9ca3af;border-radius:2px;display:inline-block;"></span>n = # students attempted</span>'
+        +'<span style="display:flex;align-items:center;gap:3px;"><span style="width:9px;height:9px;background:#1d4ed8;border-radius:2px;display:inline-block;"></span>% = success rate (AL-colored)</span>';
     container.appendChild(leg);
 }
 
