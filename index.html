@@ -9606,7 +9606,7 @@ function _drawPromoAttChart(container, ys) {
     container.style.gap = '8px';
     container.style.padding = '10px 10px 4px';
     var dpr = window.devicePixelRatio || 1;
-    var W = 132, H = 172;
+    var W = 132, H = 198;
     ys.forEach(function(y) {
         var cvs = document.createElement('canvas');
         cvs.width = W*dpr; cvs.height = H*dpr;
@@ -9614,7 +9614,7 @@ function _drawPromoAttChart(container, ys) {
         cvs.style.display = 'block';
         container.appendChild(cvs);
         var ctx = cvs.getContext('2d'); ctx.scale(dpr,dpr);
-        var pL=4, pR=4, pT=20, pB=46, plotW=W-pL-pR, plotH=H-pT-pB;
+        var pL=4, pR=4, pT=20, pB=72, plotW=W-pL-pR, plotH=H-pT-pB;
         ctx.fillStyle='#fafafa'; ctx.fillRect(0,0,W,H);
         // Year title
         ctx.fillStyle='#3a3a3c'; ctx.font='bold 10px -apple-system,sans-serif'; ctx.textAlign='center';
@@ -9626,7 +9626,10 @@ function _drawPromoAttChart(container, ys) {
             var moySuc=(y.s.midSucByAL&&y.s.midSucByAL[al])||0;
             var eoyAtt=(y.s.eoyAttByAL&&y.s.eoyAttByAL[al])||0;
             var eoySuc=(y.s.eoySucByAL&&y.s.eoySucByAL[al])||0;
+            var moyRate = moyAtt ? moySuc/moyAtt : null;
+            var eoyRate = eoyAtt ? eoySuc/eoyAtt : null;
             var bx1=gx+bGap, bx2=bx1+bw+bGap;
+            var cx=gx+gW/2;
             function drawBar(bx,att,suc,sucColor,lbl) {
                 if(!att){
                     ctx.fillStyle='#e8e8ed'; ctx.fillRect(bx,pT+plotH-3,bw,3);
@@ -9650,9 +9653,32 @@ function _drawPromoAttChart(container, ys) {
             }
             drawBar(bx1,moyAtt,moySuc,PROMO_AL_LIGHT[al],'MOY');
             drawBar(bx2,eoyAtt,eoySuc,PROMO_AL_DARK[al],'EOY');
+            // Delta row: EOY rate - MOY rate
+            var deltaRateTxt='—', deltaRateCol='#aeaeb2';
+            var deltaAttTxt='', deltaAttCol='#aeaeb2';
+            if(moyRate!==null && eoyRate!==null){
+                var dr=Math.round((eoyRate-moyRate)*100);
+                deltaRateTxt=(dr>0?'+':'')+dr+'%';
+                deltaRateCol=dr>0?'#16a34a':dr<0?'#dc2626':'#64748b';
+            } else if(moyRate===null && eoyRate!==null){
+                deltaRateTxt='EOY only'; deltaRateCol='#64748b';
+            } else if(moyRate!==null && eoyRate===null){
+                deltaRateTxt='MOY only'; deltaRateCol='#64748b';
+            }
+            if(moyAtt||eoyAtt){
+                var da=eoyAtt-moyAtt;
+                deltaAttTxt='att '+(da>0?'+':'')+da;
+                deltaAttCol=da>0?'#2563eb':da<0?'#9333ea':'#64748b';
+            }
+            ctx.fillStyle=deltaRateCol; ctx.font='bold 7.5px -apple-system,sans-serif'; ctx.textAlign='center';
+            ctx.fillText(deltaRateTxt,cx,pT+plotH+33);
+            if(deltaAttTxt){
+                ctx.fillStyle=deltaAttCol; ctx.font='6.5px -apple-system,sans-serif';
+                ctx.fillText(deltaAttTxt,cx,pT+plotH+44);
+            }
             // AL label
             ctx.fillStyle=PROMO_AL_DARK[al]; ctx.font='bold 8px -apple-system,sans-serif'; ctx.textAlign='center';
-            ctx.fillText('AL'+al,gx+gW/2,pT+plotH+33);
+            ctx.fillText('AL'+al,cx,pT+plotH+58);
         });
         // Axis
         ctx.strokeStyle='#d1d1d6'; ctx.lineWidth=1; ctx.setLineDash([]);
@@ -9661,7 +9687,7 @@ function _drawPromoAttChart(container, ys) {
     // Legend row
     var leg = document.createElement('div');
     leg.style.cssText = 'width:100%;display:flex;gap:14px;padding:0 4px 8px;font-size:.68rem;color:#64748b;align-items:center;flex-wrap:wrap;';
-    leg.innerHTML = '<span style="color:#86868b;font-size:.63rem;">Bar height = success rate · Number = attempts</span>';
+    leg.innerHTML = '<span style="color:#86868b;font-size:.63rem;">Bar = success rate · # = attempts · Δ rate = EOY−MOY success rate · Δ att = EOY−MOY attempts</span>';
     container.appendChild(leg);
 }
 
