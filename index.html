@@ -3113,16 +3113,25 @@ function parseCellDate(str) {
     // MM/YYYY or M/YYYY (month + year only)
     var mm = str.match(/^(\d{1,2})\/(\d{4})$/);
     if (mm) return mm[2] + '-' + String(mm[1]).padStart(2,'0') + '-01';
-    // MM/DD/YYYY — if first number > 12, treat as D/M/YYYY (European)
+    // Slash-separated date — spreadsheet uses D/M/YYYY (European) format.
+    // Unambiguous: if first number > 12 it must be day; if second > 12 it must be day (so first is month).
+    // Ambiguous (both ≤ 12): default to D/M/YYYY (European).
     var m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
     if (m) {
         var _a = parseInt(m[1]), _b = parseInt(m[2]);
-        if (_a > 12) return m[3] + '-' + String(_b).padStart(2,'0') + '-' + String(_a).padStart(2,'0');
-        return m[3] + '-' + String(_a).padStart(2,'0') + '-' + String(_b).padStart(2,'0');
+        if (_a > 12) return m[3] + '-' + String(_b).padStart(2,'0') + '-' + String(_a).padStart(2,'0'); // day first
+        if (_b > 12) return m[3] + '-' + String(_a).padStart(2,'0') + '-' + String(_b).padStart(2,'0'); // month first
+        return m[3] + '-' + String(_b).padStart(2,'0') + '-' + String(_a).padStart(2,'0'); // ambiguous → D/M
     }
-    // M/D/YY (2-digit year)
+    // D/M/YY (2-digit year, slash) — same European default
     var m2 = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);
-    if (m2) { var yr = parseInt(m2[3]) < 50 ? '20' + m2[3] : '19' + m2[3]; return yr + '-' + String(m2[1]).padStart(2,'0') + '-' + String(m2[2]).padStart(2,'0'); }
+    if (m2) {
+        var yr = parseInt(m2[3]) < 50 ? '20' + m2[3] : '19' + m2[3];
+        var _c = parseInt(m2[1]), _d = parseInt(m2[2]);
+        if (_c > 12) return yr + '-' + String(_d).padStart(2,'0') + '-' + String(_c).padStart(2,'0'); // day first
+        if (_d > 12) return yr + '-' + String(_c).padStart(2,'0') + '-' + String(_d).padStart(2,'0'); // month first
+        return yr + '-' + String(_d).padStart(2,'0') + '-' + String(_c).padStart(2,'0'); // ambiguous → D/M
+    }
     // MM-DD-YYYY
     var m3 = str.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
     if (m3) return m3[3] + '-' + String(m3[1]).padStart(2,'0') + '-' + String(m3[2]).padStart(2,'0');
