@@ -3110,9 +3110,9 @@ function parseCellDate(str) {
     // Strip trailing time component (Google Sheets exports "M/D/YYYY 0:00:00")
     str = str.replace(/\s+\d{1,2}:\d{2}(:\d{2})?(\s*(AM|PM))?$/i, '').trim();
     if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
-    // MM/YYYY or M/YYYY (month + year only)
+    // MM/YYYY or M/YYYY (month + year only) — no specific day known
     var mm = str.match(/^(\d{1,2})\/(\d{4})$/);
-    if (mm) return mm[2] + '-' + String(mm[1]).padStart(2,'0') + '-01';
+    if (mm) return mm[2] + '-' + String(mm[1]).padStart(2,'0');
     // Slash-separated date — spreadsheet uses D/M/YYYY (European) format.
     // Unambiguous: if first number > 12 it must be day; if second > 12 it must be day (so first is month).
     // Ambiguous (both ≤ 12): default to D/M/YYYY (European).
@@ -3144,7 +3144,7 @@ function parseCellDate(str) {
     if (mn) { var mo = _MN[mn[1].toLowerCase().substring(0,3)]; if (mo) return mn[3] + '-' + String(mo).padStart(2,'0') + '-' + String(parseInt(mn[2])).padStart(2,'0'); }
     // Month name + year only: "Mar 2026" / "March 2026"
     var mn2 = str.match(/^([A-Za-z]+)\s+(\d{4})$/);
-    if (mn2) { var mo2 = _MN[mn2[1].toLowerCase().substring(0,3)]; if (mo2) return mn2[2] + '-' + String(mo2).padStart(2,'0') + '-01'; }
+    if (mn2) { var mo2 = _MN[mn2[1].toLowerCase().substring(0,3)]; if (mo2) return mn2[2] + '-' + String(mo2).padStart(2,'0'); }
     return '';
 }
 
@@ -3393,8 +3393,10 @@ function groupLabel(g) {
 
 function formatDate(d) {
     if (!d) return '';
-    var iso = parseCellDate(d);
-    const dt = new Date((iso || d) + 'T00:00:00');
+    var iso = /^\d{4}-\d{2}(-\d{2})?$/.test(d) ? d : parseCellDate(d);
+    if (!iso) return '';
+    if (/^\d{4}-\d{2}$/.test(iso)) return iso.substring(5) + '/' + iso.substring(0, 4);
+    const dt = new Date(iso + 'T00:00:00');
     if (isNaN(dt)) return '';
     var m = dt.getMonth() + 1, d2 = dt.getDate(), y = dt.getFullYear();
     return (m < 10 ? '0' + m : m) + '/' + (d2 < 10 ? '0' + d2 : d2) + '/' + y;
@@ -3688,6 +3690,7 @@ function renderPortfolioStudent(studentId) {
     var el = document.getElementById('portfolio-content');
     if (!el) return;
 
+    function _d(s){return new Date((s&&s.length===7?s+'-01':s||'')+'T00:00:00');}
     // All earned entries for this student, sorted most-recent first
     var studentEarned = earned
         .filter(function(e) { return e.studentId === studentId; })
@@ -3695,7 +3698,7 @@ function renderPortfolioStudent(studentId) {
             if (!a.date && !b.date) return 0;
             if (!a.date) return 1;
             if (!b.date) return -1;
-            return new Date(b.date) - new Date(a.date);
+            return _d(b.date) - _d(a.date);
         });
 
     // Collect subjects present for this student for the toggle bar
@@ -3819,7 +3822,7 @@ function renderPortfolioStudent(studentId) {
             // Format earned date as MM.DD.YY for placeholder replacement
             var narDateFmt = '';
             if (e.date) {
-                var narDt = new Date(e.date + 'T00:00:00');
+                var narDt = new Date((e.date.length===7?e.date+'-01':e.date)+'T00:00:00');
                 narDateFmt = String(narDt.getMonth() + 1).padStart(2, '0') + '.'
                            + String(narDt.getDate()).padStart(2, '0') + '.'
                            + String(narDt.getFullYear()).slice(-2);
@@ -6906,7 +6909,8 @@ function renderDrafting() {
         if (!a.date && !b.date) return 0;
         if (!a.date) return 1;
         if (!b.date) return -1;
-        return new Date(b.date) - new Date(a.date);
+        function _ds(s){return new Date((s&&s.length===7?s+'-01':s||'')+'T00:00:00');}
+        return _ds(b.date) - _ds(a.date);
     });
 
     var total = draftingData.length;
