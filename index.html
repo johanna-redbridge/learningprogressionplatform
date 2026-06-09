@@ -14185,6 +14185,73 @@ function setFfSort(col) {
     renderFactFluencyTable();
 }
 
+var FF_GRADE_GOALS = {
+    'K': { label:'End of KG',   desc:'20 add/sub facts within 5' },
+    '1': { label:'End of 1st',  desc:'30 add/sub facts within 10' },
+    '2': { label:'End of 2nd',  desc:'30 add/sub facts within 20' },
+    '3': { label:'End of 3rd',  desc:'30 ×÷ facts through 10×10' },
+    '4': { label:'End of 4th',  desc:'30 ×÷ facts through 12×12' }
+};
+
+function ffGleToGrade(gle) {
+    if (!gle) return null;
+    if (String(gle).toUpperCase() === 'K') return 'K';
+    var n = parseFloat(gle);
+    if (isNaN(n)) return null;
+    if (n < 1)  return 'K';
+    if (n < 2)  return '1';
+    if (n < 3)  return '2';
+    if (n < 4)  return '3';
+    return '4';
+}
+
+function ffGradeOps(ops, grade) {
+    return ops.filter(function(op) {
+        var l = (op.label || '').toLowerCase();
+        if (grade === 'K') return l.indexOf('kg') >= 0 || l.indexOf('kindergar') >= 0;
+        if (grade === '1') return l.indexOf('1st') >= 0 || l.indexOf('first grade') >= 0;
+        if (grade === '2') return l.indexOf('2nd') >= 0 || l.indexOf('second grade') >= 0;
+        if (grade === '3') return l.indexOf('3rd') >= 0 || l.indexOf('third grade') >= 0 || l.indexOf('10x10') >= 0 || l.indexOf('10 x 10') >= 0;
+        if (grade === '4') return l.indexOf('4th') >= 0 || l.indexOf('fourth grade') >= 0 || l.indexOf('12x12') >= 0 || l.indexOf('12 x 12') >= 0 || l.indexOf('fraction') >= 0;
+        return false;
+    });
+}
+
+function ffGoalProgress(s, ops, grade) {
+    var rel = ffGradeOps(ops, grade);
+    if (!rel.length) return null;
+    var best = null;
+    rel.forEach(function(op) {
+        var f = s.facts[ops.indexOf(op)];
+        if (!f) return;
+        var pct = ffPctNum(f.moyPct) !== null ? ffPctNum(f.moyPct) : ffPctNum(f.boyPct);
+        if (pct !== null && (best === null || pct > best)) best = pct;
+    });
+    return best;
+}
+
+function ffGoalPie(pct, grade) {
+    var g = FF_GRADE_GOALS[grade] || {};
+    var tip = g.label ? g.label + ': ' + g.desc : '';
+    var r = 9.5, cx = 13, cy = 13, circ = 2 * Math.PI * r;
+    if (pct === null) {
+        return '<div title="'+tip+'" style="display:flex;flex-direction:column;align-items:center;gap:1px;">'
+            +'<svg width="26" height="26" viewBox="0 0 26 26"><circle cx="13" cy="13" r="9.5" fill="none" stroke="#e8e8ed" stroke-width="4"/></svg>'
+            +'<span style="font-size:.55rem;color:#aeaeb2;">—</span></div>';
+    }
+    var fill = Math.min(pct / 100, 1) * circ;
+    var col = pct >= 80 ? '#5a9e5a' : pct >= 50 ? '#c4a434' : '#c05050';
+    return '<div title="'+tip+'" style="display:flex;flex-direction:column;align-items:center;gap:1px;">'
+        +'<svg width="26" height="26" viewBox="0 0 26 26">'
+        +'<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="#e8e8ed" stroke-width="4"/>'
+        +'<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="4"'
+        +' stroke-dasharray="'+fill.toFixed(2)+' '+circ.toFixed(2)+'"'
+        +' stroke-linecap="round" transform="rotate(-90 '+cx+' '+cy+')"/>'
+        +'</svg>'
+        +'<span style="font-size:.55rem;font-weight:700;color:'+col+';">'+Math.round(pct)+'%</span>'
+        +'</div>';
+}
+
 function ffShortLabel(label) {
     return (label||'')
         .replace(/\s*Facts?\s*/i, '')
@@ -14368,18 +14435,19 @@ function renderFactFluencyTable() {
         return out + '</div>';
     }
 
-    var fixedCols = ffGroupFilter === 'all' ? 4 : 3;
+    var fixedCols = ffGroupFilter === 'all' ? 5 : 4;
     var html = '<div style="overflow-x:auto;overflow-y:auto;max-height:65vh;border-radius:16px;border:1px solid #f0f0f0;">';
     html += '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
 
     // Header row: student columns + op labels
     html += '<thead><tr style="background:#5c5b5a;">';
     html += ffTh('name',  'Student', 'text-align:left;padding:0.5rem 0.75rem;');
-    html += ffTh('al',    'AL',    'text-align:center;');
-    html += ffTh('gle',   'GLE',   'text-align:center;');
     if (ffGroupFilter === 'all') {
         html += ffTh('group', 'Group', 'text-align:center;');
     }
+    html += ffTh('al',    'AL',    'text-align:center;');
+    html += ffTh('gle',   'GLE',   'text-align:center;');
+    html += '<th style="position:sticky;top:0;z-index:12;background:#5c5b5a;padding:0.5rem 0.6rem;font-weight:600;font-size:0.72rem;color:#fff;white-space:nowrap;text-align:center;">Goal</th>';
     activeOps.forEach(function(op) {
         var globalIdx = ops.indexOf(op);
         var short = ffShortLabel(op.label);
@@ -14405,11 +14473,14 @@ function renderFactFluencyTable() {
         var rowBg = idx % 2 === 0 ? '#ffffff' : '#f9fafb';
         html += '<tr style="background:' + rowBg + ';">';
         html += '<td data-redact="name" style="padding:0.45rem 0.75rem;color:#1d1d1f;font-weight:500;white-space:nowrap;">' + fullName(s.name).replace(/</g,'&lt;') + '</td>';
-        html += '<td data-redact="al" style="padding:0.45rem 0.6rem;text-align:center;color:#1d1d1f;">' + (s.al||'—') + '</td>';
-        html += '<td style="padding:0.45rem 0.6rem;text-align:center;color:#1d1d1f;">' + (s.gle||'—') + '</td>';
         if (ffGroupFilter === 'all') {
             html += '<td data-redact="group" style="padding:0.45rem 0.6rem;text-align:center;color:#1d1d1f;">' + (s.group||'—') + '</td>';
         }
+        html += '<td data-redact="al" style="padding:0.45rem 0.6rem;text-align:center;color:#1d1d1f;">' + (s.al||'—') + '</td>';
+        html += '<td style="padding:0.45rem 0.6rem;text-align:center;color:#1d1d1f;">' + (s.gle||'—') + '</td>';
+        var _ffGrade = ffGleToGrade(s.gle);
+        var _ffProg  = _ffGrade ? ffGoalProgress(s, ops, _ffGrade) : null;
+        html += '<td style="padding:0.2rem 0.3rem;text-align:center;">' + ffGoalPie(_ffProg, _ffGrade) + '</td>';
         activeOps.forEach(function(op) {
             var globalIdx = ops.indexOf(op);
             var f = s.facts[globalIdx];
