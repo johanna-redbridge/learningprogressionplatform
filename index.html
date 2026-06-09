@@ -3145,8 +3145,8 @@ function buildCreditsAndEarned(rows, headerRow) {
     // Credits come solely from the catalog sheet — refresh it now
     enhanceCreditsWithMetadata();
 
-    // Process earned records
-    var newEarned = [], seen = {}, studentCounts = {}, unmatchedNames = [];
+    // Process earned and attempted records
+    var newEarned = [], newAttempted = [], seen = {}, studentCounts = {}, unmatchedNames = [];
     for (var r = headerRow + 1; r < rows.length; r++) {
         var row = rows[r];
         if (!row || !row[0]) continue;
@@ -3162,13 +3162,21 @@ function buildCreditsAndEarned(rows, headerRow) {
                     newEarned.push({ studentId: sid, creditId: colMap[c], date: earnedDate });
                     studentCounts[sid] = (studentCounts[sid] || 0) + 1;
                 }
+            } else if (cellVal === 'a' && colMap[c]) {
+                var akey = 'a_' + sid + '_' + colMap[c];
+                if (!seen[akey]) {
+                    seen[akey] = true;
+                    var attDate = parseCellDate((row[c + 1] || '').trim());
+                    newAttempted.push({ studentId: sid, creditId: colMap[c], date: attDate });
+                }
             }
         }
     }
     if (unmatchedNames.length) console.log('[Sheet] unmatched students:', unmatchedNames);
-    console.log('[Sheet] parsed', newEarned.length, 'earned records. Per student:', studentCounts);
+    console.log('[Sheet] parsed', newEarned.length, 'earned,', newAttempted.length, 'attempted records.');
     if (!earnedModified && newEarned.length > 0) {
         earned = newEarned;
+        attempted = newAttempted;
         renderPortfolio();
         if (currentTab === 'earned' || currentLCSubtab === 'earned') renderEarnedCredits();
         if (currentTab === 'student' && studentTabStudentId) renderStudentTab();
