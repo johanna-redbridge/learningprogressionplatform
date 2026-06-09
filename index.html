@@ -9419,6 +9419,12 @@ function _renderPromoOverview() {
         + al3PeriodCard('EOY', '#f97316', al3EOY)
         +'</div></div>';
 
+    function kpi(v,lbl,sub,color){
+        return '<div style="background:#fff;border-radius:12px;border:1px solid #e8e8ed;padding:0.85rem 1rem;">'
+            +'<div style="font-size:1.55rem;font-weight:700;color:'+(color||'#1d1d1f')+';">'+v+'</div>'
+            +'<div style="font-size:.72rem;font-weight:600;color:#3a3a3c;margin-top:2px;">'+lbl+'</div>'
+            +'<div style="font-size:.65rem;color:#86868b;margin-top:1px;">'+sub+'</div></div>';
+    }
     html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:0.75rem;margin-bottom:1.25rem;">'
         +kpi(cs.n,'Students',cur.label+' school year')
         +kpi(cs.midAtt,'Mid-Year Attempts',midPct+' success rate','#60a5fa')
