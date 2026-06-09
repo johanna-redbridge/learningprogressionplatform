@@ -3114,15 +3114,22 @@ function parseCellDate(str) {
     // MM/YYYY or M/YYYY (month + year only)
     var mm = str.match(/^(\d{1,2})\/(\d{4})$/);
     if (mm) return mm[2] + '-' + String(mm[1]).padStart(2,'0') + '-01';
-    // MM/DD/YYYY
+    // MM/DD/YYYY — if first number > 12, treat as D/M/YYYY (European)
     var m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-    if (m) return m[3] + '-' + String(m[1]).padStart(2,'0') + '-' + String(m[2]).padStart(2,'0');
+    if (m) {
+        var _a = parseInt(m[1]), _b = parseInt(m[2]);
+        if (_a > 12) return m[3] + '-' + String(_b).padStart(2,'0') + '-' + String(_a).padStart(2,'0');
+        return m[3] + '-' + String(_a).padStart(2,'0') + '-' + String(_b).padStart(2,'0');
+    }
     // M/D/YY (2-digit year)
     var m2 = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);
     if (m2) { var yr = parseInt(m2[3]) < 50 ? '20' + m2[3] : '19' + m2[3]; return yr + '-' + String(m2[1]).padStart(2,'0') + '-' + String(m2[2]).padStart(2,'0'); }
     // MM-DD-YYYY
     var m3 = str.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
     if (m3) return m3[3] + '-' + String(m3[1]).padStart(2,'0') + '-' + String(m3[2]).padStart(2,'0');
+    // M-D-YY (2-digit year, dashes — common manual entry format like 3-7-25)
+    var m4 = str.match(/^(\d{1,2})-(\d{1,2})-(\d{2})$/);
+    if (m4) { var yr4 = parseInt(m4[3]) < 50 ? '20' + m4[3] : '19' + m4[3]; return yr4 + '-' + String(m4[1]).padStart(2,'0') + '-' + String(m4[2]).padStart(2,'0'); }
     // Month name formats: "Mar 11, 2026" / "March 11, 2026" / "Mar 11 2026"
     var _MN = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
     var mn = str.match(/^([A-Za-z]+)\s+(\d{1,2})[,\s]+(\d{4})$/);
@@ -4769,7 +4776,7 @@ function openLCSubtab(name) {
     if (backNav) backNav.style.display = '';
     if (backTitle) backTitle.textContent = labels[name] || name;
     if (name === 'available') { earnedModified = false; loadEarnedFromSheet(); enhanceCreditsWithMetadata(); }
-    if (name === 'earned') { earnedModified = false; loadEarnedFromSheet(); }
+    if (name === 'earned') { earnedModified = false; loadEarnedFromSheet(); enhanceCreditsWithMetadata(); }
     switchLCSubtab(name);
 }
 
