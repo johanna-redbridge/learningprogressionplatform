@@ -1912,22 +1912,25 @@ var earnedGroupId = '';
 // ───────── HELPERS ─────────
 
 function toggleEarned(studentId, creditId) {
-    var aidx = attempted.findIndex(function(a) { return a.studentId === studentId && a.creditId === creditId; });
     var eidx = earned.findIndex(function(e) { return e.studentId === studentId && e.creditId === creditId; });
     var today = new Date().toISOString().substring(0, 10);
     if (eidx !== -1) {
-        // earned → attempted (preserve date)
-        var eDate = earned[eidx].date;
         earned.splice(eidx, 1);
-        attempted.push({ studentId: studentId, creditId: creditId, date: eDate });
-    } else if (aidx !== -1) {
-        // attempted → earned
-        attempted.splice(aidx, 1);
-        earned.push({ studentId: studentId, creditId: creditId, date: today });
     } else {
-        // not started → attempted
-        attempted.push({ studentId: studentId, creditId: creditId, date: today });
+        earned.push({ studentId: studentId, creditId: creditId, date: today });
     }
+    earnedModified = true;
+    renderEarnedCredits();
+}
+function startAttempt(studentId, creditId) {
+    if (attempted.find(function(a){ return a.studentId===studentId && a.creditId===creditId; })) return;
+    attempted.push({ studentId: studentId, creditId: creditId, date: '' });
+    earnedModified = true;
+    editAttemptedDate(studentId, creditId);
+}
+function toggleAttempted(studentId, creditId) {
+    var aidx = attempted.findIndex(function(a){ return a.studentId===studentId && a.creditId===creditId; });
+    if (aidx !== -1) attempted.splice(aidx, 1);
     earnedModified = true;
     renderEarnedCredits();
 }
@@ -5481,7 +5484,7 @@ function renderEarnedWholeSchool(period, container) {
                 html += `<td style="text-align:center;"><span class="earned-icon earned-yes" style="cursor:pointer;" onclick="toggleEarned('${s.id}','${c.id}')"${fd ? ' title="Earned ' + fd + '"' : ''}>&#10003;</span>${fd ? '<span class="earned-date" style="cursor:pointer;" onclick="event.stopPropagation();editEarnedDate(\'' + s.id + '\',\'' + c.id + '\')">'+fd+'</span>' : ''}</td>`;
             } else if (att) {
                 var afd = formatDate(att.date);
-                html += `<td style="text-align:center;"><span class="earned-icon attempted-icon" style="cursor:pointer;" onclick="toggleEarned('${s.id}','${c.id}')"${afd ? ' title="Attempted ' + afd + '"' : ''}>a</span>${afd ? '<span class="earned-date" style="cursor:pointer;" onclick="event.stopPropagation();editAttemptedDate(\'' + s.id + '\',\'' + c.id + '\')">'+afd+'</span>' : ''}</td>`;
+                html += `<td style="text-align:center;"><span class="earned-icon attempted-icon" style="cursor:pointer;" onclick="toggleAttempted('${s.id}','${c.id}')"${afd ? ' title="Attempted ' + afd + '"' : ''}>a</span>${afd ? '<span class="earned-date" style="cursor:pointer;" onclick="event.stopPropagation();editAttemptedDate(\'' + s.id + '\',\'' + c.id + '\')">'+afd+'</span>' : ''}</td>`;
             } else {
                 html += `<td style="text-align:center;"><span class="earned-icon earned-no" style="cursor:pointer;" onclick="toggleEarned('${s.id}','${c.id}')"></span></td>`;
             }
@@ -5615,7 +5618,7 @@ function renderEarnedGroup(period, container) {
                     html += `<td style="text-align:center;"><span class="earned-icon earned-yes" style="cursor:pointer;" onclick="toggleEarned('${s.id}','${c.id}')"${fd ? ' title="Earned ' + fd + '"' : ''}>&#10003;</span>${gDateStr ? '<br><span style="font-size:0.62rem;color:#86868b;white-space:nowrap;">'+gDateStr+'</span>' : ''}</td>`;
                 } else if (att) {
                     var afd = formatDate(att.date);
-                    html += `<td style="text-align:center;"><span class="earned-icon attempted-icon" style="cursor:pointer;" onclick="toggleEarned('${s.id}','${c.id}')"${afd ? ' title="Attempted ' + afd + '"' : ''}>a</span>${afd ? '<br><span style="font-size:0.62rem;color:#86868b;white-space:nowrap;">'+afd+'</span>' : ''}</td>`;
+                    html += `<td style="text-align:center;"><span class="earned-icon attempted-icon" style="cursor:pointer;" onclick="toggleAttempted('${s.id}','${c.id}')"${afd ? ' title="Attempted ' + afd + '"' : ''}>a</span>${afd ? '<br><span style="font-size:0.62rem;color:#86868b;white-space:nowrap;">'+afd+'</span>' : ''}</td>`;
                 } else {
                     html += `<td style="text-align:center;"><span class="earned-icon earned-no" style="cursor:pointer;" onclick="toggleEarned('${s.id}','${c.id}')"></span></td>`;
                 }
@@ -5762,10 +5765,10 @@ function renderEarnedStudent(period, container) {
             html += '<td style="text-align:center;">';
             if (att) {
                 var afd = formatDate(att.date);
-                html += '<span class="earned-icon attempted-icon" style="cursor:pointer;" onclick="toggleEarned(\'' + studentId + '\',\'' + c.id + '\')">a</span>';
+                html += '<span class="earned-icon attempted-icon" style="cursor:pointer;" onclick="toggleAttempted(\'' + studentId + '\',\'' + c.id + '\')">a</span>';
                 if (afd) html += '<div style="font-size:0.65rem;color:#555;margin-top:1px;cursor:pointer;" onclick="editAttemptedDate(\'' + studentId + '\',\'' + c.id + '\')">' + afd + '</div>';
             } else {
-                html += '<span style="color:#d2d2d7;">—</span>';
+                html += '<span class="earned-icon earned-no" style="cursor:pointer;" onclick="startAttempt(\'' + studentId + '\',\'' + c.id + '\')"></span>';
             }
             html += '</td>';
             // Earned column
