@@ -412,6 +412,7 @@
         .artifact-preview {
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 0.3rem;
             font-size: 0.75rem;
         }
@@ -5629,8 +5630,8 @@ function setEarnedGroupStageFilter(stageName, value) {
 
 var earnedStudentSubject = 'all';
 var earnedStudentStage = 'all';
-var earnedStudentSortCol = 'status';
-var earnedStudentSortDir = 1;
+var earnedStudentSortCol = 'date';
+var earnedStudentSortDir = -1;
 
 function setEarnedStudentFilter(key, value) {
     if (key === 'subject') earnedStudentSubject = (value === 'all' || earnedStudentSubject === value) ? 'all' : value;
@@ -5785,7 +5786,7 @@ function renderEarnedStudent(period, container) {
                 }
                 html += '</div>';
             } else {
-                html += '<div style="display:flex;gap:4px;align-items:center;">';
+                html += '<div style="display:flex;gap:4px;align-items:center;justify-content:center;">';
                 html += '<div class="artifact-drop" ondragover="artifactDragOver(event)" ondragleave="artifactDragLeave(event)" ondrop="handleArtifactDrop(event,\'' + studentId + '\',\'' + c.id + '\')">';
                 html += '<span style="pointer-events:none;">&#128206; drop</span>';
                 html += '<input type="file" accept="image/*,video/*,application/pdf" onchange="handleArtifactDrop(event,\'' + studentId + '\',\'' + c.id + '\')" />';
