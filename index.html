@@ -9602,7 +9602,7 @@ function _drawPromoAttChart(container, ys) {
     container.style.gap = '8px';
     container.style.padding = '10px 10px 4px';
     var dpr = window.devicePixelRatio || 1;
-    var W = 132, H = 154;
+    var W = 132, H = 172;
     ys.forEach(function(y) {
         var cvs = document.createElement('canvas');
         cvs.width = W*dpr; cvs.height = H*dpr;
@@ -9610,7 +9610,7 @@ function _drawPromoAttChart(container, ys) {
         cvs.style.display = 'block';
         container.appendChild(cvs);
         var ctx = cvs.getContext('2d'); ctx.scale(dpr,dpr);
-        var pL=4, pR=4, pT=20, pB=32, plotW=W-pL-pR, plotH=H-pT-pB;
+        var pL=4, pR=4, pT=20, pB=46, plotW=W-pL-pR, plotH=H-pT-pB;
         ctx.fillStyle='#fafafa'; ctx.fillRect(0,0,W,H);
         // Year title
         ctx.fillStyle='#3a3a3c'; ctx.font='bold 10px -apple-system,sans-serif'; ctx.textAlign='center';
@@ -9623,8 +9623,13 @@ function _drawPromoAttChart(container, ys) {
             var eoyAtt=(y.s.eoyAttByAL&&y.s.eoyAttByAL[al])||0;
             var eoySuc=(y.s.eoySucByAL&&y.s.eoySucByAL[al])||0;
             var bx1=gx+bGap, bx2=bx1+bw+bGap;
-            function drawBar(bx,att,suc,sucColor) {
-                if(!att){ctx.fillStyle='#e8e8ed';ctx.fillRect(bx,pT+plotH-3,bw,3);return;}
+            function drawBar(bx,att,suc,sucColor,lbl) {
+                if(!att){
+                    ctx.fillStyle='#e8e8ed'; ctx.fillRect(bx,pT+plotH-3,bw,3);
+                    ctx.fillStyle='#aeaeb2'; ctx.font='7px -apple-system,sans-serif'; ctx.textAlign='center';
+                    ctx.fillText(lbl,bx+bw/2,pT+plotH+20);
+                    return;
+                }
                 var rate=suc/att;
                 var sucH=Math.round(plotH*rate);
                 var failH=plotH-sucH;
@@ -9632,16 +9637,18 @@ function _drawPromoAttChart(container, ys) {
                 ctx.fillStyle=sucColor; ctx.fillRect(bx,pT+failH,bw,sucH);
                 var pct=Math.round(rate*100);
                 ctx.fillStyle='#1d1d1f'; ctx.font='bold 7px -apple-system,sans-serif'; ctx.textAlign='center';
-                if(failH>8) ctx.fillText(pct+'%',bx+bw/2,pT+failH-2);
-                else ctx.fillText(pct+'%',bx+bw/2,pT+failH+8);
+                if(failH>9) ctx.fillText(pct+'%',bx+bw/2,pT+failH-2);
+                else ctx.fillText(pct+'%',bx+bw/2,pT+failH+9);
                 ctx.fillStyle='#64748b'; ctx.font='7px -apple-system,sans-serif';
                 ctx.fillText(att,bx+bw/2,pT+plotH+11);
+                ctx.fillStyle='#86868b'; ctx.font='7px -apple-system,sans-serif';
+                ctx.fillText(lbl,bx+bw/2,pT+plotH+20);
             }
-            drawBar(bx1,moyAtt,moySuc,PROMO_AL_LIGHT[al]);
-            drawBar(bx2,eoyAtt,eoySuc,PROMO_AL_DARK[al]);
+            drawBar(bx1,moyAtt,moySuc,PROMO_AL_LIGHT[al],'MOY');
+            drawBar(bx2,eoyAtt,eoySuc,PROMO_AL_DARK[al],'EOY');
             // AL label
             ctx.fillStyle=PROMO_AL_DARK[al]; ctx.font='bold 8px -apple-system,sans-serif'; ctx.textAlign='center';
-            ctx.fillText('AL'+al,gx+gW/2,pT+plotH+24);
+            ctx.fillText('AL'+al,gx+gW/2,pT+plotH+33);
         });
         // Axis
         ctx.strokeStyle='#d1d1d6'; ctx.lineWidth=1; ctx.setLineDash([]);
@@ -9650,9 +9657,7 @@ function _drawPromoAttChart(container, ys) {
     // Legend row
     var leg = document.createElement('div');
     leg.style.cssText = 'width:100%;display:flex;gap:14px;padding:0 4px 8px;font-size:.68rem;color:#64748b;align-items:center;flex-wrap:wrap;';
-    leg.innerHTML = '<span style="display:flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;background:#93c5fd;border:1px solid #93c5fd;border-radius:2px;display:inline-block;"></span>Left bar = MOY</span>'
-        +'<span style="display:flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;background:#1d4ed8;border-radius:2px;display:inline-block;"></span>Right bar = EOY</span>'
-        +'<span style="color:#86868b;font-size:.63rem;">Bar height = success rate · Number = attempts</span>';
+    leg.innerHTML = '<span style="color:#86868b;font-size:.63rem;">Bar height = success rate · Number = attempts</span>';
     container.appendChild(leg);
 }
 
