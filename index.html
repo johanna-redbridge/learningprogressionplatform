@@ -17659,7 +17659,7 @@ function _buildWbTable() {
             if (sc===null||sc===undefined) { cols.push({bg:'#e2e2e7',pct:0,lbl:'',eoy:pd.eoy}); }
             else { cols.push({bg:pd.eoy?'#c4c4cc':bColor(sc),pct:Math.max((sc/WD_MAX)*100,5),lbl:sc.toFixed(1),eoy:pd.eoy}); any=true; }
         });
-        if (!any) return '<span style="color:#c7c7cc;font-size:0.7rem;">&ndash;</span>';
+        if (!any) return '<span style="color:#c7c7cc;font-size:0.6rem;">N/A</span>';
         var o = '<div style="display:flex;align-items:flex-start;gap:2px;justify-content:center;padding:2px 1px;">';
         cols.forEach(function(c) {
             o += '<div style="display:flex;flex-direction:column;align-items:center;gap:1px;">'
@@ -17670,7 +17670,7 @@ function _buildWbTable() {
         return o+'</div>';
     }
     function tierBadge(v) {
-        if (!v) return '<span style="color:#c7c7cc;font-size:0.65rem;">—</span>';
+        if (!v) return '<span style="color:#c7c7cc;font-size:0.65rem;">N/A</span>';
         var t = v.trim().toLowerCase();
         var sty = (t==='tier 1'||t==='1')?'background:#dcfce7;color:#15803d;':(t==='tier 2'||t==='2')?'background:#fef9c3;color:#854d0e;':(t==='tier 3'||t==='3')?'background:#fee2e2;color:#b91c1c;':'background:#f3f4f6;color:#374151;';
         return '<span style="display:inline-block;padding:1px 5px;border-radius:4px;font-size:0.63rem;font-weight:600;'+sty+'">'+v+'</span>';
@@ -17708,7 +17708,7 @@ function _buildWbTable() {
         return '<th style="background:#3a3a3c;color:#fff;font-size:0.6rem;font-weight:600;padding:0.35rem 0.2rem;text-align:center;border:1px solid #555;vertical-align:bottom;line-height:1.2;white-space:normal;cursor:pointer;user-select:none;'+(extra||'')+'" onclick="wbASort(\''+col+'\')">'+label+arr+'</th>';
     }
     var TH = 'background:#3a3a3c;color:#fff;font-size:0.6rem;font-weight:600;padding:0.35rem 0.2rem;text-align:center;border:1px solid #555;vertical-align:bottom;line-height:1.2;white-space:normal;cursor:pointer;user-select:none;';
-    function fmtAvg(v) { return v!==null?'<span style="font-size:0.72rem;font-weight:600;">'+v.toFixed(1)+'</span>':'<span style="color:#c7c7cc;font-size:0.63rem;">—</span>'; }
+    function fmtAvg(v) { return v!==null?'<span style="font-size:0.72rem;font-weight:600;">'+v.toFixed(1)+'</span>':'<span style="color:#c7c7cc;font-size:0.63rem;">N/A</span>'; }
 
     function buildAlTable(alLabel) {
         var groupStu = _wbACache.lsStu.filter(function(s) { return s.al === alLabel; });
@@ -17752,11 +17752,11 @@ function _buildWbTable() {
             h += '<td style="'+TD+'">' + fmtAvg(boyAvg) + '</td>';
             h += '<td style="'+TD+'">' + fmtAvg(moyAvg) + '</td>';
             h += '<td style="'+TD+'">' + fmtAvg(eoyAvg) + '</td>';
-            h += '<td style="'+TD+'font-size:0.7rem;font-weight:600;">'+(boyAvg!==null?(boyAvg+1).toFixed(1):'—')+'</td>';
-            h += '<td style="'+TD+'font-size:0.7rem;">'+(s.goal||'—')+'</td>';
+            h += '<td style="'+TD+'font-size:0.7rem;font-weight:600;">'+(boyAvg!==null?(boyAvg+1).toFixed(1):'N/A')+'</td>';
+            h += '<td style="'+TD+'font-size:0.7rem;">'+(s.goal||'N/A')+'</td>';
             h += '<td style="'+TD+'">'+tierBadge(tr.boy)+'</td>';
             h += '<td style="'+TD+'">'+tierBadge(tr.moy)+'</td>';
-            h += '<td style="'+TD+'"><span style="color:#c7c7cc;font-size:0.63rem;">—</span></td>';
+            h += '<td style="'+TD+'"><span style="color:#c7c7cc;font-size:0.63rem;">N/A</span></td>';
             h += '</tr>';
         });
         // Growth rows (per-AL)
@@ -17766,7 +17766,7 @@ function _buildWbTable() {
                 var diffs = sorted.filter(function(s2){ return s2[fk]&&s2[tk]&&s2[fk].scores[ci]!=null&&s2[tk].scores[ci]!=null; })
                                   .map(function(s2){ return s2[tk].scores[ci]-s2[fk].scores[ci]; });
                 var avg = diffs.length ? diffs.reduce(function(a,b){return a+b;},0)/diffs.length : null;
-                var txt = avg!==null?(avg>=0?'+':'')+avg.toFixed(2):'—';
+                var txt = avg!==null?(avg>=0?'+':'')+avg.toFixed(2):'N/A';
                 var col = avg===null?'#aeaeb2':avg>0?'#15803d':avg<0?'#b91c1c':'#374151';
                 h += '<td style="background:#f0f4f8;border:1px solid #d0d7de;padding:3px 1px;text-align:center;font-weight:700;font-size:0.66rem;color:'+col+';">'+txt+'</td>';
             });
