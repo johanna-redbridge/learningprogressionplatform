@@ -17813,14 +17813,14 @@ function renderWbCategoryDetail(ci) {
         stu.sort(function(a,b){ return a.name.localeCompare(b.name); });
         h += '<div style="font-size:0.82rem;font-weight:700;color:#1d1d1f;padding:0.5rem 1.25rem 0.35rem;">'+alLabel+'</div>';
         h += '<div style="overflow-x:auto;margin:0 1.25rem 1.5rem;border-radius:12px;border:1px solid #e2e2e7;">';
-        h += '<table style="width:100%;border-collapse:collapse;"><thead><tr>';
-        h += '<th style="'+TH+'text-align:left;min-width:130px;">Student</th>';
-        h += '<th style="'+TH+'width:40px;">GLE</th>';
-        h += '<th style="'+TH+'min-width:80px;">BOY</th>';
-        h += '<th style="'+TH+'min-width:80px;">MOY</th>';
-        h += '<th style="'+TH+'min-width:80px;">EOY</th>';
-        h += '<th style="'+TH+'min-width:70px;">BOY→MOY</th>';
-        h += '<th style="'+TH+'min-width:70px;">MOY→EOY</th>';
+        h += '<table style="width:100%;border-collapse:collapse;table-layout:fixed;"><thead><tr>';
+        h += '<th style="'+TH+'text-align:left;width:24%;">Student</th>';
+        h += '<th style="'+TH+'width:6%;">GLE</th>';
+        h += '<th style="'+TH+'width:13%;">BOY</th>';
+        h += '<th style="'+TH+'width:13%;">MOY</th>';
+        h += '<th style="'+TH+'width:13%;">EOY</th>';
+        h += '<th style="'+TH+'width:15%;">BOY→MOY</th>';
+        h += '<th style="'+TH+'width:16%;">MOY→EOY</th>';
         h += '</tr></thead><tbody>';
         stu.forEach(function(s, i) {
             var bg = i%2===0?'#fff':'#f9fafb';
