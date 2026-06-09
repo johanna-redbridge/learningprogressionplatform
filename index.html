@@ -17915,7 +17915,7 @@ function renderWbCategoryDetail(ci, alFilter) {
     h += '<thead><tr>';
     h += '<th style="'+TH+'text-align:left;">Student</th>';
     h += '<th style="'+TH+'">GLE</th>';
-    h += '<th style="'+TH+'">GLE Goal</th>';
+    h += '<th style="'+TH+'">EOY GLE Goal</th>';
     h += '<th style="'+TH+'">BOY</th>';
     h += '<th style="'+TH+'">MOY</th>';
     h += '<th style="'+TH+'">EOY</th>';
@@ -17953,7 +17953,7 @@ function renderWbCategoryDetail(ci, alFilter) {
         h += '<tr>'
             +'<td style="'+GA+'text-align:left;padding:5px 10px;color:#374151;">Class avg</td>'
             +'<td style="'+GA+'"></td>'
-            +'<td style="'+GA+'font-size:0.72rem;">'+(avgGoal?avgGoal.toFixed(1):'—')+'</td>'
+            +'<td style="'+GA+'"></td>'
             +'<td style="'+GA+'">'+scoreCell(bAvg,'boy',avgGoal)+'</td>'
             +'<td style="'+GA+'">'+scoreCell(mAvg,'moy',avgGoal)+'</td>'
             +'<td style="'+GA+'">'+scoreCell(eAvg,'eoy',avgGoal)+'</td>'
