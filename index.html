@@ -1924,9 +1924,20 @@ function toggleEarned(studentId, creditId) {
 }
 function startAttempt(studentId, creditId) {
     if (attempted.find(function(a){ return a.studentId===studentId && a.creditId===creditId; })) return;
-    attempted.push({ studentId: studentId, creditId: creditId, date: '' });
+    var entry = { studentId: studentId, creditId: creditId, date: '' };
+    attempted.push(entry);
     earnedModified = true;
-    editAttemptedDate(studentId, creditId);
+    openDateModal('', function(date) {
+        entry.date = date;
+        var cell = document.querySelector('[data-att-cell="' + studentId + '_' + creditId + '"]');
+        if (cell) {
+            var afd = date ? formatDate(date) : '';
+            cell.innerHTML = '<span class="earned-icon attempted-icon" style="cursor:pointer;" onclick="toggleAttempted(\'' + studentId + '\',\'' + creditId + '\')">a</span>'
+                + (afd ? '<div data-att-date="' + studentId + '_' + creditId + '" style="font-size:0.65rem;color:#555;margin-top:1px;cursor:pointer;" onclick="editAttemptedDate(\'' + studentId + '\',\'' + creditId + '\')">' + afd + '</div>' : '');
+        } else {
+            renderEarnedCredits();
+        }
+    });
 }
 function toggleAttempted(studentId, creditId) {
     var aidx = attempted.findIndex(function(a){ return a.studentId===studentId && a.creditId===creditId; });
@@ -5767,7 +5778,7 @@ function renderEarnedStudent(period, container) {
             html += '<td><span class="tag ' + subjectTagClass(c.subject) + '" style="font-size:0.65rem;padding:0.1rem 0.4rem;">' + c.subject + '</span></td>';
             html += '<td style="font-size:0.78rem;color:#555;">' + (c.stage || '') + '</td>';
             // Attempted column
-            html += '<td style="text-align:center;">';
+            html += '<td style="text-align:center;"><div data-att-cell="' + studentId + '_' + c.id + '">';
             if (att) {
                 var afd = formatDate(att.date);
                 html += '<span class="earned-icon attempted-icon" style="cursor:pointer;" onclick="toggleAttempted(\'' + studentId + '\',\'' + c.id + '\')">a</span>';
@@ -5775,7 +5786,7 @@ function renderEarnedStudent(period, container) {
             } else {
                 html += '<span class="earned-icon earned-no" style="cursor:pointer;" onclick="startAttempt(\'' + studentId + '\',\'' + c.id + '\')"></span>';
             }
-            html += '</td>';
+            html += '</div></td>';
             // Earned column
             var aKey = artifactKey(studentId, c.id);
             var art = artifacts[aKey];
