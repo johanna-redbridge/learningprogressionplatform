@@ -1328,7 +1328,7 @@
             <span style="padding:0.55rem 0.5rem;font-size:0.82rem;font-weight:600;color:#1d1d1f;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-2px;">Writing</span>
             <span style="width:1px;background:#e8e8ed;margin:4px 8px;align-self:stretch;"></span>
             <button id="writing-sub-rubric-btn" class="data-subtab-btn" onclick="switchWritingSubtab('writing-benchmark')">Writing Benchmark Rubric</button>
-            <button id="writing-sub-survey-btn" class="data-subtab-btn" onclick="switchWritingSubtab('survey')">Writing Survey</button>
+            <button id="writing-sub-survey-btn" class="data-subtab-btn" onclick="switchWritingSubtab('survey')" style="display:none;">Writing Survey</button>
             <span style="width:1px;background:#e8e8ed;margin:4px 8px;align-self:stretch;"></span>
             <button id="writing-logo-wb" class="logo-tab-btn writing-sub-btn active" data-wsub="wb" onclick="switchWritingSubtab('wb')"><img src="Writing%20Benchmark%20logo.png" alt="Writing Benchmark" style="height:24px;object-fit:contain;display:block;"></button>
           </div>
@@ -17665,7 +17665,7 @@ function _buildWbTable() {
         var _alLabels = ['All','AL1','AL2','AL3','AL4'];
         _ct.innerHTML = _alOpts.map(function(val, i) {
             var active = _wbMainAlFilter === val;
-            return '<button onclick="_wbMainAlFilter=\''+val+'\';_buildWbTable()" style="border:none;border-radius:6px;padding:4px 11px;font-size:0.78rem;font-weight:500;cursor:pointer;background:'+(active?'#3a3a3c':'#e8e8ed')+';color:'+(active?'#fff':'#3a3a3c')+';">'+_alLabels[i]+'</button>';
+            return '<button onclick="_wbMainAlFilter=\''+val+'\';_buildWbTable()" style="border:none;border-radius:6px;padding:4px 11px;font-size:0.78rem;font-weight:500;cursor:pointer;background:'+(active?'#5c5b5a':'#e8e8ed')+';color:'+(active?'#fff':'#3a3a3c')+';">'+_alLabels[i]+'</button>';
         }).join('');
     }
     var tiers = _wbACache.tiers;
@@ -17729,9 +17729,9 @@ function _buildWbTable() {
     function th(col, label, extra) {
         var active = _wbASortCol === col;
         var arr = active ? '<span style="font-size:0.55em;margin-left:2px;opacity:0.8;">'+(_wbASortDir>0?'▲':'▼')+'</span>' : '';
-        return '<th style="background:#3a3a3c;color:#fff;font-size:0.6rem;font-weight:600;padding:0.35rem 0.2rem;text-align:center;border:1px solid #555;vertical-align:bottom;line-height:1.2;white-space:normal;cursor:pointer;user-select:none;'+(extra||'')+'" onclick="wbASort(\''+col+'\')">'+label+arr+'</th>';
+        return '<th style="background:#5c5b5a;color:#fff;font-size:0.6rem;font-weight:600;padding:0.35rem 0.2rem;text-align:center;border:1px solid #4a4948;vertical-align:bottom;line-height:1.2;white-space:normal;cursor:pointer;user-select:none;'+(extra||'')+'" onclick="wbASort(\''+col+'\')">'+label+arr+'</th>';
     }
-    var TH = 'background:#3a3a3c;color:#fff;font-size:0.6rem;font-weight:600;padding:0.35rem 0.2rem;text-align:center;border:1px solid #555;vertical-align:bottom;line-height:1.2;white-space:normal;cursor:pointer;user-select:none;';
+    var TH = 'background:#5c5b5a;color:#fff;font-size:0.6rem;font-weight:600;padding:0.35rem 0.2rem;text-align:center;border:1px solid #4a4948;vertical-align:bottom;line-height:1.2;white-space:normal;cursor:pointer;user-select:none;';
     function fmtAvg(v) { return v!==null?'<span style="font-size:0.72rem;font-weight:600;">'+v.toFixed(1)+'</span>':'<span style="color:#c7c7cc;font-size:0.63rem;">N/A</span>'; }
 
     function buildAlTable(alLabel) {
@@ -17755,8 +17755,8 @@ function _buildWbTable() {
         h += th('avg_boy','BOY<br>avg');
         h += th('avg_moy','MOY<br>avg');
         h += th('avg_eoy','EOY<br>avg');
-        h += th('goal_plus','+1.0<br>goal');
-        h += th('goal_gle','GLE<br>goal');
+        h += th('goal_plus','+1.0<br>progress');
+        h += th('goal_gle','GLE<br>progress');
         h += th('tier_boy','BOY<br>Tier');
         h += th('tier_moy','MOY<br>Tier');
         h += '<th style="'+TH+'">EOY<br>Tier</th>';
@@ -17768,6 +17768,7 @@ function _buildWbTable() {
             var boyAvg = s.fall ? s.fall.avg : null;
             var moyAvg = s.winter ? s.winter.avg : null;
             var eoyAvg = s.spring ? s.spring.avg : null;
+            var latestAvg = eoyAvg !== null ? eoyAvg : (moyAvg !== null ? moyAvg : boyAvg);
             h += '<tr>';
             h += '<td style="'+TD+'text-align:left;padding:3px 8px;font-weight:500;">'+fullName(s.name)+'</td>';
             h += '<td style="'+TD+'font-size:0.68rem;">'+s.gle+'</td>';
@@ -17775,8 +17776,15 @@ function _buildWbTable() {
             h += '<td style="'+TD+'">' + fmtAvg(boyAvg) + '</td>';
             h += '<td style="'+TD+'">' + fmtAvg(moyAvg) + '</td>';
             h += '<td style="'+TD+'">' + fmtAvg(eoyAvg) + '</td>';
-            h += '<td style="'+TD+'font-size:0.7rem;font-weight:600;">'+(boyAvg!==null?(boyAvg+1).toFixed(1):'N/A')+'</td>';
-            h += '<td style="'+TD+'font-size:0.7rem;">'+(s.goal||'N/A')+'</td>';
+            var _gpTarget = boyAvg !== null ? boyAvg + 1.0 : null;
+            var _gpPct = (_gpTarget !== null && latestAvg !== null && _gpTarget > 0) ? Math.min(100, Math.round(latestAvg / _gpTarget * 100)) : null;
+            h += '<td style="'+TD+'padding:3px 4px;">' + (_gpPct !== null
+                ? '<div style="height:5px;background:#e8e8ed;border-radius:3px;overflow:hidden;margin-bottom:2px;"><div style="height:100%;width:'+_gpPct+'%;background:'+pctColor(_gpPct)+';border-radius:3px;"></div></div><div style="font-size:0.6rem;font-weight:600;color:#3a3a3c;text-align:center;line-height:1;">'+_gpPct+'%</div>'
+                : '<span style="color:#c7c7cc;font-size:0.63rem;">N/A</span>') + '</td>';
+            var _glePct = (s.goal && latestAvg !== null) ? Math.min(100, Math.round(latestAvg / s.goal * 100)) : null;
+            h += '<td style="'+TD+'padding:3px 4px;">' + (_glePct !== null
+                ? '<div style="height:5px;background:#e8e8ed;border-radius:3px;overflow:hidden;margin-bottom:2px;"><div style="height:100%;width:'+_glePct+'%;background:'+pctColor(_glePct)+';border-radius:3px;"></div></div><div style="font-size:0.6rem;font-weight:600;color:#3a3a3c;text-align:center;line-height:1;">'+_glePct+'%</div>'
+                : '<span style="color:#c7c7cc;font-size:0.63rem;">N/A</span>') + '</td>';
             h += '<td style="'+TD+'">'+tierBadge(tr.boy)+'</td>';
             h += '<td style="'+TD+'">'+tierBadge(tr.moy)+'</td>';
             h += '<td style="'+TD+'"><span style="color:#c7c7cc;font-size:0.63rem;">N/A</span></td>';
@@ -17830,7 +17838,7 @@ function renderWbCategoryDetail(ci, alFilter) {
         var vals = stu.map(function(s){ return s[key]?s[key].scores[ci]:null; }).filter(function(v){ return v!==null&&!isNaN(v); });
         return vals.length ? vals.reduce(function(a,b){return a+b;},0)/vals.length : null;
     }
-    var TH = 'background:#3a3a3c;color:#fff;font-size:0.6rem;font-weight:600;padding:0.35rem 0.5rem;text-align:center;border:1px solid #555;vertical-align:bottom;';
+    var TH = 'background:#5c5b5a;color:#fff;font-size:0.6rem;font-weight:600;padding:0.35rem 0.5rem;text-align:center;border:1px solid #4a4948;vertical-align:bottom;';
     var _optHtml = _CATS.map(function(c,i){ return '<option value="'+i+'"'+(i===ci?' selected':'')+'>'+c+'</option>'; }).join('');
     // AL toggle bar — populated into #wb-cat-toolbar in the view bar
     var alLabels = [];
@@ -17838,7 +17846,7 @@ function renderWbCategoryDetail(ci, alFilter) {
     alLabels.sort();
     function _alBtn(label, val) {
         var active = _wbCatAlFilter === val;
-        return '<button onclick="_wbCatAlFilter=\''+val+'\';renderWbCategoryDetail('+ci+')" style="border:none;border-radius:6px;padding:4px 11px;font-size:0.78rem;font-weight:500;cursor:pointer;background:'+(active?'#3a3a3c':'#e8e8ed')+';color:'+(active?'#fff':'#3a3a3c')+';">'+label+'</button>';
+        return '<button onclick="_wbCatAlFilter=\''+val+'\';renderWbCategoryDetail('+ci+')" style="border:none;border-radius:6px;padding:4px 11px;font-size:0.78rem;font-weight:500;cursor:pointer;background:'+(active?'#5c5b5a':'#e8e8ed')+';color:'+(active?'#fff':'#3a3a3c')+';">'+label+'</button>';
     }
     var toolbar = document.getElementById('wb-cat-toolbar');
     if (toolbar) {
