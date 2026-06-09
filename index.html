@@ -4014,25 +4014,6 @@ function loadPortfolioDriveArtifacts(studentId) {
         portfolioDriveArtifacts[studentId] = files || [];
         portfolioDriveArtifactsLoading[studentId] = false;
 
-        // Backfill earned dates from Drive artifact filenames
-        if (files && files.length) {
-            earned.forEach(function(e) {
-                if (e.studentId !== studentId || e.date) return;
-                var credit = credits.find(function(c) { return c.id === e.creditId; });
-                if (!credit) return;
-                var norm = function(s) { return s.replace(/\(.*?\)/g,'').toLowerCase().replace(/[^a-z0-9]/g,''); };
-                var tNorm = norm(credit.title);
-                if (tNorm.length < 3) return;
-                for (var i = 0; i < files.length; i++) {
-                    var fNorm = norm(files[i].name);
-                    if (fNorm.indexOf(tNorm) !== -1 || (tNorm.length >= 5 && fNorm.indexOf(tNorm.slice(0, Math.ceil(tNorm.length * 0.75))) !== -1)) {
-                        var d = parseDateFromFilename(files[i].name);
-                        if (d && d.iso) { e.date = d.iso; break; }
-                    }
-                }
-            });
-        }
-
         if (portfolioStudent === studentId) renderPortfolioStudent(studentId);
         if (currentTab === 'earned') {
             var earnedSel = document.getElementById('st-student');
