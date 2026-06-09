@@ -14178,6 +14178,7 @@ var FACT_FLUENCY_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSxkZDw1
 var factFluencyData = null;
 var ffGroupFilter   = 'all';
 var ffAlFilter      = 'all';
+var ffGleFilter     = 'all';
 var ffSortCol       = 'name';
 var ffSortDir       = 1;
 function setFfSort(col) {
@@ -14338,12 +14339,18 @@ function renderFactFluencyTable() {
     var ops      = factFluencyData.ops;
 
     // Build filter option lists
-    var groups = [], als = [];
+    var groups = [], als = [], gles = [];
     students.forEach(function(s) {
         if (s.group && groups.indexOf(s.group) < 0) groups.push(s.group);
         if (s.al    && als.indexOf(s.al)       < 0) als.push(s.al);
+        if (s.gle   && gles.indexOf(s.gle)     < 0) gles.push(s.gle);
     });
     groups.sort(); als.sort();
+    gles.sort(function(a, b) {
+        var av = a.toUpperCase() === 'K' ? 0 : parseFloat(a) || 0;
+        var bv = b.toUpperCase() === 'K' ? 0 : parseFloat(b) || 0;
+        return av - bv;
+    });
 
     // Toolbar
     if (toolbar) {
@@ -14364,6 +14371,15 @@ function renderFactFluencyTable() {
             });
             th += '</div>';
         }
+        if (gles.length > 1) {
+            th += '<span style="font-size:0.72rem;font-weight:600;color:#6b7280;padding:0 2px;">GLE</span>';
+            th += '<div class="toggle-group">';
+            th += '<button class="toggle-btn ff-gle-btn' + (ffGleFilter==='all'?' active':'') + '" onclick="ffGleFilter=\'all\';renderFactFluencyTable()">All</button>';
+            gles.forEach(function(g) {
+                th += '<button class="toggle-btn ff-gle-btn' + (ffGleFilter===g?' active':'') + '" onclick="ffGleFilter=\'' + g.replace(/'/g,"\\'") + '\';renderFactFluencyTable()">' + g.replace(/</g,'&lt;') + '</button>';
+            });
+            th += '</div>';
+        }
         toolbar.innerHTML = th;
     }
 
@@ -14371,6 +14387,7 @@ function renderFactFluencyTable() {
     var filtered = students.filter(function(s) {
         if (ffAlFilter    !== 'all' && s.al    !== ffAlFilter)    return false;
         if (ffGroupFilter !== 'all' && s.group !== ffGroupFilter) return false;
+        if (ffGleFilter   !== 'all' && s.gle   !== ffGleFilter)   return false;
         return true;
     });
 
