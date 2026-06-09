@@ -14253,7 +14253,7 @@ function renderFactFluencyTable() {
 function renderFactFluency() {
     var content = document.getElementById('fact-fluency-content');
     if (!content) return;
-    if (factFluencyData) { renderFactFluencyTable(); return; }
+    factFluencyData = null;
     content.innerHTML = '<p style="padding:1rem;color:#aeaeb2;">Loading…</p>';
     loadFactFluencyData(renderFactFluencyTable);
 }
