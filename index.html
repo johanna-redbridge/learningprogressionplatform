@@ -3816,16 +3816,11 @@ function renderPortfolioStudent(studentId) {
             // Replace placeholders in narrative text
             // Handles both bracketed [MM.DD.YY] and plain MM.DD.YY forms
             var narText = narrative.narrative;
-            if (narDateFmt) {
-                narText = narText
-                    .replace(/\[MM\.DD\.YY\]/gi, narDateFmt)
-                    .replace(/\bMM\.DD\.YY\b/g, narDateFmt);
-            } else {
-                // No date: remove placeholder + the " - " separator that follows it
-                narText = narText
-                    .replace(/\[MM\.DD\.YY\]\s*-\s*/gi, '')
-                    .replace(/\bMM\.DD\.YY\s*-\s*/g, '');
-            }
+            // Strip date prefix and the dash that follows it entirely
+            narText = narText
+                .replace(/\[MM\.DD\.YY\]\s*-\s*/gi, '')
+                .replace(/\bMM\.DD\.YY\s*-\s*/g, '')
+                .replace(/\b\d{1,2}\.\d{1,2}\.\d{2,4}\s*-\s*/g, '');
             narText = narText.replace(/\[Student(?:\s+Name)?\]/gi, narName || '[Student Name]');
             narText = applyPronouns(narText, narPronoun);
 
