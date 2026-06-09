@@ -14192,7 +14192,7 @@ var FF_GRADE_GOALS = {
     '1': { label:'End of 1st',  desc:'30 add/sub facts within 10' },
     '2': { label:'End of 2nd',  desc:'30 add/sub facts within 20' },
     '3': { label:'End of 3rd',  desc:'30 ×÷ facts through 10×10' },
-    '4': { label:'End of 4th',  desc:'30 ×÷ facts through 12×12' }
+    '4': { label:'End of 4th',  desc:'fluent in all categories (≥80% each)' }
 };
 
 function ffGleToGrade(gle) {
@@ -14214,7 +14214,7 @@ function ffGradeOps(ops, grade) {
         if (grade === '1') return l.indexOf('1st') >= 0 || l.indexOf('first grade') >= 0;
         if (grade === '2') return l.indexOf('2nd') >= 0 || l.indexOf('second grade') >= 0;
         if (grade === '3') return l.indexOf('3rd') >= 0 || l.indexOf('third grade') >= 0 || l.indexOf('10x10') >= 0 || l.indexOf('10 x 10') >= 0;
-        if (grade === '4') return l.indexOf('4th') >= 0 || l.indexOf('fourth grade') >= 0 || l.indexOf('12x12') >= 0 || l.indexOf('12 x 12') >= 0 || l.indexOf('fraction') >= 0;
+        if (grade === '4') return true; // all categories
         return false;
     });
 }
@@ -14222,6 +14222,19 @@ function ffGradeOps(ops, grade) {
 function ffGoalProgress(s, ops, grade) {
     var rel = ffGradeOps(ops, grade);
     if (!rel.length) return null;
+    if (grade === '4') {
+        // Goal = fluent in every category; progress = % of categories at ≥80%
+        var total = 0, mastered = 0;
+        rel.forEach(function(op) {
+            var f = s.facts[ops.indexOf(op)];
+            if (!f) return;
+            var pct = ffPctNum(f.moyPct) !== null ? ffPctNum(f.moyPct) : ffPctNum(f.boyPct);
+            if (pct === null) return;
+            total++;
+            if (pct >= 80) mastered++;
+        });
+        return total > 0 ? Math.round(mastered / total * 100) : null;
+    }
     var best = null;
     rel.forEach(function(op) {
         var f = s.facts[ops.indexOf(op)];
@@ -14273,7 +14286,9 @@ function renderFFAnalytics() {
         if (!g || !gradeData[g]) return;
         gradeData[g].total++;
         var prog = ffGoalProgress(s, ops, g);
-        if (prog !== null && prog >= GOAL_THRESHOLD) gradeData[g].reached++;
+        // Grade 4: goal = ALL categories mastered (progress returns % of cats at ≥80%, so 100 = done)
+        var threshold = g === '4' ? 100 : GOAL_THRESHOLD;
+        if (prog !== null && prog >= threshold) gradeData[g].reached++;
     });
 
     function bigPie(reached, total, grade) {
