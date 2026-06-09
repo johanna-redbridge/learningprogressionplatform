@@ -17671,17 +17671,28 @@ function _buildWbTable() {
     var tiers = _wbACache.tiers;
     var _CATS = ['Intros','Transitions','Ending','Sequencing/Org','Elaboration','Voice/Craft','Spelling','Grammar','Overall'];
     var WD_MAX = 6, BH = 26, BW = 9;
-    function bColor(sc) {
-        if (sc>=5) return '#5a9e5a'; if (sc>=4) return '#a8df9e';
-        if (sc>=3) return '#F8D66D'; if (sc>=2) return '#ffb54c'; return '#ff6961';
+    function goalBgColor(sc, target) {
+        if (!target || target <= 0) return sc > 0 ? '#5a9e5a' : '#e2e2e7';
+        var pct = sc / target * 100;
+        if (pct >= 90) return '#5a9e5a';
+        if (pct >= 80) return '#a8df9e';
+        if (pct >= 50) return '#F8D66D';
+        if (pct >= 25) return '#ffb54c';
+        return '#ff6961';
     }
     function barCell(s, ci) {
-        var pds = [{key:'fall',eoy:false},{key:'winter',eoy:false},{key:'spring',eoy:true}];
+        var boyTarget = s.goal ? Math.max(0.01, s.goal - 1.0) : null;
+        var moyTarget = s.goal ? s.goal - 0.5 : null;
+        var pds = [{key:'fall',eoy:false,target:boyTarget},{key:'winter',eoy:false,target:moyTarget},{key:'spring',eoy:true,target:null}];
         var cols = [], any = false;
         pds.forEach(function(pd) {
             var sc = s[pd.key] ? s[pd.key].scores[ci] : null;
             if (sc===null||sc===undefined) { cols.push({bg:'#e2e2e7',pct:0,lbl:'',eoy:pd.eoy}); }
-            else { cols.push({bg:pd.eoy?'#c4c4cc':bColor(sc),pct:Math.max((sc/WD_MAX)*100,5),lbl:sc.toFixed(1),eoy:pd.eoy}); any=true; }
+            else {
+                var bg = pd.eoy ? '#c4c4cc' : goalBgColor(sc, pd.target);
+                cols.push({bg:bg, pct:Math.max((sc/WD_MAX)*100,5), lbl:sc.toFixed(1), eoy:pd.eoy});
+                any = true;
+            }
         });
         if (!any) return '<span style="color:#c7c7cc;font-size:0.6rem;">N/A</span>';
         var o = '<div style="display:flex;align-items:flex-start;gap:2px;justify-content:center;padding:2px 1px;">';
@@ -17819,13 +17830,24 @@ function renderWbCategoryDetail(ci, alFilter) {
     var el = document.getElementById('wb-content');
     if (!el || !_wbACache) return;
     var _CATS = ['Intros','Transitions','Ending','Sequencing/Org','Elaboration','Voice/Craft','Spelling','Grammar','Overall'];
-    function bColor(sc) {
-        if (sc>=5) return '#5a9e5a'; if (sc>=4) return '#a8df9e';
-        if (sc>=3) return '#F8D66D'; if (sc>=2) return '#ffb54c'; return '#ff6961';
+    function goalBgColor(sc, target) {
+        if (!target || target <= 0) return sc > 0 ? '#5a9e5a' : '#e2e2e7';
+        var pct = sc / target * 100;
+        if (pct >= 90) return '#5a9e5a';
+        if (pct >= 80) return '#a8df9e';
+        if (pct >= 50) return '#F8D66D';
+        if (pct >= 25) return '#ffb54c';
+        return '#ff6961';
     }
-    function scoreCell(val, eoy) {
+    function scoreCell(val, period, goal) {
         if (val===null||val===undefined) return '<span style="color:#c7c7cc;font-size:0.7rem;">N/A</span>';
-        var bg = eoy ? '#d0d0d8' : bColor(val);
+        var bg;
+        if (period === 'eoy') {
+            bg = '#d0d0d8';
+        } else {
+            var target = period === 'boy' ? (goal ? Math.max(0.01, goal - 1.0) : null) : (goal ? goal - 0.5 : null);
+            bg = goalBgColor(val, target);
+        }
         return '<div style="display:inline-block;padding:2px 10px;border-radius:5px;background:'+bg+';font-size:0.78rem;font-weight:700;color:#1d1d1f;">'+val.toFixed(1)+'</div>';
     }
     function trendCell(from, to) {
@@ -17892,20 +17914,22 @@ function renderWbCategoryDetail(ci, alFilter) {
             h += '<tr>';
             h += '<td style="'+TD+'text-align:left;padding:5px 10px;font-weight:500;">'+fullName(s.name)+'</td>';
             h += '<td style="'+TD+'font-size:0.68rem;">'+s.gle+'</td>';
-            h += '<td style="'+TD+'">'+scoreCell(boy,false)+'</td>';
-            h += '<td style="'+TD+'">'+scoreCell(moy,false)+'</td>';
-            h += '<td style="'+TD+'">'+scoreCell(eoy,true)+'</td>';
+            h += '<td style="'+TD+'">'+scoreCell(boy,'boy',s.goal)+'</td>';
+            h += '<td style="'+TD+'">'+scoreCell(moy,'moy',s.goal)+'</td>';
+            h += '<td style="'+TD+'">'+scoreCell(eoy,'eoy',s.goal)+'</td>';
             h += '<td style="'+TD+'">'+trendCell(boy,moy)+'</td>';
             h += '<td style="'+TD+'">'+trendCell(moy,eoy)+'</td>';
             h += '</tr>';
         });
         var bAvg=alAvg(stu,'fall'), mAvg=alAvg(stu,'winter'), eAvg=alAvg(stu,'spring');
+        var _stuGoals = stu.map(function(s){ return s.goal; }).filter(function(g){ return g && g > 0; });
+        var avgGoal = _stuGoals.length ? _stuGoals.reduce(function(a,b){return a+b;},0)/_stuGoals.length : null;
         h += '<tr>'
             +'<td style="'+GA+'text-align:left;padding:5px 10px;color:#374151;">Class avg</td>'
             +'<td style="'+GA+'"></td>'
-            +'<td style="'+GA+'">'+scoreCell(bAvg,false)+'</td>'
-            +'<td style="'+GA+'">'+scoreCell(mAvg,false)+'</td>'
-            +'<td style="'+GA+'">'+scoreCell(eAvg,true)+'</td>'
+            +'<td style="'+GA+'">'+scoreCell(bAvg,'boy',avgGoal)+'</td>'
+            +'<td style="'+GA+'">'+scoreCell(mAvg,'moy',avgGoal)+'</td>'
+            +'<td style="'+GA+'">'+scoreCell(eAvg,'eoy',avgGoal)+'</td>'
             +'<td style="'+GA+'">'+trendCell(bAvg,mAvg)+'</td>'
             +'<td style="'+GA+'">'+trendCell(mAvg,eAvg)+'</td>'
             +'</tr>';
