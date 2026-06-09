@@ -4768,7 +4768,8 @@ function openLCSubtab(name) {
     var backTitle = document.getElementById('lc-back-nav-title');
     if (backNav) backNav.style.display = '';
     if (backTitle) backTitle.textContent = labels[name] || name;
-    if (name === 'available') { loadEarnedFromSheet(); enhanceCreditsWithMetadata(); }
+    if (name === 'available') { earnedModified = false; loadEarnedFromSheet(); enhanceCreditsWithMetadata(); }
+    if (name === 'earned') { earnedModified = false; loadEarnedFromSheet(); }
     switchLCSubtab(name);
 }
 
@@ -4804,7 +4805,7 @@ function applyNavState(state) {
 // Low-level: update DOM and render for a tab (shared by switchTab and applyNavState)
 function applyTabRender(tab) {
     currentTab = tab;
-    if (tab === 'earned' || tab === 'available' || tab === 'portfolio' || tab === 'student') loadEarnedFromSheet();
+    if (tab === 'earned' || tab === 'available' || tab === 'portfolio' || tab === 'student') { earnedModified = false; loadEarnedFromSheet(); }
     loadStudentALFromSheet();
     document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
     document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
