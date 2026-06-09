@@ -17721,8 +17721,7 @@ function _buildWbTable() {
         h += th('student','Student','text-align:left;min-width:110px;');
         h += th('gle','GLE','width:34px;');
         _CATS.forEach(function(cat, ci) {
-            h += '<th style="'+TH+'min-width:54px;" onclick="wbASort(\'cat'+ci+'\')">'+cat
-                +((_wbASortCol==='cat'+ci)?'<span style="font-size:0.45em;margin-left:1px;">'+(_wbASortDir>0?'▲':'▼')+'</span>':'')
+            h += '<th style="'+TH+'min-width:54px;cursor:pointer;" onclick="renderWbCategoryDetail('+ci+')">'+cat
                 +'<div style="display:flex;gap:2px;justify-content:center;margin-top:3px;">'
                 +'<span style="width:9px;text-align:center;font-size:0.45rem;color:rgba(255,255,255,0.65);font-weight:600;">B</span>'
                 +'<span style="width:9px;text-align:center;font-size:0.45rem;color:rgba(255,255,255,0.65);font-weight:600;">M</span>'
@@ -17780,6 +17779,84 @@ function _buildWbTable() {
 
     var h = buildAlTable('AL1') + buildAlTable('AL2') + buildAlTable('AL3/4');
     el.innerHTML = h || '<p style="padding:2rem;text-align:center;color:#aeaeb2;">No data available.</p>';
+}
+
+function renderWbCategoryDetail(ci) {
+    var el = document.getElementById('wb-content');
+    if (!el || !_wbACache) return;
+    var _CATS = ['Intros','Transitions','Ending','Sequencing/Org','Elaboration','Voice/Craft','Spelling','Grammar','Overall'];
+    var catName = _CATS[ci];
+    function bColor(sc) {
+        if (sc>=5) return '#5a9e5a'; if (sc>=4) return '#a8df9e';
+        if (sc>=3) return '#F8D66D'; if (sc>=2) return '#ffb54c'; return '#ff6961';
+    }
+    function scoreCell(val, eoy) {
+        if (val===null||val===undefined) return '<span style="color:#c7c7cc;font-size:0.7rem;">N/A</span>';
+        var bg = eoy ? '#d0d0d8' : bColor(val);
+        return '<div style="display:inline-block;padding:2px 10px;border-radius:5px;background:'+bg+';font-size:0.78rem;font-weight:700;color:#1d1d1f;">'+val.toFixed(1)+'</div>';
+    }
+    function trendCell(from, to) {
+        if (from===null||from===undefined||to===null||to===undefined) return '<span style="color:#c7c7cc;font-size:0.7rem;">N/A</span>';
+        var diff = to - from;
+        var col = diff>0?'#15803d':diff<0?'#b91c1c':'#374151';
+        return '<span style="font-size:0.75rem;font-weight:700;color:'+col+'">'+(diff>=0?'+':'')+diff.toFixed(1)+'</span>';
+    }
+    var TH = 'background:#3a3a3c;color:#fff;font-size:0.6rem;font-weight:600;padding:0.35rem 0.5rem;text-align:center;border:1px solid #555;vertical-align:bottom;';
+    var h = '<div style="display:flex;align-items:center;gap:0.75rem;padding:1.25rem 1.25rem 0.75rem;">'
+        +'<button onclick="_buildWbTable()" style="border:none;background:#f0f0f5;border-radius:8px;padding:5px 14px;font-size:0.8rem;cursor:pointer;font-weight:500;">← Back</button>'
+        +'<span style="font-size:0.95rem;font-weight:700;color:#1d1d1f;">'+catName+'</span>'
+        +'<span style="font-size:0.75rem;color:#8e8e93;font-weight:400;">All students by AL — BOY / MOY / EOY</span>'
+        +'</div>';
+    ['AL1','AL2','AL3/4'].forEach(function(alLabel) {
+        var stu = _wbACache.lsStu.filter(function(s){ return s.al===alLabel; });
+        if (!stu.length) return;
+        stu.sort(function(a,b){ return a.name.localeCompare(b.name); });
+        h += '<div style="font-size:0.82rem;font-weight:700;color:#1d1d1f;padding:0.5rem 1.25rem 0.35rem;">'+alLabel+'</div>';
+        h += '<div style="overflow-x:auto;margin:0 1.25rem 1.5rem;border-radius:12px;border:1px solid #e2e2e7;">';
+        h += '<table style="width:100%;border-collapse:collapse;"><thead><tr>';
+        h += '<th style="'+TH+'text-align:left;min-width:130px;">Student</th>';
+        h += '<th style="'+TH+'width:40px;">GLE</th>';
+        h += '<th style="'+TH+'min-width:80px;">BOY</th>';
+        h += '<th style="'+TH+'min-width:80px;">MOY</th>';
+        h += '<th style="'+TH+'min-width:80px;">EOY</th>';
+        h += '<th style="'+TH+'min-width:70px;">BOY→MOY</th>';
+        h += '<th style="'+TH+'min-width:70px;">MOY→EOY</th>';
+        h += '</tr></thead><tbody>';
+        stu.forEach(function(s, i) {
+            var bg = i%2===0?'#fff':'#f9fafb';
+            var TD = 'border:1px solid #e8e8ed;padding:5px 6px;vertical-align:middle;text-align:center;background:'+bg+';';
+            var boy = s.fall ? s.fall.scores[ci] : null;
+            var moy = s.winter ? s.winter.scores[ci] : null;
+            var eoy = s.spring ? s.spring.scores[ci] : null;
+            h += '<tr>';
+            h += '<td style="'+TD+'text-align:left;padding:5px 10px;font-weight:500;">'+fullName(s.name)+'</td>';
+            h += '<td style="'+TD+'font-size:0.68rem;">'+s.gle+'</td>';
+            h += '<td style="'+TD+'">'+scoreCell(boy, false)+'</td>';
+            h += '<td style="'+TD+'">'+scoreCell(moy, false)+'</td>';
+            h += '<td style="'+TD+'">'+scoreCell(eoy, true)+'</td>';
+            h += '<td style="'+TD+'">'+trendCell(boy, moy)+'</td>';
+            h += '<td style="'+TD+'">'+trendCell(moy, eoy)+'</td>';
+            h += '</tr>';
+        });
+        // Class averages row
+        function alAvg(key, scores) {
+            var vals = stu.map(function(s){ return s[key]?s[key].scores[ci]:null; }).filter(function(v){ return v!==null&&!isNaN(v); });
+            return vals.length ? vals.reduce(function(a,b){return a+b;},0)/vals.length : null;
+        }
+        var bAvg=alAvg('fall'), mAvg=alAvg('winter'), eAvg=alAvg('spring');
+        var GA='background:#eef2f7;border:1px solid #d0d7de;padding:5px 6px;font-weight:700;font-size:0.68rem;text-align:center;vertical-align:middle;';
+        h += '<tr>'
+            +'<td style="'+GA+'text-align:left;padding:5px 10px;color:#374151;">Class avg</td>'
+            +'<td style="'+GA+'"></td>'
+            +'<td style="'+GA+'">'+scoreCell(bAvg,false)+'</td>'
+            +'<td style="'+GA+'">'+scoreCell(mAvg,false)+'</td>'
+            +'<td style="'+GA+'">'+scoreCell(eAvg,true)+'</td>'
+            +'<td style="'+GA+'">'+trendCell(bAvg,mAvg)+'</td>'
+            +'<td style="'+GA+'">'+trendCell(mAvg,eAvg)+'</td>'
+            +'</tr>';
+        h += '</tbody></table></div>';
+    });
+    el.innerHTML = h;
 }
 
 function renderWbAnalytics() {
