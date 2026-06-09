@@ -17912,12 +17912,13 @@ function renderWbCategoryDetail(ci, alFilter) {
     h += '<div style="overflow-x:auto;margin:0 1.25rem 1.5rem;border-radius:12px;border:1px solid #e2e2e7;">';
     h += '<table style="width:100%;border-collapse:collapse;table-layout:fixed;">';
     h += '<colgroup>'
-        +'<col style="width:24%"><col style="width:6%"><col style="width:13%">'
-        +'<col style="width:13%"><col style="width:13%"><col style="width:15%"><col style="width:16%">'
+        +'<col style="width:21%"><col style="width:5%"><col style="width:7%"><col style="width:12%">'
+        +'<col style="width:12%"><col style="width:12%"><col style="width:15%"><col style="width:16%">'
         +'</colgroup>';
     h += '<thead><tr>';
     h += '<th style="'+TH+'text-align:left;">Student</th>';
     h += '<th style="'+TH+'">GLE</th>';
+    h += '<th style="'+TH+'">Goal</th>';
     h += '<th style="'+TH+'">BOY</th>';
     h += '<th style="'+TH+'">MOY</th>';
     h += '<th style="'+TH+'">EOY</th>';
@@ -17931,7 +17932,7 @@ function renderWbCategoryDetail(ci, alFilter) {
         if (!stu.length) return;
         stu.sort(function(a,b){ return a.name.localeCompare(b.name); });
         // AL group header row
-        h += '<tr><td colspan="7" style="background:#f0f0f5;border:1px solid #e2e2e7;padding:5px 10px;font-size:0.78rem;font-weight:700;color:#3a3a3c;">'+alLabel+'</td></tr>';
+        h += '<tr><td colspan="8" style="background:#f0f0f5;border:1px solid #e2e2e7;padding:5px 10px;font-size:0.78rem;font-weight:700;color:#3a3a3c;">'+alLabel+'</td></tr>';
         stu.forEach(function(s, i) {
             var bg = i%2===0?'#fff':'#f9fafb';
             var TD = 'border:1px solid #e8e8ed;padding:5px 6px;vertical-align:middle;text-align:center;background:'+bg+';';
@@ -17941,6 +17942,7 @@ function renderWbCategoryDetail(ci, alFilter) {
             h += '<tr>';
             h += '<td style="'+TD+'text-align:left;padding:5px 10px;font-weight:500;">'+fullName(s.name)+'</td>';
             h += '<td style="'+TD+'font-size:0.68rem;">'+s.gle+'</td>';
+            h += '<td style="'+TD+'font-size:0.72rem;font-weight:600;">'+(s.goal||'—')+'</td>';
             h += '<td style="'+TD+'">'+scoreCell(boy,'boy',s.goal)+'</td>';
             h += '<td style="'+TD+'">'+scoreCell(moy,'moy',s.goal)+'</td>';
             h += '<td style="'+TD+'">'+scoreCell(eoy,'eoy',s.goal)+'</td>';
@@ -17954,6 +17956,7 @@ function renderWbCategoryDetail(ci, alFilter) {
         h += '<tr>'
             +'<td style="'+GA+'text-align:left;padding:5px 10px;color:#374151;">Class avg</td>'
             +'<td style="'+GA+'"></td>'
+            +'<td style="'+GA+'font-size:0.72rem;">'+(avgGoal?avgGoal.toFixed(1):'—')+'</td>'
             +'<td style="'+GA+'">'+scoreCell(bAvg,'boy',avgGoal)+'</td>'
             +'<td style="'+GA+'">'+scoreCell(mAvg,'moy',avgGoal)+'</td>'
             +'<td style="'+GA+'">'+scoreCell(eAvg,'eoy',avgGoal)+'</td>'
