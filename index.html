@@ -5623,10 +5623,7 @@ function renderEarnedGroup(period, container) {
                 if (e) {
                     studentTotal++;
                     var fd = formatDate(e.date);
-                    var gArt = artifacts[artifactKey(s.id, c.id)];
-                    var gDriveDate = driveArtifactDateFor(s.id, c.title);
-                    var gArtDate = gDriveDate || (gArt ? parseDateFromFilename(gArt.name) : null);
-                    var gDateStr = gArtDate ? gArtDate.display : fd;
+                    var gDateStr = fd;
                     html += `<td style="text-align:center;"><span class="earned-icon earned-yes" style="cursor:pointer;" onclick="toggleEarned('${s.id}','${c.id}')"${fd ? ' title="Earned ' + fd + '"' : ''}>&#10003;</span>${gDateStr ? '<br><span style="font-size:0.62rem;color:#86868b;white-space:nowrap;">'+gDateStr+'</span>' : ''}</td>`;
                 } else if (att) {
                     var afd = formatDate(att.date);
@@ -5711,8 +5708,7 @@ function renderEarnedStudent(period, container) {
     tableCredits.forEach(function(c) {
         var e2 = hasEarned(studentId, c.id, period);
         var art2 = artifacts[artifactKey(studentId, c.id)];
-        var dr = driveArtifactDateFor(studentId, c.title) || (art2 ? parseDateFromFilename(art2.name) : null);
-        var iso = dr && dr.iso ? dr.iso : (e2 && e2.date ? e2.date : '');
+        var iso = e2 && e2.date ? e2.date : '';
         _creditSortDates[c.id] = iso ? parseCellDate(iso) : '';
     });
 
@@ -5784,12 +5780,8 @@ function renderEarnedStudent(period, container) {
             }
             html += '</div></td>';
             // Earned column
-            var aKey = artifactKey(studentId, c.id);
-            var art = artifacts[aKey];
-            var dateResult = driveArtifactDateFor(studentId, c.title)
-                          || (art ? parseDateFromFilename(art.name) : null);
             var fd = e ? formatDate(e.date) : '';
-            var dateDisplay = dateResult ? (dateResult.iso ? formatDate(dateResult.iso) : formatDate(dateResult.display)) : (fd || '');
+            var dateDisplay = fd;
             html += '<td style="text-align:center;">';
             if (e) {
                 html += '<span class="earned-icon earned-yes" style="cursor:pointer;" onclick="toggleEarned(\'' + studentId + '\',\'' + c.id + '\')">&#10003;</span>';
