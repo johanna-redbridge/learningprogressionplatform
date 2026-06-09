@@ -14410,8 +14410,17 @@ function renderFactFluencyTable() {
 
     // Toolbar
     if (toolbar) {
-        var th = '<button onclick="ffView=(ffView===\'analytics\'?\'table\':\'analytics\');renderFactFluencyTable()" style="padding:0.35rem 0.85rem;border-radius:8px;border:1px solid '+(ffView==='analytics'?'#5c5b5a':'#e8e8ed')+';background:'+(ffView==='analytics'?'#5c5b5a':'#f5f5f7')+';color:'+(ffView==='analytics'?'#fff':'#1d1d1f')+';font-family:inherit;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap;margin-right:4px;">Analytics</button>';
-        if (ffView === 'analytics') { toolbar.innerHTML = th; renderFFAnalytics(); return; }
+        var th = '';
+        if (ffView === 'analytics') {
+            th += '<button onclick="ffView=\'table\';renderFactFluencyTable()" style="padding:0.35rem 0.85rem;border-radius:8px;border:1px solid #e8e8ed;background:#f5f5f7;color:#1d1d1f;font-family:inherit;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background=\'#e8e8ed\'" onmouseout="this.style.background=\'#f5f5f7\'">&#8592; Overview</button>';
+            th += '<div style="margin-left:auto;display:flex;align-items:center;gap:0.5rem;">';
+            th += '<button onclick="ffView=\'table\';renderFactFluencyTable()" style="padding:0.35rem 0.85rem;border-radius:8px;border:1px solid #e8e8ed;background:#f5f5f7;color:#1d1d1f;font-family:inherit;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background=\'#e8e8ed\'" onmouseout="this.style.background=\'#f5f5f7\'">Analytics</button>';
+            th += '<button onclick="showEnterDataModal()" style="padding:0.35rem 0.85rem;border-radius:8px;border:1px solid #e8e8ed;background:#f5f5f7;color:#1d1d1f;font-family:inherit;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background=\'#e8e8ed\'" onmouseout="this.style.background=\'#f5f5f7\'">+ Enter New Data</button>';
+            th += '</div>';
+            toolbar.innerHTML = th;
+            renderFFAnalytics();
+            return;
+        }
         if (als.length > 1) {
             th += '<div class="toggle-group">';
             th += '<button class="toggle-btn ff-al-btn' + (ffAlFilter==='all'?' active':'') + '" onclick="ffAlFilter=\'all\';renderFactFluencyTable()">All</button>';
@@ -14428,6 +14437,10 @@ function renderFactFluencyTable() {
             });
             th += '</div>';
         }
+        th += '<div style="margin-left:auto;display:flex;align-items:center;gap:0.5rem;">';
+        th += '<button onclick="ffView=\'analytics\';renderFactFluencyTable()" style="padding:0.35rem 0.85rem;border-radius:8px;border:1px solid #e8e8ed;background:#f5f5f7;color:#1d1d1f;font-family:inherit;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background=\'#e8e8ed\'" onmouseout="this.style.background=\'#f5f5f7\'">Analytics</button>';
+        th += '<button onclick="showEnterDataModal()" style="padding:0.35rem 0.85rem;border-radius:8px;border:1px solid #e8e8ed;background:#f5f5f7;color:#1d1d1f;font-family:inherit;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background=\'#e8e8ed\'" onmouseout="this.style.background=\'#f5f5f7\'">+ Enter New Data</button>';
+        th += '</div>';
         toolbar.innerHTML = th;
     }
 
