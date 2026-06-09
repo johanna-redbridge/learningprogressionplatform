@@ -14188,11 +14188,11 @@ function setFfSort(col) {
 }
 
 var FF_GRADE_GOALS = {
-    'K': { label:'End of KG',   desc:'20 add/sub facts within 5' },
-    '1': { label:'End of 1st',  desc:'30 add/sub facts within 10' },
-    '2': { label:'End of 2nd',  desc:'30 add/sub facts within 20' },
-    '3': { label:'End of 3rd',  desc:'30 ×÷ facts through 10×10' },
-    '4': { label:'End of 4th',  desc:'fluent in all categories (≥80% each)' }
+    'K': { label:'End of KG',   desc:'20 add/sub within 5 (100% acc, ≤1 min)' },
+    '1': { label:'End of 1st',  desc:'30 add/sub within 10 + maintain KG (100% acc, ≤1 min)' },
+    '2': { label:'End of 2nd',  desc:'30 add/sub within 20 + maintain KG–1st (100% acc, ≤1 min)' },
+    '3': { label:'End of 3rd',  desc:'30 ×÷ through 10×10 + maintain add/sub fluency (100% acc, ≤1 min)' },
+    '4': { label:'End of 4th',  desc:'30 ×÷ through 12×12 + maintain all prior fluency (100% acc, ≤1 min)' }
 };
 
 function ffGleToGrade(gle) {
@@ -14207,42 +14207,43 @@ function ffGleToGrade(gle) {
     return '4';
 }
 
+var FF_GRADE_ORDER = ['K', '1', '2', '3', '4'];
+
+function ffOpGrade(op) {
+    var l = (op.label || '').toLowerCase();
+    if (l.indexOf('kg') >= 0 || l.indexOf('kindergar') >= 0) return 'K';
+    if (l.indexOf('1st') >= 0 || l.indexOf('first') >= 0) return '1';
+    if (l.indexOf('2nd') >= 0 || l.indexOf('second') >= 0) return '2';
+    if (l.indexOf('3rd') >= 0 || l.indexOf('third') >= 0 || l.indexOf('10x10') >= 0 || l.indexOf('10 x 10') >= 0) return '3';
+    if (l.indexOf('4th') >= 0 || l.indexOf('fourth') >= 0 || l.indexOf('12x12') >= 0 || l.indexOf('12 x 12') >= 0) return '4';
+    return null;
+}
+
+// Returns all ops for grades up to and including the given grade (cumulative)
 function ffGradeOps(ops, grade) {
+    var maxIdx = FF_GRADE_ORDER.indexOf(grade);
+    if (maxIdx < 0) return ops;
     return ops.filter(function(op) {
-        var l = (op.label || '').toLowerCase();
-        if (grade === 'K') return l.indexOf('kg') >= 0 || l.indexOf('kindergar') >= 0;
-        if (grade === '1') return l.indexOf('1st') >= 0 || l.indexOf('first grade') >= 0;
-        if (grade === '2') return l.indexOf('2nd') >= 0 || l.indexOf('second grade') >= 0;
-        if (grade === '3') return l.indexOf('3rd') >= 0 || l.indexOf('third grade') >= 0 || l.indexOf('10x10') >= 0 || l.indexOf('10 x 10') >= 0;
-        if (grade === '4') return true; // all categories
-        return false;
+        var og = ffOpGrade(op);
+        if (!og) return false;
+        return FF_GRADE_ORDER.indexOf(og) <= maxIdx;
     });
 }
 
 function ffGoalProgress(s, ops, grade) {
     var rel = ffGradeOps(ops, grade);
     if (!rel.length) return null;
-    if (grade === '4') {
-        // Goal = fluent in every category; progress = % of categories at ≥80%
-        var total = 0, mastered = 0;
-        rel.forEach(function(op) {
-            var f = s.facts[ops.indexOf(op)];
-            if (!f) return;
-            var pct = ffPctNum(f.moyPct) !== null ? ffPctNum(f.moyPct) : ffPctNum(f.boyPct);
-            if (pct === null) return;
-            total++;
-            if (pct >= 80) mastered++;
-        });
-        return total > 0 ? Math.round(mastered / total * 100) : null;
-    }
-    var best = null;
+    // Progress = % of all cumulative grade ops where student has reached ≥80%
+    var total = 0, mastered = 0;
     rel.forEach(function(op) {
         var f = s.facts[ops.indexOf(op)];
         if (!f) return;
         var pct = ffPctNum(f.moyPct) !== null ? ffPctNum(f.moyPct) : ffPctNum(f.boyPct);
-        if (pct !== null && (best === null || pct > best)) best = pct;
+        if (pct === null) return;
+        total++;
+        if (pct >= 80) mastered++;
     });
-    return best;
+    return total > 0 ? Math.round(mastered / total * 100) : null;
 }
 
 function ffGoalPie(pct, grade) {
@@ -14286,9 +14287,8 @@ function renderFFAnalytics() {
         if (!g || !gradeData[g]) return;
         gradeData[g].total++;
         var prog = ffGoalProgress(s, ops, g);
-        // Grade 4: goal = ALL categories mastered (progress returns % of cats at ≥80%, so 100 = done)
-        var threshold = g === '4' ? 100 : GOAL_THRESHOLD;
-        if (prog !== null && prog >= threshold) gradeData[g].reached++;
+        // Goal reached = 100% of cumulative ops mastered (all prior grades included)
+        if (prog !== null && prog >= 100) gradeData[g].reached++;
     });
 
     function bigPie(reached, total, grade) {
