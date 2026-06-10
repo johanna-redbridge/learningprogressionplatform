@@ -5779,13 +5779,34 @@ function renderEarnedStudent(period, container) {
     if (studentId === 's17') {
         var clarkLookup = {};
         clarksonAttainmentData.forEach(function(row) { clarkLookup[row.credit.toLowerCase()] = row; });
-        if (tableCredits.length === 0) {
+
+        // Split credits: spreadsheet ones first (sorted by earned date desc), rest after
+        var clarkSheetCredits = [], clarkOtherCredits = [];
+        tableCredits.forEach(function(c) {
+            (clarkLookup[c.title.toLowerCase()] ? clarkSheetCredits : clarkOtherCredits).push(c);
+        });
+        function _parseSlashDate(d) {
+            if (!d) return null;
+            var p = d.split('/');
+            return p.length === 3 ? new Date(+p[2], +p[0]-1, +p[1]) : null;
+        }
+        clarkSheetCredits.sort(function(a, b) {
+            var da = _parseSlashDate((clarkLookup[a.title.toLowerCase()] || {}).earnedDate);
+            var db = _parseSlashDate((clarkLookup[b.title.toLowerCase()] || {}).earnedDate);
+            if (!da && !db) return 0;
+            if (!da) return 1;
+            if (!db) return -1;
+            return db - da;
+        });
+        var clarkSortedCredits = clarkSheetCredits.concat(clarkOtherCredits);
+
+        if (clarkSortedCredits.length === 0) {
             html += '<p style="text-align:center;color:#86868b;padding:2rem;">No credits match the selected filters.</p>';
         } else {
             html += '<div class="progress-table-wrapper"><table><thead><tr>';
             html += _thSort('credit','Credit',false) + _thSort('subject','Subject',false) + _thSort('stage','Stage',false) + _thSort('attempted','Attempted',true) + _thSort('earned','Earned',true) + _thSort('artifact','Artifact',true);
             html += '</tr></thead><tbody>';
-            tableCredits.forEach(function(c) {
+            clarkSortedCredits.forEach(function(c) {
                 var sheetRow = clarkLookup[c.title.toLowerCase()] || null;
                 var afd = sheetRow && sheetRow.attemptDate ? sheetRow.attemptDate : '';
                 var fd = sheetRow && sheetRow.earnedDate ? sheetRow.earnedDate : '';
