@@ -5650,6 +5650,24 @@ function setEarnedGroupStageFilter(stageName, value) {
     renderEarnedCredits();
 }
 
+var clarksonAttainmentData = [
+    { credit: 'Parts of Speech Parade',                  attemptDate: '4/23/2026', earnedDate: '5/16/2026' },
+    { credit: 'Suffix Spotter 2',                        attemptDate: '',          earnedDate: '5/14/2026' },
+    { credit: 'Add to 10 (Fluency)',                     attemptDate: '',          earnedDate: '5/12/2026' },
+    { credit: 'Time Teller 1',                           attemptDate: '',          earnedDate: '5/1/2026'  },
+    { credit: 'Word Wizard - Digraph',                   attemptDate: '4/28/2026', earnedDate: ''          },
+    { credit: 'Try By Sight 4',                          attemptDate: '3/25/2026', earnedDate: '4/28/2026' },
+    { credit: 'Syllable Superstar 2',                    attemptDate: '',          earnedDate: '4/22/2026' },
+    { credit: 'Solve That Disagreement!',                attemptDate: '',          earnedDate: '4/21/2026' },
+    { credit: 'More Money and Problems',                 attemptDate: '',          earnedDate: '4/15/2026' },
+    { credit: 'Add and Subtract Within 20 (Accuracy)',   attemptDate: '',          earnedDate: '4/14/2026' },
+    { credit: 'Word Wizard - CCVC/CVCC',                 attemptDate: '',          earnedDate: '4/13/2026' },
+    { credit: 'Suffix Spotter 1',                        attemptDate: '',          earnedDate: '4/13/2026' },
+    { credit: "You Can't Always Get What You Want",      attemptDate: '',          earnedDate: '4/10/2026' },
+    { credit: 'Special Friends Specialist 2',            attemptDate: '',          earnedDate: '4/8/2026'  },
+    { credit: 'Money',                                   attemptDate: '',          earnedDate: '4/7/2026'  }
+];
+
 var earnedStudentSubject = 'all';
 var earnedStudentStage = 'all';
 var earnedStudentSortCol = 'date';
@@ -5673,6 +5691,33 @@ function renderEarnedStudent(period, container) {
         container.innerHTML = '<div style="text-align:center;padding:3rem;color:#86868b;">Select a student from the dropdown above.</div>';
         return;
     }
+
+    // Special spreadsheet-driven view for Clarkson (Clark)
+    if (student.name === 'Clarkson (Clark)') {
+        var clarkSearch = document.getElementById('earned-search') ? document.getElementById('earned-search').value.toLowerCase() : '';
+        var clarkRows = clarksonAttainmentData.filter(function(row) {
+            return !clarkSearch || row.credit.toLowerCase().indexOf(clarkSearch) !== -1;
+        });
+        var clarkHtml = '';
+        if (clarkRows.length === 0) {
+            clarkHtml = '<p style="text-align:center;color:#86868b;padding:2rem;">No credits match the search.</p>';
+        } else {
+            clarkHtml += '<div class="progress-table-wrapper"><table><thead><tr>';
+            clarkHtml += '<th>Credit Name</th><th style="text-align:center;">Attempt Date</th><th style="text-align:center;">Earned Date</th>';
+            clarkHtml += '</tr></thead><tbody>';
+            clarkRows.forEach(function(row) {
+                clarkHtml += '<tr>';
+                clarkHtml += '<td style="font-weight:500;">' + row.credit + '</td>';
+                clarkHtml += '<td style="text-align:center;font-size:0.82rem;color:#555;">' + row.attemptDate + '</td>';
+                clarkHtml += '<td style="text-align:center;font-size:0.82rem;color:#555;">' + row.earnedDate + '</td>';
+                clarkHtml += '</tr>';
+            });
+            clarkHtml += '</tbody></table></div>';
+        }
+        container.innerHTML = clarkHtml;
+        return;
+    }
+
     const studentGroups = (student.groups || []).map(gid => groups.find(g => g.id === gid)).filter(Boolean);
 
     const studentEarned = earned.filter(e => {
