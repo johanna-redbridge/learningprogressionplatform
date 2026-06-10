@@ -3703,6 +3703,26 @@ function renderPortfolioStudent(studentId) {
             return _d(b.date) - _d(a.date);
         });
 
+    // Clarkson (Clark) s17: use spreadsheet attainment data instead
+    if (studentId === 's17') {
+        var clarkPortfolioEntries = [];
+        clarksonAttainmentData.forEach(function(row) {
+            if (!row.earnedDate) return;
+            var credit = credits.find(function(c) { return c.title.toLowerCase() === row.credit.toLowerCase(); });
+            if (!credit) return;
+            var p = row.earnedDate.split('/');
+            var iso = p.length === 3 ? p[2] + '-' + ('0'+p[0]).slice(-2) + '-' + ('0'+p[1]).slice(-2) : '';
+            clarkPortfolioEntries.push({ studentId: studentId, creditId: credit.id, date: iso });
+        });
+        clarkPortfolioEntries.sort(function(a, b) {
+            if (!a.date && !b.date) return 0;
+            if (!a.date) return 1;
+            if (!b.date) return -1;
+            return b.date.localeCompare(a.date);
+        });
+        studentEarned = clarkPortfolioEntries;
+    }
+
     // Collect subjects present for this student for the toggle bar
     var presentSubjects = [];
     var seenSubj = {};
