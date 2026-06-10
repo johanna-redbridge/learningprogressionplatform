@@ -14585,13 +14585,54 @@ function renderFFAnalytics() {
             +'</div>';
     }
 
+    // Growth band counts (avg pp growth across ops with both BOY+MOY data)
+    var growthBands = [
+        {label: 'No growth', fn: function(v){ return v <= 0; }},
+        {label: '1–10%',     fn: function(v){ return v > 0  && v <= 10; }},
+        {label: '11–25%',    fn: function(v){ return v > 10 && v <= 25; }},
+        {label: '26–50%',    fn: function(v){ return v > 25 && v <= 50; }},
+        {label: '50%+',      fn: function(v){ return v > 50; }}
+    ];
+    var bandCounts = growthBands.map(function(){ return 0; });
+    students.forEach(function(s) {
+        var diffs = [];
+        s.facts.forEach(function(f) {
+            var boy = ffPctNum(f.boyPct), moy = ffPctNum(f.moyPct);
+            if (boy !== null && moy !== null) diffs.push(moy - boy);
+        });
+        if (!diffs.length) return;
+        var avg = diffs.reduce(function(a,b){ return a+b; }, 0) / diffs.length;
+        growthBands.forEach(function(b, i){ if (b.fn(avg)) bandCounts[i]++; });
+    });
+
+    function growthBandBox() {
+        var s = '<div style="background:#fff;border:1px solid #e5e5ea;border-radius:14px;overflow:hidden;align-self:flex-start;min-width:210px;">';
+        s += '<div style="padding:0.6rem 1rem 0.7rem;">';
+        s += '<div style="display:flex;justify-content:space-between;padding-bottom:0.4rem;border-bottom:2px solid #e5e5ea;margin-bottom:0.1rem;">';
+        s += '<span style="font-size:0.72rem;font-weight:700;color:#1d1d1f;">Growth Band</span>';
+        s += '<span style="font-size:0.72rem;font-weight:700;color:#1d1d1f;"># Students</span>';
+        s += '</div>';
+        growthBands.forEach(function(b, i) {
+            var last = i === growthBands.length - 1;
+            s += '<div style="display:flex;justify-content:space-between;align-items:center;padding:0.42rem 0;'+(last?'':'border-bottom:1px solid #f0f0f5;')+'">';
+            s += '<span style="font-size:0.75rem;color:#3a3a3c;">'+b.label+'</span>';
+            s += '<span style="font-size:0.75rem;font-weight:600;color:#1d1d1f;">'+bandCounts[i]+'</span>';
+            s += '</div>';
+        });
+        s += '</div></div>';
+        return s;
+    }
+
     var html = '<div style="padding:1.25rem;">'
         +'<div style="font-size:.78rem;color:#86868b;margin-bottom:1rem;">Goal = 100% accuracy on all cumulative grade-level facts (best of BOY/MOY)</div>'
+        +'<div style="display:flex;flex-wrap:wrap;gap:1.5rem;align-items:flex-start;">'
         +'<div style="display:flex;flex-wrap:wrap;gap:1rem;">';
     grades.forEach(function(g) {
         var d = gradeData[g];
         if (d.total > 0) html += bigPie(d.reached, d.total, g);
     });
+    html += '</div>';
+    html += growthBandBox();
     html += '</div></div>';
     content.innerHTML = html;
 }
