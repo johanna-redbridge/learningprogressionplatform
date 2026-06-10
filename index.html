@@ -9727,9 +9727,14 @@ function _renderPromoOverview() {
         +'<div style="background:#5c5b5a;color:#fff;padding:0.55rem 1rem;font-size:.8rem;font-weight:700;">AL Distribution by Year</div>'
         +'<canvas id="promo-al-c" style="width:100%;height:260px;display:block;"></canvas></div></div>';
 
-    html += '<div style="background:#fff;border-radius:14px;border:1px solid #e8e8ed;overflow:hidden;margin-bottom:1rem;">'
-        +'<div style="background:#5c5b5a;color:#fff;padding:0.55rem 1rem;font-size:.8rem;font-weight:700;">Promotion Success Rate Over Time</div>'
-        +'<canvas id="promo-rate-c" style="width:100%;height:180px;display:block;"></canvas></div>';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">'
+        +'<div style="background:#fff;border-radius:14px;border:1px solid #e8e8ed;overflow:hidden;">'
+        +'<div style="background:#5c5b5a;color:#fff;padding:0.55rem 1rem;font-size:.8rem;font-weight:700;">Success Rate by AL — <span style="color:#93c5fd;">Mid-Year</span></div>'
+        +'<canvas id="promo-rate-moy" style="width:100%;height:200px;display:block;"></canvas></div>'
+        +'<div style="background:#fff;border-radius:14px;border:1px solid #e8e8ed;overflow:hidden;">'
+        +'<div style="background:#5c5b5a;color:#fff;padding:0.55rem 1rem;font-size:.8rem;font-weight:700;">Success Rate by AL — <span style="color:#fdba74;">End of Year</span></div>'
+        +'<canvas id="promo-rate-eoy" style="width:100%;height:200px;display:block;"></canvas></div>'
+        +'</div>';
 
 
     // ── Box 1: Attempt-to-success ratio by AL split by MOY and EOY ──
@@ -9842,10 +9847,12 @@ function _renderPromoOverview() {
     requestAnimationFrame(function(){
         var c1=document.getElementById('promo-att-c');
         var c2=document.getElementById('promo-al-c');
-        var c3=document.getElementById('promo-rate-c');
+        var c3m=document.getElementById('promo-rate-moy');
+        var c3e=document.getElementById('promo-rate-eoy');
         if(c1){_drawPromoAttChart(c1,ys);}
         if(c2){c2.width=c2.offsetWidth||400;c2.height=260;_drawPromoALChart(c2,ys);}
-        if(c3){c3.width=c3.offsetWidth||800;c3.height=180;_drawPromoRateChart(c3,ys);}
+        if(c3m){c3m.width=c3m.offsetWidth||400;c3m.height=200;_drawPromoRateChart(c3m,ys,'moy');}
+        if(c3e){c3e.width=c3e.offsetWidth||400;c3e.height=200;_drawPromoRateChart(c3e,ys,'eoy');}
     });
 }
 
@@ -10073,13 +10080,15 @@ function _drawPromoALChart(canvas, ys) {
     ctx.strokeStyle='#d1d1d6';ctx.lineWidth=1;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(pL,pT);ctx.lineTo(pL,pT+plotH);ctx.lineTo(pL+plotW,pT+plotH);ctx.stroke();
 }
 
-function _drawPromoRateChart(canvas, ys) {
+function _drawPromoRateChart(canvas, ys, period) {
     var dpr=window.devicePixelRatio||1, W=canvas.width, H=canvas.height;
     canvas.width=W*dpr; canvas.height=H*dpr; canvas.style.width=W+'px'; canvas.style.height=H+'px';
     var ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
     var pL=36,pR=54,pT=22,pB=38, plotW=W-pL-pR, plotH=H-pT-pB;
     ctx.fillStyle='#fafafa'; ctx.fillRect(0,0,W,H);
-    var n=ys.length;
+    // For EOY chart, skip years with no EOY attempts
+    var visYs = period==='eoy' ? ys.filter(function(y){return y.s.eoyAtt>0;}) : ys;
+    var n=visYs.length;
     function xOf(i){return pL+(i/Math.max(n-1,1))*plotW;}
     function yOf(v){return pT+plotH*(1-v/100);}
     [0,25,50,75,100].forEach(function(v){var gy=yOf(v);ctx.strokeStyle='#ebebf0';ctx.lineWidth=1;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(pL,gy);ctx.lineTo(pL+plotW,gy);ctx.stroke();ctx.fillStyle='#8e8e93';ctx.font='9px -apple-system,sans-serif';ctx.textAlign='right';ctx.fillText(v+'%',pL-4,gy+3);});
@@ -10096,17 +10105,15 @@ function _drawPromoRateChart(canvas, ys) {
         });
         if(lastR!==null){ctx.fillStyle=color;ctx.font='bold 10px -apple-system,sans-serif';ctx.textAlign='left';ctx.fillText(lbl,xOf(lastI)+10,yOf(lastR)+4);}
     }
-    // One line per AL: combined MOY+EOY per year; skip EOY for years with no EOY attempts
     [1,2,3,4].forEach(function(al){
-        var rates=ys.map(function(y){
-            var noEoy=y.s.eoyAtt===0;
-            var att=y.s.midAttByAL[al]+(noEoy?0:y.s.eoyAttByAL[al]);
-            var suc=y.s.midSucByAL[al]+(noEoy?0:y.s.eoySucByAL[al]);
+        var rates=visYs.map(function(y){
+            var att=period==='eoy'?y.s.eoyAttByAL[al]:y.s.midAttByAL[al];
+            var suc=period==='eoy'?y.s.eoySucByAL[al]:y.s.midSucByAL[al];
             return att>0?suc/att*100:null;
         });
         drawLine(rates,PROMO_AL_DARK[al],'AL'+al);
     });
-    ys.forEach(function(y,i){ctx.fillStyle='#8e8e93';ctx.font='10px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillText(y.label,xOf(i),pT+plotH+20);});
+    visYs.forEach(function(y,i){ctx.fillStyle='#8e8e93';ctx.font='10px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillText(y.label,xOf(i),pT+plotH+20);});
     ctx.strokeStyle='#d1d1d6';ctx.lineWidth=1;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(pL,pT);ctx.lineTo(pL,pT+plotH);ctx.lineTo(pL+plotW,pT+plotH);ctx.stroke();
 }
 
