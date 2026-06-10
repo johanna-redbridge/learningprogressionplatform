@@ -5775,8 +5775,8 @@ function renderEarnedStudent(period, container) {
         return '<th style="' + style + '" onclick="' + click + '">' + label + indicator + '</th>';
     }
 
-    // Clarkson (Clark): same table structure but dates from spreadsheet data
-    if (student.name === 'Clarkson (Clark)') {
+    // Clarkson (Clark) s17: same table structure but dates from spreadsheet data
+    if (studentId === 's17') {
         var clarkLookup = {};
         clarksonAttainmentData.forEach(function(row) { clarkLookup[row.credit.toLowerCase()] = row; });
         if (tableCredits.length === 0) {
