@@ -5692,32 +5692,6 @@ function renderEarnedStudent(period, container) {
         return;
     }
 
-    // Special spreadsheet-driven view for Clarkson (Clark)
-    if (student.name === 'Clarkson (Clark)') {
-        var clarkSearch = document.getElementById('earned-search') ? document.getElementById('earned-search').value.toLowerCase() : '';
-        var clarkRows = clarksonAttainmentData.filter(function(row) {
-            return !clarkSearch || row.credit.toLowerCase().indexOf(clarkSearch) !== -1;
-        });
-        var clarkHtml = '';
-        if (clarkRows.length === 0) {
-            clarkHtml = '<p style="text-align:center;color:#86868b;padding:2rem;">No credits match the search.</p>';
-        } else {
-            clarkHtml += '<div class="progress-table-wrapper"><table><thead><tr>';
-            clarkHtml += '<th>Credit Name</th><th style="text-align:center;">Attempt Date</th><th style="text-align:center;">Earned Date</th>';
-            clarkHtml += '</tr></thead><tbody>';
-            clarkRows.forEach(function(row) {
-                clarkHtml += '<tr>';
-                clarkHtml += '<td style="font-weight:500;">' + row.credit + '</td>';
-                clarkHtml += '<td style="text-align:center;font-size:0.82rem;color:#555;">' + row.attemptDate + '</td>';
-                clarkHtml += '<td style="text-align:center;font-size:0.82rem;color:#555;">' + row.earnedDate + '</td>';
-                clarkHtml += '</tr>';
-            });
-            clarkHtml += '</tbody></table></div>';
-        }
-        container.innerHTML = clarkHtml;
-        return;
-    }
-
     const studentGroups = (student.groups || []).map(gid => groups.find(g => g.id === gid)).filter(Boolean);
 
     const studentEarned = earned.filter(e => {
@@ -5799,6 +5773,80 @@ function renderEarnedStudent(period, container) {
         var click = 'if(earnedStudentSortCol===\'' + col + '\'){earnedStudentSortDir*=-1;}else{earnedStudentSortCol=\'' + col + '\';earnedStudentSortDir=' + _defDir + ';}renderEarnedCredits();';
         var indicator = active ? '<span style="font-size:0.65em;opacity:0.8;margin-left:2px;">' + (earnedStudentSortDir < 0 ? '▼' : '▲') + '</span>' : '';
         return '<th style="' + style + '" onclick="' + click + '">' + label + indicator + '</th>';
+    }
+
+    // Clarkson (Clark): same table structure but dates from spreadsheet data
+    if (student.name === 'Clarkson (Clark)') {
+        var clarkLookup = {};
+        clarksonAttainmentData.forEach(function(row) { clarkLookup[row.credit.toLowerCase()] = row; });
+        if (tableCredits.length === 0) {
+            html += '<p style="text-align:center;color:#86868b;padding:2rem;">No credits match the selected filters.</p>';
+        } else {
+            html += '<div class="progress-table-wrapper"><table><thead><tr>';
+            html += _thSort('credit','Credit',false) + _thSort('subject','Subject',false) + _thSort('stage','Stage',false) + _thSort('attempted','Attempted',true) + _thSort('earned','Earned',true) + _thSort('artifact','Artifact',true);
+            html += '</tr></thead><tbody>';
+            tableCredits.forEach(function(c) {
+                var sheetRow = clarkLookup[c.title.toLowerCase()] || null;
+                var afd = sheetRow && sheetRow.attemptDate ? sheetRow.attemptDate : '';
+                var fd = sheetRow && sheetRow.earnedDate ? sheetRow.earnedDate : '';
+                var aKey = artifactKey(studentId, c.id);
+                var art = artifacts[aKey];
+                html += '<tr>';
+                html += '<td style="font-weight:500;">' + c.title + '</td>';
+                html += '<td><span class="tag ' + subjectTagClass(c.subject) + '" style="font-size:0.65rem;padding:0.1rem 0.4rem;">' + c.subject + '</span></td>';
+                html += '<td style="font-size:0.78rem;color:#555;">' + (c.stage || '') + '</td>';
+                html += '<td style="text-align:center;">';
+                if (afd) {
+                    html += '<span class="earned-icon attempted-icon">a</span>';
+                    html += '<div style="font-size:0.65rem;color:#555;margin-top:1px;">' + afd + '</div>';
+                } else {
+                    html += '<span class="earned-icon earned-no"></span>';
+                }
+                html += '</td>';
+                html += '<td style="text-align:center;">';
+                if (fd) {
+                    html += '<span class="earned-icon earned-yes">&#10003;</span>';
+                    html += '<div style="font-size:0.65rem;color:#555;margin-top:1px;">' + fd + '</div>';
+                } else {
+                    html += '<span class="earned-icon earned-no"></span>';
+                }
+                html += '</td>';
+                html += '<td style="text-align:center;">';
+                if (art) {
+                    html += '<div class="artifact-preview">';
+                    var isImg = art.type && art.type.startsWith('image/');
+                    if (isImg && art.dataUrl) {
+                        html += '<img src="' + art.dataUrl + '" class="artifact-thumb" onclick="viewArtifact(\'' + studentId + '\',\'' + c.id + '\')" style="cursor:pointer;" />';
+                    }
+                    if (art.uploading && !art.dataUrl) {
+                        html += '<span style="font-size:0.72rem;color:#86868b;font-style:italic;">Uploading&#8230;</span>';
+                    } else if (art.webViewLink) {
+                        html += '<a href="' + art.webViewLink + '" target="_blank" title="Open in Google Drive: ' + art.name + '" style="color:#1a73e8;font-size:0.72rem;">&#128196; ' + art.name + (art.uploading ? ' &#8230;' : '') + '</a>';
+                        html += '<span class="artifact-remove" onclick="removeArtifact(\'' + studentId + '\',\'' + c.id + '\')" title="Remove">&times;</span>';
+                    } else {
+                        html += '<a href="#" onclick="event.preventDefault();viewArtifact(\'' + studentId + '\',\'' + c.id + '\')" title="' + art.name + '">' + art.name + '</a>';
+                        html += '<span class="artifact-remove" onclick="removeArtifact(\'' + studentId + '\',\'' + c.id + '\')" title="Remove">&times;</span>';
+                    }
+                    html += '</div>';
+                } else {
+                    html += '<div style="display:flex;gap:4px;align-items:center;justify-content:center;">';
+                    html += '<div class="artifact-drop" ondragover="artifactDragOver(event)" ondragleave="artifactDragLeave(event)" ondrop="handleArtifactDrop(event,\'' + studentId + '\',\'' + c.id + '\')">';
+                    html += '<span style="pointer-events:none;">&#128206; drop</span>';
+                    html += '<input type="file" accept="image/*,video/*,application/pdf" onchange="handleArtifactDrop(event,\'' + studentId + '\',\'' + c.id + '\')" />';
+                    html += '</div>';
+                    html += '<div class="artifact-drop">';
+                    html += '<span style="pointer-events:none;">&#128247; capture</span>';
+                    html += '<input type="file" accept="image/*" capture="environment" onchange="handleArtifactDrop(event,\'' + studentId + '\',\'' + c.id + '\')" />';
+                    html += '</div>';
+                    html += '</div>';
+                }
+                html += '</td>';
+                html += '</tr>';
+            });
+            html += '</tbody></table></div>';
+        }
+        container.innerHTML = html;
+        return;
     }
 
     if (tableCredits.length === 0) {
