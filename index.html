@@ -14669,7 +14669,10 @@ function renderFactFluencyTable() {
         var diff = to - from;
         var sign = diff > 0 ? '+' : '';
         var col = diff > 0 ? '#3b82f6' : diff < 0 ? '#c05050' : '#86868b';
-        return '<span style="font-size:0.68rem;font-weight:700;color:' + col + ';">' + sign + diff + 'pp</span>';
+        return '<div style="display:flex;flex-direction:column;align-items:center;gap:1px;">'
+            + '<span style="font-size:0.68rem;font-weight:700;color:' + col + ';">' + from + '%→' + to + '%</span>'
+            + '<span style="font-size:0.6rem;color:' + col + ';opacity:0.75;">' + sign + diff + 'pp</span>'
+            + '</div>';
     }
     var html = '<div style="overflow-x:auto;overflow-y:auto;max-height:65vh;border-radius:16px;border:1px solid #f0f0f0;">';
     html += '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
