@@ -3686,11 +3686,107 @@ function portfolioSearchFiltered() {
     });
 }
 
+var clarksonPortfolioData = [
+    { credit: 'Parts of Speech Parade',                attemptDate: '4/23/2026', earnedDate: '5/16/2026' },
+    { credit: 'Suffix Spotter 2',                      attemptDate: '',          earnedDate: '5/14/2026' },
+    { credit: 'Add to 10 (Fluency)',                   attemptDate: '',          earnedDate: '5/12/2026' },
+    { credit: 'Time Teller 1',                         attemptDate: '',          earnedDate: '5/1/2026'  },
+    { credit: 'Word Wizard - Digraph',                 attemptDate: '4/28/2026', earnedDate: ''          },
+    { credit: 'Try By Sight 4',                        attemptDate: '3/25/2026', earnedDate: '4/28/2026' },
+    { credit: 'Syllable Superstar 2',                  attemptDate: '',          earnedDate: '4/22/2026' },
+    { credit: 'Solve That Disagreement!',              attemptDate: '',          earnedDate: '4/21/2026' },
+    { credit: 'More Money and Problems',               attemptDate: '',          earnedDate: '4/15/2026' },
+    { credit: 'Add and Subtract Within 20 (Accuracy)', attemptDate: '',          earnedDate: '4/14/2026' },
+    { credit: 'Word Wizard - CCVC/CVCC',               attemptDate: '',          earnedDate: '4/13/2026' },
+    { credit: 'Suffix Spotter 1',                      attemptDate: '',          earnedDate: '4/13/2026' },
+    { credit: "You Can't Always Get What You Want",    attemptDate: '',          earnedDate: '4/10/2026' },
+    { credit: 'Special Friends Specialist 2',          attemptDate: '',          earnedDate: '4/8/2026'  },
+    { credit: 'Money',                                 attemptDate: '',          earnedDate: '4/7/2026'  }
+];
+
 function renderPortfolioStudent(studentId) {
     var s = students.find(function(x) { return x.id === studentId; });
     if (!s) return;
     var el = document.getElementById('portfolio-content');
     if (!el) return;
+
+    // Clarkson (Clark) s17: use spreadsheet data, bypassing earned array entirely
+    if (studentId === 's17') {
+        _portfolioToolbarSync();
+        var clarkRows = clarksonPortfolioData.filter(function(r) { return !!r.earnedDate; });
+        clarkRows.sort(function(a, b) {
+            var pa = a.earnedDate.split('/'), pb = b.earnedDate.split('/');
+            var da = pa.length===3 ? new Date(+pa[2],+pa[0]-1,+pa[1]) : null;
+            var db = pb.length===3 ? new Date(+pb[2],+pb[0]-1,+pb[1]) : null;
+            if (!da&&!db) return 0; if (!da) return 1; if (!db) return -1;
+            return db - da;
+        });
+        if (clarkRows.length === 0) { el.innerHTML = '<div style="text-align:center;padding:3rem;color:#86868b;">No portfolio entries yet.</div>'; return; }
+        var html = '<div style="display:flex;flex-direction:column;gap:1.25rem;">';
+        clarkRows.forEach(function(row) {
+            var credit = credits.find(function(c) { return c.title.toLowerCase() === row.credit.toLowerCase(); });
+            var sc = credit ? (avSubjectColors[credit.subject] || {bg:'#86868b',letter:'?'}) : {bg:'#86868b',letter:'?'};
+            var badgePath = credit ? getBadgePath(credit.id, 'single') : null;
+            var narrative = credit ? portfolioNarratives[credit.id] : null;
+            var loading   = credit ? portfolioLoadingNarratives[credit.id] : null;
+            var art       = credit ? artifacts[studentId + '_' + credit.id] : null;
+            var driveArts = credit ? findPortfolioArtifact(studentId, credit) : null;
+            var isoDate   = (function(){ var p=row.earnedDate.split('/'); return p.length===3?p[2]+'-'+('0'+p[0]).slice(-2)+'-'+('0'+p[1]).slice(-2):''; })();
+            var eObj = { studentId: studentId, creditId: credit ? credit.id : null, date: isoDate };
+            html += '<div style="background:#fff;border:1px solid #e8e8ed;border-radius:16px;overflow:hidden;display:grid;grid-template-columns:2fr 3fr;">';
+            html += '<div style="display:flex;flex-direction:column;border-right:1px solid #e8e8ed;">';
+            html += '<div style="padding:1.5rem 1.25rem;display:flex;flex-direction:column;align-items:center;gap:0.9rem;background:' + (sc.bg||'#f5f5f7') + '18;border-bottom:1px solid #e8e8ed;">';
+            if (badgePath) {
+                html += '<img src="' + badgePath + '" style="width:150px;height:150px;border-radius:50%;object-fit:cover;" onerror="this.style.display=\'none\'">';
+            } else {
+                html += '<div style="width:150px;height:150px;border-radius:50%;background:' + (sc.bg||'#ccc') + ';display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:3rem;">' + (sc.letter||'?') + '</div>';
+            }
+            html += '<div style="text-align:center;">';
+            html += '<div style="font-weight:700;font-size:0.95rem;line-height:1.3;">' + row.credit + '</div>';
+            if (credit) html += '<div style="font-size:0.75rem;color:#86868b;margin-top:0.25rem;">' + credit.subject + ' &middot; ' + credit.stage + '</div>';
+            html += '<div style="font-size:0.73rem;color:#aeaeb2;margin-top:0.15rem;">' + row.earnedDate + '</div>';
+            html += '</div></div>';
+            html += '<div style="padding:1.25rem 1.5rem;flex:1;">';
+            if (narrative) {
+                var narDt = new Date((isoDate.length===7?isoDate+'-01':isoDate)+'T00:00:00');
+                var narDateFmt = String(narDt.getMonth()+1).padStart(2,'0')+'.'+String(narDt.getDate()).padStart(2,'0')+'.'+String(narDt.getFullYear()).slice(-2);
+                var narText = narrative.narrative
+                    .replace(/\[MM\.DD\.YY\]\s*-\s*/gi,'').replace(/\bMM\.DD\.YY\s*-\s*/g,'').replace(/\b\d{1,2}\.\d{1,2}\.\d{2,4}\s*-\s*/g,'')
+                    .replace(/\[Student(?:\s+Name)?\]/gi, nickName(s.name)||'[Student Name]');
+                narText = applyPronouns(narText, s.pronoun);
+                html += '<div style="font-size:0.84rem;line-height:1.7;color:#1d1d1f;">' + narText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>') + '</div>';
+                if (narrative.skill) html += '<div style="margin-top:0.6rem;font-size:0.82rem;color:#FF8200;"><span style="font-weight:700;">Skill/concept:</span> <span style="font-style:italic;">' + narrative.skill.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span></div>';
+            } else if (loading) {
+                html += '<div style="color:#86868b;font-size:0.82rem;">Loading…</div>';
+            } else {
+                html += '<div style="color:#86868b;font-size:0.82rem;">No document linked.</div>';
+            }
+            html += '</div></div>';
+            html += '<div style="display:flex;flex-direction:column;">';
+            html += '<div style="padding:1.25rem 1.5rem;flex:1;display:flex;flex-direction:column;gap:0.75rem;">';
+            if (art && art.dataUrl) {
+                var artType = art.type||'';
+                if (artType.startsWith('image/')) html += '<img src="'+art.dataUrl+'" style="max-width:100%;max-height:320px;border-radius:8px;object-fit:contain;display:block;">';
+                else if (artType==='application/pdf') html += '<iframe src="'+art.dataUrl+'" style="width:100%;height:400px;border:none;border-radius:8px;"></iframe>';
+                else html += '<a href="'+(art.webViewLink||art.dataUrl)+'" target="_blank" style="color:#FF8200;font-size:0.82rem;">&#128196; '+(art.name||'View artifact')+'</a>';
+            } else if (driveArts && driveArts.length > 0) {
+                driveArts.forEach(function(da) { html += '<iframe src="https://drive.google.com/file/d/'+da.id+'/preview" style="width:100%;height:400px;border:none;border-radius:8px;" allow="autoplay"></iframe>'; });
+            } else {
+                html += '<div style="display:flex;gap:4px;align-items:center;">';
+                if (credit) {
+                    html += '<div class="artifact-drop" ondragover="artifactDragOver(event)" ondragleave="artifactDragLeave(event)" ondrop="handleArtifactDrop(event,\''+studentId+'\',\''+credit.id+'\')">';
+                    html += '<span style="pointer-events:none;">&#128206; drop</span>';
+                    html += '<input type="file" accept="image/*,video/*,application/pdf" onchange="handleArtifactDrop(event,\''+studentId+'\',\''+credit.id+'\')" />';
+                    html += '</div>';
+                }
+                html += '</div>';
+            }
+            html += '</div></div></div>';
+        });
+        html += '</div>';
+        el.innerHTML = html;
+        return;
+    }
 
     function _d(s){return new Date((s&&s.length===7?s+'-01':s||'')+'T00:00:00');}
     // All earned entries for this student, sorted most-recent first
@@ -3702,26 +3798,6 @@ function renderPortfolioStudent(studentId) {
             if (!b.date) return -1;
             return _d(b.date) - _d(a.date);
         });
-
-    // Clarkson (Clark) s17: use spreadsheet attainment data instead
-    if (studentId === 's17') {
-        var clarkPortfolioEntries = [];
-        clarksonAttainmentData.forEach(function(row) {
-            if (!row.earnedDate) return;
-            var credit = credits.find(function(c) { return c.title.toLowerCase() === row.credit.toLowerCase(); });
-            if (!credit) return;
-            var p = row.earnedDate.split('/');
-            var iso = p.length === 3 ? p[2] + '-' + ('0'+p[0]).slice(-2) + '-' + ('0'+p[1]).slice(-2) : '';
-            clarkPortfolioEntries.push({ studentId: studentId, creditId: credit.id, date: iso });
-        });
-        clarkPortfolioEntries.sort(function(a, b) {
-            if (!a.date && !b.date) return 0;
-            if (!a.date) return 1;
-            if (!b.date) return -1;
-            return b.date.localeCompare(a.date);
-        });
-        studentEarned = clarkPortfolioEntries;
-    }
 
     // Collect subjects present for this student for the toggle bar
     var presentSubjects = [];
