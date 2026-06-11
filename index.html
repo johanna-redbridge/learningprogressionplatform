@@ -11467,7 +11467,8 @@ function xrefBuildReadStds(){
     // Supplement: xrefCCSCRows standards not already in ELA CSV
     if(xrefCCSCRows){
         xrefCCSCRows.forEach(function(r){
-            if(r.area !== 'Reading' && r.area !== 'Writing') return;
+            var isEla = r.area === 'Reading' || r.area === 'Writing' || (r.code||'').match(/^RF\./i);
+            if(!isEla) return;
             if(seen[seenKey(r.code)]) return;
             seen[seenKey(r.code)] = true;
             var gn = xrefGradeNum(r.code);
@@ -11604,10 +11605,11 @@ function xrefReadDetailHTML(){
         }
     }
 
-    // Build standard code → credit rows (reading/writing only)
+    // Build standard code → credit rows (reading/writing/foundational only)
     var stdCredits = {};
     xrefCCSCRows.forEach(function(r){
-        if(r.area !== 'Reading' && r.area !== 'Writing') return;
+        var isEla = r.area === 'Reading' || r.area === 'Writing' || (r.code||'').match(/^RF\./i);
+        if(!isEla) return;
         if(!r.credit) return;
         var nc = normCcssCode(r.code);
         if(!stdCredits[nc]) stdCredits[nc]=[];
