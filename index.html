@@ -9993,109 +9993,134 @@ function _renderPromoStuDetail() {
 
 function _drawPromoAttChart(container, ys) {
     container.innerHTML = '';
-    container.style.cssText = 'display:flex;flex-direction:column;gap:8px;padding:10px;';
+    container.style.cssText = 'padding:10px 10px 6px;';
     var dpr = window.devicePixelRatio || 1;
+    var W = container.offsetWidth || 640;
+    var H = 230;
+    var cvs = document.createElement('canvas');
+    cvs.style.cssText = 'display:block;width:100%;height:'+H+'px;';
+    cvs.width = W * dpr; cvs.height = H * dpr;
+    container.appendChild(cvs);
+    var ctx = cvs.getContext('2d'); ctx.scale(dpr, dpr);
 
-    function drawPeriodCanvas(cvs, attByAL, sucByAL) {
-        var W = cvs.offsetWidth || 320, H = 120;
-        cvs.width = W*dpr; cvs.height = H*dpr;
-        cvs.style.width = W+'px'; cvs.style.height = H+'px';
-        var ctx = cvs.getContext('2d'); ctx.scale(dpr,dpr);
-        var pL=24, pR=6, pT=18, pB=26, plotW=W-pL-pR, plotH=H-pT-pB;
-        ctx.fillStyle='#fafafa'; ctx.fillRect(0,0,W,H);
+    var pL=44, pR=16, pT=20, pB=54, plotW=W-pL-pR, plotH=H-pT-pB;
+    ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,W,H);
 
-        var maxSuc=0;
-        [1,2,3,4].forEach(function(al){ maxSuc=Math.max(maxSuc,(sucByAL&&sucByAL[al])||0); });
-        maxSuc=Math.max(maxSuc,1);
-
-        // Y-axis gridlines
-        for(var g=0;g<=maxSuc;g++){
-            var gy=pT+plotH*(1-g/maxSuc);
-            ctx.strokeStyle='#ebebf0'; ctx.lineWidth=0.5; ctx.setLineDash([]);
-            ctx.beginPath(); ctx.moveTo(pL,gy); ctx.lineTo(pL+plotW,gy); ctx.stroke();
-            if(g===0||g===maxSuc){
-                ctx.fillStyle='#8e8e93'; ctx.font='8px -apple-system,sans-serif'; ctx.textAlign='right';
-                ctx.fillText(g,pL-3,gy+3);
-            }
-        }
-
-        var numAL=4, gW=plotW/numAL, bGap=6, bw=Math.max(Math.floor(gW-bGap*2),4);
-
-        [1,2,3,4].forEach(function(al,ai){
-            var gx=pL+ai*gW, cx=gx+gW/2;
-            var att=(attByAL&&attByAL[al])||0;
-            var suc=(sucByAL&&sucByAL[al])||0;
-            var rate=att?Math.round(suc/att*100):null;
-            var bx=cx-bw/2;
-
-            if(att>0){
-                var sucH=Math.max(Math.round(plotH*suc/maxSuc),2);
-                ctx.fillStyle=PROMO_AL_DARK[al];
-                ctx.fillRect(bx,pT+plotH-sucH,bw,sucH);
-                // percentage on top
-                ctx.fillStyle='#1d1d1f'; ctx.font='bold 8px -apple-system,sans-serif'; ctx.textAlign='center';
-                ctx.fillText(rate+'%',cx,pT+plotH-sucH-3);
-            } else {
-                ctx.fillStyle='#e8e8ed'; ctx.fillRect(bx,pT+plotH-3,bw,3);
-                ctx.fillStyle='#aeaeb2'; ctx.font='7px -apple-system,sans-serif'; ctx.textAlign='center';
-                ctx.fillText('—',cx,pT+plotH-5);
-            }
-
-            // AL label
-            ctx.fillStyle=PROMO_AL_DARK[al]; ctx.font='bold 8.5px -apple-system,sans-serif'; ctx.textAlign='center';
-            ctx.fillText('AL'+al,cx,pT+plotH+16);
-        });
-
-        // Axis border
-        ctx.strokeStyle='#d1d1d6'; ctx.lineWidth=1; ctx.setLineDash([]);
-        ctx.beginPath(); ctx.moveTo(pL,pT); ctx.lineTo(pL,pT+plotH); ctx.lineTo(pL+plotW,pT+plotH); ctx.stroke();
-    }
-
+    // Max attempts across all years (excluding placeholder EOY)
+    var maxAtt = 1;
     ys.forEach(function(y){
-        var card = document.createElement('div');
-        card.style.cssText = 'background:#fff;border:1px solid #e8e8ed;border-radius:10px;overflow:hidden;';
-
-        var hdr = document.createElement('div');
-        hdr.style.cssText = 'background:#f5f5f7;padding:4px 12px;font-size:.8rem;font-weight:700;color:#3a3a3c;border-bottom:1px solid #e8e8ed;';
-        hdr.textContent = y.label;
-        card.appendChild(hdr);
-
-        var body = document.createElement('div');
-        body.style.cssText = 'display:flex;align-items:stretch;';
-
-        function makeSection(label, color, attByAL, sucByAL) {
-            var sec = document.createElement('div');
-            sec.style.cssText = 'flex:1;padding:6px 6px 4px;min-width:0;';
-            var lbl = document.createElement('div');
-            lbl.style.cssText = 'font-size:.72rem;font-weight:700;color:'+color+';text-align:center;margin-bottom:4px;';
-            lbl.textContent = label;
-            var cvs = document.createElement('canvas');
-            cvs.style.cssText = 'display:block;width:100%;';
-            sec.appendChild(lbl); sec.appendChild(cvs);
-            sec._cvs = cvs; sec._att = attByAL; sec._suc = sucByAL;
-            return sec;
-        }
-
-        var moySec = makeSection('MOY','#3b82f6',y.s.midAttByAL,y.s.midSucByAL);
-        var divEl = document.createElement('div');
-        divEl.style.cssText = 'width:1px;background:#e8e8ed;margin:8px 0;flex-shrink:0;';
-        var eoySec = makeSection('EOY','#f97316',y.s.eoyAttByAL,y.s.eoySucByAL);
-
-        body.appendChild(moySec); body.appendChild(divEl); body.appendChild(eoySec);
-        card.appendChild(body);
-        container.appendChild(card);
-
-        // Draw after layout so offsetWidth is available
-        requestAnimationFrame(function(){
-            drawPeriodCanvas(moySec._cvs, moySec._att, moySec._suc);
-            drawPeriodCanvas(eoySec._cvs, eoySec._att, eoySec._suc);
-        });
+        maxAtt = Math.max(maxAtt, y.s.midAtt||0);
+        if ((y.s.eoyAtt||0) > 0) maxAtt = Math.max(maxAtt, y.s.eoyAtt);
     });
 
-    var leg = document.createElement('div');
-    leg.style.cssText = 'padding:2px 2px 6px;font-size:.68rem;color:#64748b;';
-    leg.textContent = 'Bar height = # students who succeeded · label = success rate';
-    container.appendChild(leg);
+    // Y-axis gridlines
+    var nGrid = 4;
+    for (var g=0; g<=nGrid; g++) {
+        var gv = Math.round(maxAtt * g / nGrid);
+        var gy = pT + plotH * (1 - g/nGrid);
+        ctx.strokeStyle='#ebebf0'; ctx.lineWidth=1; ctx.setLineDash([]);
+        ctx.beginPath(); ctx.moveTo(pL,gy); ctx.lineTo(pL+plotW,gy); ctx.stroke();
+        ctx.fillStyle='#8e8e93'; ctx.font='9px -apple-system,sans-serif'; ctx.textAlign='right';
+        ctx.fillText(gv, pL-4, gy+3);
+    }
+    // Axis lines
+    ctx.strokeStyle='#d1d1d6'; ctx.lineWidth=1; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(pL,pT); ctx.lineTo(pL,pT+plotH); ctx.lineTo(pL+plotW,pT+plotH); ctx.stroke();
+
+    var MOY_DARK='#1d4ed8', MOY_LIGHT='#93c5fd';
+    var EOY_DARK='#ea580c', EOY_LIGHT='#fdba74';
+
+    var nYears = ys.length;
+    var groupW = plotW / nYears;
+    var pairW = groupW * 0.72;
+    var barW = Math.max(Math.floor(pairW/2 - 2), 8);
+    var barGap = 3;
+
+    function drawStackedBar(cx, att, suc, darkC, lightC) {
+        if (!att) return;
+        var failed = att - suc;
+        var totalH = Math.round(plotH * att / maxAtt);
+        var sucH = Math.round(plotH * suc / maxAtt);
+        var failH = totalH - sucH;
+        var baseY = pT + plotH;
+        var bx = cx - barW/2;
+
+        // Top section: attempted but failed (light)
+        if (failH > 0) {
+            ctx.fillStyle = lightC;
+            ctx.fillRect(bx, baseY-totalH, barW, failH);
+            if (failH >= 12) {
+                ctx.fillStyle = '#374151';
+                ctx.font = 'bold 8px -apple-system,sans-serif'; ctx.textAlign = 'center';
+                ctx.fillText(failed, cx, baseY-totalH + failH/2 + 3);
+            }
+        }
+        // Bottom section: succeeded (dark)
+        if (sucH > 0) {
+            ctx.fillStyle = darkC;
+            ctx.fillRect(bx, baseY-sucH, barW, sucH);
+            if (sucH >= 12) {
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 8px -apple-system,sans-serif'; ctx.textAlign = 'center';
+                ctx.fillText(suc, cx, baseY-sucH + sucH/2 + 3);
+            }
+        }
+        // % success on top of bar
+        var rate = Math.round(suc/att*100);
+        ctx.fillStyle = '#1d1d1f'; ctx.font = 'bold 8px -apple-system,sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText(rate+'%', cx, baseY-totalH-4);
+    }
+
+    function drawPlaceholderBar(cx) {
+        var ph = Math.round(plotH * 0.35);
+        ctx.fillStyle = '#e5e7eb';
+        ctx.fillRect(cx-barW/2, pT+plotH-ph, barW, ph);
+        ctx.fillStyle = '#9ca3af'; ctx.font = '7px -apple-system,sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('—', cx, pT+plotH-ph-3);
+    }
+
+    ys.forEach(function(y, i) {
+        var gx = pL + i*groupW;
+        var pairStart = gx + (groupW - (2*barW + barGap))/2;
+        var moyCX = pairStart + barW/2;
+        var eoyCX = pairStart + barW + barGap + barW/2;
+        var eoyMissing = !(y.s.eoyAtt > 0);
+
+        drawStackedBar(moyCX, y.s.midAtt||0, y.s.midSuc||0, MOY_DARK, MOY_LIGHT);
+        if (eoyMissing) {
+            drawPlaceholderBar(eoyCX);
+        } else {
+            drawStackedBar(eoyCX, y.s.eoyAtt, y.s.eoySuc||0, EOY_DARK, EOY_LIGHT);
+        }
+
+        // MOY / EOY sub-labels
+        ctx.fillStyle = '#6b7280'; ctx.font = '7.5px -apple-system,sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('MOY', moyCX, pT+plotH+12);
+        ctx.fillText('EOY', eoyCX, pT+plotH+12);
+
+        // Year label
+        ctx.fillStyle = '#3a3a3c'; ctx.font = 'bold 9px -apple-system,sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText(y.label, (moyCX+eoyCX)/2, pT+plotH+26);
+    });
+
+    // Legend
+    var legEl = document.createElement('div');
+    legEl.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px 16px;padding:6px 0 2px;font-size:.68rem;color:#6b7280;align-items:center;';
+    [
+        {color:MOY_DARK, label:'MOY succeeded'},
+        {color:MOY_LIGHT, border:'#93c5fd', label:'MOY not passed'},
+        {color:EOY_DARK, label:'EOY succeeded'},
+        {color:EOY_LIGHT, border:'#fdba74', label:'EOY not passed'}
+    ].forEach(function(item){
+        var sw = document.createElement('span');
+        sw.style.cssText = 'display:inline-block;width:10px;height:10px;background:'+item.color+';border-radius:2px;margin-right:4px;vertical-align:middle;flex-shrink:0;';
+        var si = document.createElement('span');
+        si.style.cssText = 'display:inline-flex;align-items:center;';
+        si.appendChild(sw);
+        si.appendChild(document.createTextNode(item.label));
+        legEl.appendChild(si);
+    });
+    container.appendChild(legEl);
 }
 
 function _drawPromoALChart(canvas, ys) {
