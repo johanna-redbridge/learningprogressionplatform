@@ -8574,7 +8574,10 @@ function renderReadingStudentOverview() {
     // ── Draw F&P canvas ──
     if (fpLong && fpLong.points && fpLong.points.some(function(p){return p.score!==null;})) {
         var fpCanvas = document.getElementById('stu-ov-fp-canvas');
-        if (fpCanvas) drawFpGrowthGraph(fpCanvas, fpLong.points, fpLong.gle);
+        if (fpCanvas) drawFpGrowthGraph(fpCanvas, fpLong.points, fpLong.gle, {
+            yearGoals: fpLong.yearGoals || null,
+            gleGoalCurrentYear: readOvTierRec && readOvTierRec.gleGoal ? readOvTierRec.gleGoal : null
+        });
     }
 
     // ── Draw MAP ELA canvas ──
@@ -13634,7 +13637,7 @@ function renderFPGrowthView() {
             if (fpWholeSchoolMode) {
                 drawFpWholeSchoolGraph(canvas, students);
             } else {
-                drawFpGrowthGraph(canvas, student.points, student.gle);
+                drawFpGrowthGraph(canvas, student.points, student.gle, { yearGoals: student.yearGoals || null });
             }
         }
         if (fpWholeSchoolMode) {
@@ -13664,7 +13667,8 @@ function renderFPGrowthView() {
     }).catch(function(e){ el.innerHTML = '<p style="padding:1rem;color:#f87171;">Error: ' + e.message + '</p>'; });
 }
 
-function drawFpGrowthGraph(canvas, points, gle) {
+function drawFpGrowthGraph(canvas, points, gle, opts) {
+    opts = opts || {};
     var dpr = window.devicePixelRatio || 1;
     var cssW = canvas.width, cssH = canvas.height;
     canvas.width  = cssW * dpr;
@@ -13687,28 +13691,41 @@ function drawFpGrowthGraph(canvas, points, gle) {
     var rng = maxS - minS || 0.5;
     var yMin = Math.max(0, minS - rng * 0.25), yMax = maxS + rng * 0.25;
 
-    // Resolve EOY GLE target score
-    var gleTargetScore = null, gleTargetLabel = '';
-    if (gle) {
-        var gleLvl = gleTargetLevel(gle);
-        if (gleLvl) { gleTargetScore = fpScore(gleLvl.toLowerCase()); gleTargetLabel = gleLvl.toUpperCase(); }
-    }
-    if (gleTargetScore !== null) {
-        if (gleTargetScore < yMin) yMin = Math.max(0, gleTargetScore - rng * 0.15);
-        if (gleTargetScore > yMax) yMax = gleTargetScore + rng * 0.15;
-    }
+    // Build per-year GLE goal segments and +1.0 growth goal segments
+    var gleSegs = [], growthSegs = [];
+    FP_YEAR_BANDS.forEach(function(band) {
+        // GLE goal for this band (gleGoalCurrentYear and yearGoals values are F&P levels, e.g. "M", "N")
+        var glLv = null;
+        if (band.label === '25-26' && opts.gleGoalCurrentYear) {
+            glLv = opts.gleGoalCurrentYear;
+        } else if (opts.yearGoals && opts.yearGoals[band.label]) {
+            glLv = opts.yearGoals[band.label];
+        }
+        var gleVal = glLv ? fpScore(glLv.toLowerCase()) : null;
+        gleSegs.push({ s: band.s, e: band.e, value: gleVal, label: glLv ? glLv.toUpperCase() : null });
+
+        // +1.0 growth goal: BOY score + 1.0
+        var boyPt = points[band.s];
+        var growthVal = (boyPt && boyPt.score !== null) ? boyPt.score + 1.0 : null;
+        growthSegs.push({ s: band.s, e: band.e, value: growthVal });
+    });
+
+    // Include goal scores in yMin/yMax
+    gleSegs.forEach(function(g) { if (g.value !== null) { if (g.value < yMin) yMin = Math.max(0, g.value - rng * 0.15); if (g.value > yMax) yMax = g.value + rng * 0.15; } });
+    growthSegs.forEach(function(g) { if (g.value !== null) { if (g.value < yMin) yMin = Math.max(0, g.value - rng * 0.15); if (g.value > yMax) yMax = g.value + rng * 0.15; } });
 
     var n = points.length;
     function xOf(i){ return padL + (i / (n - 1)) * plotW; }
     function yOf(s){ return padT + plotH * (1 - (s - yMin) / (yMax - yMin)); }
+    function bandX1(band, bi){ return bi === 0 ? padL : (xOf(band.s) + xOf(band.s - 1)) / 2; }
+    function bandX2(band){ return band.e >= n - 1 ? padL + plotW : (xOf(band.e) + xOf(band.e + 1)) / 2; }
 
     // Background
     ctx.fillStyle = '#fafafa'; ctx.fillRect(0, 0, W, H);
 
     // Year band shading
     FP_YEAR_BANDS.forEach(function(band, bi) {
-        var x1 = bi === 0 ? padL : (xOf(band.s) + xOf(band.s - 1)) / 2;
-        var x2 = band.e >= n - 1 ? padL + plotW : (xOf(band.e) + xOf(band.e + 1)) / 2;
+        var x1 = bandX1(band, bi), x2 = bandX2(band);
         if (bi % 2 === 0) { ctx.fillStyle = 'rgba(0,0,0,.025)'; ctx.fillRect(x1, padT, x2 - x1, plotH); }
         ctx.fillStyle = '#c7c7cc'; ctx.font = '9px -apple-system,sans-serif'; ctx.textAlign = 'center';
         ctx.fillText(band.label, (x1 + x2) / 2, padT + 10);
@@ -13727,16 +13744,27 @@ function drawFpGrowthGraph(canvas, points, gle) {
         ctx.fillText(_lvNum % 1 === 0 ? _lvNum : _lvNum.toFixed(1), padL - 6, y + 4);
     });
 
-    // EOY GLE target line (green dashed)
-    if (gleTargetScore !== null) {
-        var gleY = yOf(gleTargetScore);
-        ctx.save();
-        ctx.strokeStyle = '#16a34a'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
-        ctx.beginPath(); ctx.moveTo(padL, gleY); ctx.lineTo(padL + plotW, gleY); ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.fillStyle = '#16a34a'; ctx.font = 'bold 10px -apple-system,sans-serif'; ctx.textAlign = 'right';
-        ctx.fillText('EOY Target: ' + gleTargetLabel, padL + plotW - 4, gleY - 4);
-        ctx.restore();
+    // Per-year GLE goal lines (blue dashed) and +1.0 growth goal lines (light green dashed)
+    var hasAnyGoals = gleSegs.some(function(g){ return g.value !== null; }) || growthSegs.some(function(g){ return g.value !== null; });
+    if (hasAnyGoals) {
+        FP_YEAR_BANDS.forEach(function(band, bi) {
+            var x1 = bandX1(band, bi), x2 = bandX2(band);
+            var gleSeg = gleSegs[bi], growthSeg = growthSegs[bi];
+            // GLE goal (blue)
+            if (gleSeg.value !== null) {
+                var gy = yOf(gleSeg.value);
+                ctx.save(); ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 3]);
+                ctx.beginPath(); ctx.moveTo(x1, gy); ctx.lineTo(x2, gy); ctx.stroke();
+                ctx.setLineDash([]); ctx.restore();
+            }
+            // +1.0 growth goal (light green)
+            if (growthSeg.value !== null) {
+                var gry = yOf(growthSeg.value);
+                ctx.save(); ctx.strokeStyle = '#86efac'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 3]);
+                ctx.beginPath(); ctx.moveTo(x1, gry); ctx.lineTo(x2, gry); ctx.stroke();
+                ctx.setLineDash([]); ctx.restore();
+            }
+        });
     }
 
     // Connecting line
@@ -13770,6 +13798,19 @@ function drawFpGrowthGraph(canvas, points, gle) {
         ctx.save(); ctx.translate(x, padT + plotH + 8); ctx.rotate(-Math.PI / 4);
         ctx.textAlign = 'right'; ctx.fillText(p.label, 0, 0); ctx.restore();
     });
+
+    // Legend for goal lines
+    if (hasAnyGoals) {
+        var lx = padL + 2, ly = padT + plotH + 44;
+        ctx.save(); ctx.setLineDash([5, 3]); ctx.lineWidth = 1.5;
+        ctx.strokeStyle = '#3b82f6'; ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + 18, ly); ctx.stroke();
+        ctx.setLineDash([]); ctx.fillStyle = '#3b82f6'; ctx.font = '9px -apple-system,sans-serif'; ctx.textAlign = 'left';
+        ctx.fillText('GLE Goal', lx + 22, ly + 3);
+        lx += 78;
+        ctx.setLineDash([5, 3]); ctx.strokeStyle = '#86efac'; ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + 18, ly); ctx.stroke();
+        ctx.setLineDash([]); ctx.fillStyle = '#4ade80'; ctx.fillText('+1.0 Growth', lx + 22, ly + 3);
+        ctx.restore();
+    }
 
     // Axes
     ctx.strokeStyle = '#d1d1d6'; ctx.lineWidth = 1; ctx.setLineDash([]);
