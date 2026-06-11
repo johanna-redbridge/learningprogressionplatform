@@ -1435,14 +1435,11 @@
             </div>
             <!-- Cross Reference (Reading) -->
             <div id="reading-panel-xref-read" style="display:none;">
-                <div style="display:flex;gap:0.6rem;align-items:center;padding:0.55rem max(1.25rem,calc((100vw - 1400px)/2 + 1.25rem));border-bottom:1px solid #e8e8ed;background:#f5f5f7;flex-wrap:wrap;">
-                    <span style="font-size:0.82rem;font-weight:600;color:#1d1d1f;">Student:</span>
-                    <select id="read-xref-sel" onchange="setReadXrefStudent(this.value)" class="redact-select" style="padding:0.3rem 0.6rem;border:1px solid #d2d2d7;border-radius:7px;font-size:0.82rem;background:#fff;cursor:pointer;max-width:200px;">
+                <div style="display:flex;gap:0.6rem;align-items:center;padding:0.55rem 1.25rem;border-bottom:1px solid #e8e8ed;background:#f5f5f7;">
+                    <span style="font-size:0.82rem;font-weight:600;color:#1d1d1f;white-space:nowrap;">Student</span>
+                    <select id="read-xref-sel" onchange="setReadXrefStudent(this.value)" class="redact-select" style="padding:0.3rem 0.6rem;border:1px solid #d2d2d7;border-radius:7px;font-size:0.82rem;background:#fff;cursor:pointer;max-width:220px;">
                         <option value="">— Select Student —</option>
                     </select>
-                    <div style="margin-left:auto;">
-                        <button onclick="showEnterDataModal()" style="padding:0.35rem 0.85rem;border-radius:8px;border:1px solid #e8e8ed;background:#f5f5f7;color:#1d1d1f;font-family:inherit;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#e8e8ed'" onmouseout="this.style.background='#f5f5f7'">+ Enter New Data</button>
-                    </div>
                 </div>
                 <div id="read-xref-header" style="display:none;flex-shrink:0;background:#fff;border-bottom:1px solid #e8e8ed;"></div>
                 <div id="read-xref-content" style="padding:0;"></div>
@@ -1506,15 +1503,11 @@
             </div>
             <!-- Cross Reference (Computation) -->
             <div id="math-panel-xref-comp" style="display:none;">
-                <div style="display:flex;gap:0.6rem;align-items:center;padding:0.55rem max(1.25rem,calc((100vw - 1400px)/2 + 1.25rem));border-bottom:1px solid #e8e8ed;background:#f5f5f7;flex-wrap:wrap;">
-                    <span style="font-size:0.82rem;font-weight:600;color:#1d1d1f;">Student:</span>
-                    <select id="comp-xref-sel" onchange="setCompXrefStudent(this.value)" class="redact-select" style="padding:0.3rem 0.6rem;border:1px solid #d2d2d7;border-radius:7px;font-size:0.82rem;background:#fff;cursor:pointer;max-width:200px;">
+                <div style="display:flex;gap:0.6rem;align-items:center;padding:0.55rem 1.25rem;border-bottom:1px solid #e8e8ed;background:#f5f5f7;">
+                    <span style="font-size:0.82rem;font-weight:600;color:#1d1d1f;white-space:nowrap;">Student</span>
+                    <select id="comp-xref-sel" onchange="setCompXrefStudent(this.value)" class="redact-select" style="padding:0.3rem 0.6rem;border:1px solid #d2d2d7;border-radius:7px;font-size:0.82rem;background:#fff;cursor:pointer;max-width:220px;">
                         <option value="">— Select Student —</option>
                     </select>
-                    <div style="margin-left:auto;display:flex;align-items:center;gap:0.5rem;">
-                        <button onclick="showEnterDataModal()" style="padding:0.35rem 0.85rem;border-radius:8px;border:1px solid #e8e8ed;background:#f5f5f7;color:#1d1d1f;font-family:inherit;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#e8e8ed'" onmouseout="this.style.background='#f5f5f7'">+ Enter New Data</button>
-                        <button onclick="showImportDataModal()" style="padding:0.35rem 0.85rem;border-radius:8px;border:1px solid #e8e8ed;background:#f5f5f7;color:#1d1d1f;font-family:inherit;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#e8e8ed'" onmouseout="this.style.background='#f5f5f7'">↑ Import New Data</button>
-                    </div>
                 </div>
                 <div id="comp-xref-header" style="display:none;flex-shrink:0;background:#fff;border-bottom:1px solid #e8e8ed;"></div>
                 <div id="comp-xref-content" style="padding:0;"></div>
@@ -11800,11 +11793,16 @@ function renderReadXref() {
     var el  = document.getElementById('read-xref-content');
     var hdr = document.getElementById('read-xref-header');
     if (!el) return;
+    // Clear all cached data so fresh data is fetched each time
     xrefCCSCRows = null; xrefStudents = null; xrefReadStds = null; xrefElaStds = null;
+    xrefStudList = []; fpStudents = null; lexiaStdsData = null; fpLongData = null;
+    var sel0 = document.getElementById('read-xref-sel');
+    if (sel0) { sel0.innerHTML = '<option value="">— Select Student —</option>'; }
     el.innerHTML = '<div style="padding:2rem;text-align:center;color:#86868b;"><div class="wd-spinner"></div><br>Loading reading data…</div>';
     xrefLoadReadDetail(function() {
         var sel = document.getElementById('read-xref-sel');
-        if (sel && sel.options.length <= 1 && xrefStudList.length) {
+        if (sel && xrefStudList.length) {
+            sel.innerHTML = '<option value="">— Select Student —</option>';
             xrefStudList.forEach(function(n) { var o = document.createElement('option'); o.value = n; o.textContent = n; sel.appendChild(o); });
             if (!readXrefStudent) readXrefStudent = xrefStudList[0];
             sel.value = readXrefStudent;
@@ -11827,11 +11825,16 @@ function renderCompXref() {
     var el  = document.getElementById('comp-xref-content');
     var hdr = document.getElementById('comp-xref-header');
     if (!el) return;
+    // Clear all cached data so fresh data is fetched each time
     xrefCCSCRows = null; xrefStudents = null; xrefCompStds = null;
+    xrefStudList = []; compData = null; xrefMathStdsData = null; benchLongData = null;
+    var sel0 = document.getElementById('comp-xref-sel');
+    if (sel0) { sel0.innerHTML = '<option value="">— Select Student —</option>'; }
     el.innerHTML = '<div style="padding:2rem;text-align:center;color:#86868b;"><div class="wd-spinner"></div><br>Loading computation data…</div>';
     xrefLoadCompDetail(function() {
         var sel = document.getElementById('comp-xref-sel');
-        if (sel && sel.options.length <= 1 && xrefStudList.length) {
+        if (sel && xrefStudList.length) {
+            sel.innerHTML = '<option value="">— Select Student —</option>';
             xrefStudList.forEach(function(n) { var o = document.createElement('option'); o.value = n; o.textContent = n; sel.appendChild(o); });
             if (!compXrefStudent) compXrefStudent = xrefStudList[0];
             sel.value = compXrefStudent;
@@ -11851,11 +11854,15 @@ function setCompXrefStudent(v) { compXrefStudent = v; xrefStudent = v; renderCom
 function renderXref(){
     var el = document.getElementById('xref-content');
     if(!el) return;
+    // Clear all cached data so fresh data is fetched each time
+    xrefCCSCRows = null; xrefStudents = null; xrefStudList = [];
+    var sel0 = document.getElementById('xref-student-sel');
+    if(sel0) { sel0.innerHTML = '<option value="">— Select Student —</option>'; }
     el.innerHTML = '<div style="padding:2rem;text-align:center;color:#86868b;"><div class="wd-spinner"></div><br>Loading cross-reference data…</div>';
     xrefLoadData(function(){
-        // populate student dropdown once
         var sel = document.getElementById('xref-student-sel');
-        if(sel && sel.options.length<=1){
+        if(sel && xrefStudList.length){
+            sel.innerHTML = '<option value="">— Select Student —</option>';
             xrefStudList.forEach(function(n){
                 var o = document.createElement('option');
                 o.value = n; o.textContent = n;
