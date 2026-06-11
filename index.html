@@ -10089,29 +10089,23 @@ function _renderPromoStuDetail() {
 
 // ── Promotion chart helpers ──
 
-function _drawPromoAttChart(container, ys) {
-    container.innerHTML = '';
-    container.style.cssText = 'padding:10px 10px 6px;';
+function _drawPromoAttCanvas(canvas, flatYs, H) {
     var dpr = window.devicePixelRatio || 1;
-    var W = container.offsetWidth || 640;
-    var H = 230;
-    var cvs = document.createElement('canvas');
-    cvs.style.cssText = 'display:block;width:100%;height:'+H+'px;';
-    cvs.width = W * dpr; cvs.height = H * dpr;
-    container.appendChild(cvs);
-    var ctx = cvs.getContext('2d'); ctx.scale(dpr, dpr);
+    var W = canvas.offsetWidth || 400;
+    H = H || 230;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+    var ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr);
 
     var pL=44, pR=16, pT=20, pB=54, plotW=W-pL-pR, plotH=H-pT-pB;
     ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,W,H);
 
-    // Max attempts across all years (excluding placeholder EOY)
     var maxAtt = 1;
-    ys.forEach(function(y){
-        maxAtt = Math.max(maxAtt, y.s.midAtt||0);
-        if ((y.s.eoyAtt||0) > 0) maxAtt = Math.max(maxAtt, y.s.eoyAtt);
+    flatYs.forEach(function(y){
+        maxAtt = Math.max(maxAtt, y.midAtt||0);
+        if ((y.eoyAtt||0)>0) maxAtt = Math.max(maxAtt, y.eoyAtt);
     });
 
-    // Y-axis gridlines
     var nGrid = 4;
     for (var g=0; g<=nGrid; g++) {
         var gv = Math.round(maxAtt * g / nGrid);
@@ -10121,104 +10115,111 @@ function _drawPromoAttChart(container, ys) {
         ctx.fillStyle='#8e8e93'; ctx.font='9px -apple-system,sans-serif'; ctx.textAlign='right';
         ctx.fillText(gv, pL-4, gy+3);
     }
-    // Axis lines
     ctx.strokeStyle='#d1d1d6'; ctx.lineWidth=1; ctx.setLineDash([]);
     ctx.beginPath(); ctx.moveTo(pL,pT); ctx.lineTo(pL,pT+plotH); ctx.lineTo(pL+plotW,pT+plotH); ctx.stroke();
 
-    var MOY_DARK='#1d4ed8', MOY_LIGHT='#93c5fd';
-    var EOY_DARK='#ea580c', EOY_LIGHT='#fdba74';
-
-    var nYears = ys.length;
-    var groupW = plotW / nYears;
-    var pairW = groupW * 0.72;
-    var barW = Math.max(Math.floor(pairW/2 - 2), 8);
-    var barGap = 3;
+    var MOY_DARK='#1d4ed8', MOY_LIGHT='#93c5fd', EOY_DARK='#ea580c', EOY_LIGHT='#fdba74';
+    var nYears=flatYs.length, groupW=plotW/nYears;
+    var barW=Math.max(Math.floor(groupW*0.72/2-2),8), barGap=3;
 
     function drawStackedBar(cx, att, suc, darkC, lightC) {
         if (!att) return;
-        var failed = att - suc;
-        var totalH = Math.round(plotH * att / maxAtt);
-        var sucH = Math.round(plotH * suc / maxAtt);
-        var failH = totalH - sucH;
-        var baseY = pT + plotH;
-        var bx = cx - barW/2;
-
-        // Top section: attempted but failed (light)
-        if (failH > 0) {
-            ctx.fillStyle = lightC;
-            ctx.fillRect(bx, baseY-totalH, barW, failH);
-            if (failH >= 12) {
-                ctx.fillStyle = '#374151';
-                ctx.font = 'bold 8px -apple-system,sans-serif'; ctx.textAlign = 'center';
-                ctx.fillText(failed, cx, baseY-totalH + failH/2 + 3);
-            }
+        var failed=att-suc, totalH=Math.round(plotH*att/maxAtt);
+        var sucH=Math.round(plotH*suc/maxAtt), failH=totalH-sucH;
+        var baseY=pT+plotH, bx=cx-barW/2;
+        if (failH>0) {
+            ctx.fillStyle=lightC; ctx.fillRect(bx,baseY-totalH,barW,failH);
+            if(failH>=12){ctx.fillStyle='#374151';ctx.font='bold 8px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillText(failed,cx,baseY-totalH+failH/2+3);}
         }
-        // Bottom section: succeeded (dark)
-        if (sucH > 0) {
-            ctx.fillStyle = darkC;
-            ctx.fillRect(bx, baseY-sucH, barW, sucH);
-            if (sucH >= 12) {
-                ctx.fillStyle = '#ffffff';
-                ctx.font = 'bold 8px -apple-system,sans-serif'; ctx.textAlign = 'center';
-                ctx.fillText(suc, cx, baseY-sucH + sucH/2 + 3);
-            }
+        if (sucH>0) {
+            ctx.fillStyle=darkC; ctx.fillRect(bx,baseY-sucH,barW,sucH);
+            if(sucH>=12){ctx.fillStyle='#ffffff';ctx.font='bold 8px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillText(suc,cx,baseY-sucH+sucH/2+3);}
         }
-        // % success on top of bar
-        var rate = Math.round(suc/att*100);
-        ctx.fillStyle = '#1d1d1f'; ctx.font = 'bold 8px -apple-system,sans-serif'; ctx.textAlign = 'center';
+        var rate=Math.round(suc/att*100);
+        ctx.fillStyle='#1d1d1f'; ctx.font='bold 8px -apple-system,sans-serif'; ctx.textAlign='center';
         ctx.fillText(rate+'%', cx, baseY-totalH-4);
     }
-
     function drawPlaceholderBar(cx) {
-        var ph = Math.round(plotH * 0.35);
-        ctx.fillStyle = '#e5e7eb';
-        ctx.fillRect(cx-barW/2, pT+plotH-ph, barW, ph);
-        ctx.fillStyle = '#9ca3af'; ctx.font = '7px -apple-system,sans-serif'; ctx.textAlign = 'center';
-        ctx.fillText('—', cx, pT+plotH-ph-3);
+        var ph=Math.round(plotH*0.35);
+        ctx.fillStyle='#e5e7eb'; ctx.fillRect(cx-barW/2,pT+plotH-ph,barW,ph);
+        ctx.fillStyle='#9ca3af'; ctx.font='7px -apple-system,sans-serif'; ctx.textAlign='center';
+        ctx.fillText('—',cx,pT+plotH-ph-3);
     }
 
-    ys.forEach(function(y, i) {
-        var gx = pL + i*groupW;
-        var pairStart = gx + (groupW - (2*barW + barGap))/2;
-        var moyCX = pairStart + barW/2;
-        var eoyCX = pairStart + barW + barGap + barW/2;
-        var eoyMissing = !(y.s.eoyAtt > 0);
-
-        drawStackedBar(moyCX, y.s.midAtt||0, y.s.midSuc||0, MOY_DARK, MOY_LIGHT);
-        if (eoyMissing) {
-            drawPlaceholderBar(eoyCX);
-        } else {
-            drawStackedBar(eoyCX, y.s.eoyAtt, y.s.eoySuc||0, EOY_DARK, EOY_LIGHT);
-        }
-
-        // MOY / EOY sub-labels
-        ctx.fillStyle = '#6b7280'; ctx.font = '7.5px -apple-system,sans-serif'; ctx.textAlign = 'center';
+    flatYs.forEach(function(y,i){
+        var gx=pL+i*groupW, pairStart=gx+(groupW-(2*barW+barGap))/2;
+        var moyCX=pairStart+barW/2, eoyCX=pairStart+barW+barGap+barW/2;
+        drawStackedBar(moyCX, y.midAtt||0, y.midSuc||0, MOY_DARK, MOY_LIGHT);
+        if (!(y.eoyAtt>0)) drawPlaceholderBar(eoyCX);
+        else drawStackedBar(eoyCX, y.eoyAtt, y.eoySuc||0, EOY_DARK, EOY_LIGHT);
+        ctx.fillStyle='#6b7280'; ctx.font='7.5px -apple-system,sans-serif'; ctx.textAlign='center';
         ctx.fillText('MOY', moyCX, pT+plotH+12);
         ctx.fillText('EOY', eoyCX, pT+plotH+12);
-
-        // Year label
-        ctx.fillStyle = '#3a3a3c'; ctx.font = 'bold 9px -apple-system,sans-serif'; ctx.textAlign = 'center';
+        ctx.fillStyle='#3a3a3c'; ctx.font='bold 9px -apple-system,sans-serif'; ctx.textAlign='center';
         ctx.fillText(y.label, (moyCX+eoyCX)/2, pT+plotH+26);
     });
+}
+
+function _drawPromoAttChart(container, ys) {
+    container.innerHTML = '';
+    container.style.cssText = 'padding:10px 10px 6px;';
+
+    // ── Overall canvas ──
+    var mainCvs = document.createElement('canvas');
+    mainCvs.style.cssText = 'display:block;width:100%;height:230px;';
+    container.appendChild(mainCvs);
 
     // Legend
     var legEl = document.createElement('div');
-    legEl.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px 16px;padding:6px 0 2px;font-size:.68rem;color:#6b7280;align-items:center;';
-    [
-        {color:MOY_DARK, label:'MOY succeeded'},
-        {color:MOY_LIGHT, border:'#93c5fd', label:'MOY not passed'},
-        {color:EOY_DARK, label:'EOY succeeded'},
-        {color:EOY_LIGHT, border:'#fdba74', label:'EOY not passed'}
-    ].forEach(function(item){
-        var sw = document.createElement('span');
-        sw.style.cssText = 'display:inline-block;width:10px;height:10px;background:'+item.color+';border-radius:2px;margin-right:4px;vertical-align:middle;flex-shrink:0;';
-        var si = document.createElement('span');
-        si.style.cssText = 'display:inline-flex;align-items:center;';
-        si.appendChild(sw);
-        si.appendChild(document.createTextNode(item.label));
+    legEl.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px 16px;padding:6px 0 10px;font-size:.68rem;color:#6b7280;align-items:center;';
+    [{color:'#1d4ed8',label:'MOY succeeded'},{color:'#93c5fd',label:'MOY not passed'},{color:'#ea580c',label:'EOY succeeded'},{color:'#fdba74',label:'EOY not passed'}].forEach(function(item){
+        var sw=document.createElement('span');
+        sw.style.cssText='display:inline-block;width:10px;height:10px;background:'+item.color+';border-radius:2px;margin-right:4px;vertical-align:middle;flex-shrink:0;';
+        var si=document.createElement('span');
+        si.style.cssText='display:inline-flex;align-items:center;';
+        si.appendChild(sw); si.appendChild(document.createTextNode(item.label));
         legEl.appendChild(si);
     });
     container.appendChild(legEl);
+
+    // ── Per-AL 2×2 grid ──
+    var grid = document.createElement('div');
+    grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:10px;';
+    var alCanvases = {};
+    [1,2,3,4].forEach(function(al){
+        var card = document.createElement('div');
+        card.style.cssText = 'background:#fff;border:1px solid #e8e8ed;border-radius:10px;overflow:hidden;';
+        var hdr = document.createElement('div');
+        hdr.style.cssText = 'padding:4px 10px;font-size:.75rem;font-weight:700;color:#fff;background:'+PROMO_AL_DARK[al]+';';
+        hdr.textContent = 'AL ' + al;
+        card.appendChild(hdr);
+        var alCvs = document.createElement('canvas');
+        alCvs.style.cssText = 'display:block;width:100%;height:190px;';
+        card.appendChild(alCvs);
+        alCanvases[al] = alCvs;
+        grid.appendChild(card);
+    });
+    container.appendChild(grid);
+
+    requestAnimationFrame(function(){
+        var overallYs = ys.map(function(y){
+            return {label:y.label, midAtt:y.s.midAtt||0, midSuc:y.s.midSuc||0, eoyAtt:y.s.eoyAtt||0, eoySuc:y.s.eoySuc||0};
+        });
+        _drawPromoAttCanvas(mainCvs, overallYs, 230);
+
+        [1,2,3,4].forEach(function(al){
+            var alYs = ys.map(function(y){
+                return {
+                    label: y.label,
+                    midAtt: (y.s.midAttByAL&&y.s.midAttByAL[al])||0,
+                    midSuc: (y.s.midSucByAL&&y.s.midSucByAL[al])||0,
+                    eoyAtt: (y.s.eoyAttByAL&&y.s.eoyAttByAL[al])||0,
+                    eoySuc: (y.s.eoySucByAL&&y.s.eoySucByAL[al])||0
+                };
+            });
+            _drawPromoAttCanvas(alCanvases[al], alYs, 190);
+        });
+    });
 }
 
 function _drawPromoALChart(canvas, ys) {
