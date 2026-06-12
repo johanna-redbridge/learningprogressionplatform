@@ -2934,7 +2934,7 @@ function loadStudentPortraits() {
 var AL_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn61zKcYvdvqpFwZvf3Py42I7QzcIt9k167SwGGEO_KYN9f-kAH-Je8dsQNNrSJTuQJs5GhAgttnMY/pub?gid=995760857&single=true&output=csv';
 
 function loadStudentALFromSheet() {
-    fetch(AL_SHEET_CSV_URL)
+    fetch(AL_SHEET_CSV_URL, { cache: 'no-store' })
         .then(function(r) { return r.text(); })
         .then(function(csv) {
             var lines = csv.split('\n').map(function(l) { return l.trim(); }).filter(Boolean);
@@ -4881,7 +4881,16 @@ function switchDPSubtab(name) {
     });
     var panel = document.getElementById('dp-subtab-' + name);
     if (panel) panel.style.display = '';
-    if (name === 'portfolio') renderPortfolio();
+    if (name === 'portfolio') {
+        portfolioDriveArtifacts = {};
+        portfolioDriveArtifactsLoading = {};
+        portfolioNarratives = {};
+        portfolioLoadingNarratives = {};
+        earnedModified = false;
+        loadEarnedFromSheet();
+        loadStudentALFromSheet();
+        renderPortfolio();
+    }
 }
 
 function switchLCSubtab(name) {
@@ -4902,8 +4911,8 @@ function openLCSubtab(name) {
     var backTitle = document.getElementById('lc-back-nav-title');
     if (backNav) backNav.style.display = '';
     if (backTitle) backTitle.textContent = labels[name] || name;
-    if (name === 'available') { earnedModified = false; loadEarnedFromSheet(); enhanceCreditsWithMetadata(); }
-    if (name === 'earned') { earnedModified = false; loadEarnedFromSheet(); enhanceCreditsWithMetadata(); }
+    if (name === 'available') { earnedModified = false; loadEarnedFromSheet(); enhanceCreditsWithMetadata(); loadStudentALFromSheet(); }
+    if (name === 'earned') { earnedModified = false; loadEarnedFromSheet(); enhanceCreditsWithMetadata(); loadStudentALFromSheet(); }
     switchLCSubtab(name);
 }
 
