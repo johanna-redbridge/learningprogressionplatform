@@ -9169,19 +9169,15 @@ function renderCompStudentOverview() {
     html += '<div style="padding:1rem 1.25rem;">';
     if (ffRec && ffRec.facts && ffRec.facts.length) {
         ffRec.facts.forEach(function(f) {
-            // Use MOY data if available, otherwise BOY
-            var hasMoy = f.moyCount !== undefined && f.moyCount !== '';
-            var dispCount = hasMoy ? f.moyCount : (f.boyCount !== undefined ? f.boyCount : f.count || '');
-            var dispPct   = hasMoy ? f.moyPct   : (f.boyPct   !== undefined ? f.boyPct   : f.pct   || '');
-            var boyCount  = f.boyCount !== undefined ? f.boyCount : f.count || '';
-            var boyPct    = f.boyPct   !== undefined ? f.boyPct   : f.pct   || '';
+            // Always show BOY data only
+            var dispCount = f.boyCount !== undefined ? f.boyCount : f.count || '';
+            var dispPct   = f.boyPct   !== undefined ? f.boyPct   : f.pct   || '';
             var pct = ffPctNum(dispPct);
             var bg = pct !== null ? pctColor(pct) : '#f0f0f0';
             html += '<div style="margin-bottom:0.6rem;">';
             html += '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px;">';
             html += '<span style="font-size:.7rem;font-weight:600;color:#3a3a3c;">'+f.label+'</span>';
             var scoreStr = (dispCount||'—')+(f.max?'/'+f.max:'');
-            if (hasMoy && boyCount !== '') scoreStr = 'BOY:'+boyCount+' → MOY:'+dispCount+(f.max?'/'+f.max:'');
             html += '<span style="font-size:.68rem;color:#5c5b5a;font-weight:600;">'+scoreStr+'&nbsp;<span style="color:#86868b;font-weight:400;">'+(pct!==null?pct+'%':'')+'</span></span>';
             html += '</div>';
             html += '<div style="background:#f0f0f0;border-radius:4px;height:10px;overflow:hidden;">';
