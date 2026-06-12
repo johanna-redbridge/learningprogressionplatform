@@ -8496,24 +8496,7 @@ function renderReadingStudentOverview() {
     }
     html += '</div></div>';
 
-    // MAP ELA (right side)
-    var mapRec = (mapData && mapData.students) ? mapData.students.find(function(s){ return xrefNorm(s.name)===norm; }) : null;
-    html += '<div style="flex:1;min-width:260px;background:#fff;border-radius:16px;box-shadow:0 1px 6px rgba(0,0,0,.07);overflow:hidden;">';
-    html += '<div style="background:#5c5b5a;color:#fff;padding:0.7rem 1.25rem;font-weight:700;font-size:.88rem;">MAP ELA</div>';
-    html += '<div style="padding:1rem 1.25rem;">';
-    if (mapRec) {
-        var elaPeriods = (mapData && mapData.elaPeriods) ? mapData.elaPeriods : [];
-        var validEla = mapRec.elaScores.map(function(s,i){ return {period:elaPeriods[i]||'P'+(i+1), score:parseFloat(s)||null, pct:parseFloat(mapRec.elaPcts[i])||null}; }).filter(function(x){ return x.score!==null; });
-        if (validEla.length) {
-            html += '<canvas id="stu-ov-map-canvas" width="700" height="260" style="width:100%;height:260px;border-radius:8px;display:block;"></canvas>';
-        } else {
-            html += '<p style="color:#aeaeb2;font-size:.82rem;">No MAP ELA scores recorded for this student.</p>';
-        }
-    } else {
-        html += '<p style="color:#aeaeb2;font-size:.82rem;">No MAP data for this student. Visit the MAP ELA tab to load data.</p>';
-    }
-    html += '</div></div>';
-    html += '</div>'; // flex row (Lexia + MAP ELA)
+    html += '</div>'; // flex row (Lexia)
 
     // ── 3. CORE Word Knowledge ──
     var coreRec = null, coreALKey = null;
@@ -8593,16 +8576,6 @@ function renderReadingStudentOverview() {
         });
     }
 
-    // ── Draw MAP ELA canvas ──
-    var mapRec2 = (mapData && mapData.students) ? mapData.students.find(function(s){ return xrefNorm(s.name)===norm; }) : null;
-    if (mapRec2) {
-        var elaPeriods2 = (mapData && mapData.elaPeriods) ? mapData.elaPeriods : [];
-        var validEla2 = mapRec2.elaScores.map(function(s,i){ return {period:elaPeriods2[i]||'P'+(i+1), score:parseFloat(s)||null, pct:parseFloat(mapRec2.elaPcts[i])||null}; }).filter(function(x){ return x.score!==null; });
-        var mapCanvas = document.getElementById('stu-ov-map-canvas');
-        if (mapCanvas && validEla2.length) {
-            drawMapGrowthGraph(mapCanvas, validEla2, '#FFC8BB');
-        }
-    }
 }
 
 function drawMapLineGraph(canvas, pts, lineColor, goalSegs, opts) {
