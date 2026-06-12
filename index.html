@@ -9085,8 +9085,8 @@ function renderCompStudentOverview() {
 
     // ── 1. Computation Benchmark drilldown ──
     html += '<div style="background:#fff;border-radius:16px;box-shadow:0 1px 6px rgba(0,0,0,.07);overflow:hidden;">';
-    html += '<div style="background:#5c5b5a;color:#fff;padding:0.7rem 1.25rem;font-weight:700;font-size:.88rem;">Computation Benchmark</div>';
-    html += '<div style="padding:1rem 1.25rem;">';
+    html += '<div style="background:#5c5b5a;color:#fff;padding:0.5rem 1rem;font-weight:700;font-size:.85rem;">Computation Benchmark</div>';
+    html += '<div style="padding:0.6rem 1rem;">';
     if (compData && compData.questions.length) {
         // Group questions by GLE
         var gleGroups = [], gleMap = {};
@@ -9100,24 +9100,28 @@ function renderCompStudentOverview() {
             var total = grp.items.length;
             var pct = total ? Math.round(mastered/total*100) : 0;
             var col = pctColor(pct);
-            html += '<div style="margin-bottom:1rem;">';
-            html += '<div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:6px;">';
-            html += '<span style="font-size:.72rem;font-weight:700;color:#5c5b5a;min-width:3.5rem;">GLE '+grp.gle+'</span>';
-            html += '<div style="flex:1;background:#f0f0f0;border-radius:4px;height:10px;overflow:hidden;">';
-            html += '<div style="height:100%;width:'+pct+'%;background:'+col+';border-radius:4px;"></div></div>';
-            html += '<span style="font-size:.72rem;font-weight:600;color:#3a3a3c;min-width:3rem;text-align:right;">'+mastered+'/'+total+'</span>';
+            html += '<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;">';
+            // Left: GLE label + small bar + score stacked
+            html += '<div style="display:flex;flex-direction:column;gap:2px;min-width:54px;flex-shrink:0;">';
+            html += '<div style="display:flex;align-items:baseline;gap:4px;">';
+            html += '<span style="font-size:.65rem;font-weight:700;color:#5c5b5a;white-space:nowrap;">GLE '+grp.gle+'</span>';
+            html += '<span style="font-size:.6rem;color:#86868b;white-space:nowrap;">'+mastered+'/'+total+'</span>';
             html += '</div>';
-            // Question chips
-            html += '<div style="display:flex;flex-wrap:wrap;gap:4px;padding-left:4.25rem;">';
+            html += '<div style="background:#f0f0f0;border-radius:3px;height:5px;overflow:hidden;">';
+            html += '<div style="height:100%;width:'+pct+'%;background:'+col+';border-radius:3px;"></div></div>';
+            html += '</div>';
+            // Right: chips in a single scrollable row
+            html += '<div style="display:flex;gap:3px;overflow-x:auto;flex:1;padding-bottom:2px;">';
             grp.items.forEach(function(it) {
                 var done = it.q.mastery[compSel];
                 var bg = done ? '#34c759' : '#e8e8ed';
                 var tc = done ? '#fff' : '#aeaeb2';
                 var lbl = (it.q.q || it.q.std || '').replace(/"/g,'&quot;');
                 var tip = (it.q.std || it.q.q || '').replace(/"/g,'&quot;');
-                html += '<div title="'+tip+'" style="min-width:22px;height:20px;padding:0 3px;border-radius:4px;background:'+bg+';color:'+tc+';font-size:.58rem;font-weight:700;display:flex;align-items:center;justify-content:center;white-space:nowrap;">'+lbl+'</div>';
+                html += '<div title="'+tip+'" style="flex-shrink:0;min-width:20px;height:18px;padding:0 3px;border-radius:3px;background:'+bg+';color:'+tc+';font-size:.55rem;font-weight:700;display:flex;align-items:center;justify-content:center;white-space:nowrap;">'+lbl+'</div>';
             });
-            html += '</div></div>';
+            html += '</div>';
+            html += '</div>';
         });
     } else {
         html += '<p style="color:#aeaeb2;font-size:.82rem;">No benchmark data. Visit the Computation Benchmark tab to load data.</p>';
