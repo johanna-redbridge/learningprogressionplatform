@@ -10412,9 +10412,12 @@ function _drawPromoStuChart(canvas, sy) {
 function _sdTierBadge(label, raw) {
     if (!raw) return '';
     var t = String(raw).replace(/tier\s*/i, '').trim(); // "Tier 3" → "3"
-    var bg = t === '1' ? '#34c759' : t === '2' ? '#ffcc00' : t === '3' ? '#ff3b30' : '#86868b';
-    var tc = t === '2' ? '#1d1d1f' : '#fff';
-    return '<span style="background:' + bg + ';color:' + tc + ';border-radius:5px;padding:2px 7px;font-size:.7rem;font-weight:700;white-space:nowrap;">' + label + ' T' + t + '</span>';
+    var bg, tc;
+    if (t === '1') { bg = '#dcfce7'; tc = '#15803d'; }
+    else if (t === '2') { bg = '#fef9c3'; tc = '#854d0e'; }
+    else if (t === '3') { bg = '#fee2e2'; tc = '#b91c1c'; }
+    else { bg = '#f3f4f6'; tc = '#374151'; }
+    return '<span style="display:inline-block;border-radius:6px;padding:2px 7px;font-size:.68rem;font-weight:600;white-space:nowrap;background:' + bg + ';color:' + tc + ';">' + label + ' Tier ' + t + '</span>';
 }
 
 function _tierNorm(name) {
