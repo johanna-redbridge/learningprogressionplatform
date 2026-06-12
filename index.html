@@ -1300,6 +1300,7 @@
             <button id="reading-sub-overview-btn" class="data-subtab-btn" onclick="switchReadingSubtab('student-overview')">Student Overview</button>
             <button id="reading-sub-xref-btn" class="data-subtab-btn" onclick="switchReadingSubtab('xref-read')">Cross Reference</button>
             <span style="width:1px;background:#e8e8ed;margin:4px 8px;align-self:stretch;"></span>
+            <button id="reading-logo-spelling" class="logo-tab-btn reading-view-btn" data-view="spelling" onclick="switchReadingSubtab('spelling')"><img src="Spelling%20Benchmark%20Logo.png" alt="Spelling Benchmark" style="height:24px;object-fit:contain;display:block;"></button>
             <button id="reading-logo-fp" class="logo-tab-btn reading-view-btn active" data-view="fp" onclick="switchReadingSubtab('fp')"><img src="F%26P%20Logo.jpg" alt="F&amp;P" style="height:24px;object-fit:contain;display:block;"></button>
             <button id="reading-logo-map" class="logo-tab-btn reading-view-btn" data-view="map-ela" onclick="switchReadingSubtab('map-ela')"><img src="nwea%20map%20logo.png" alt="MAP ELA" style="height:24px;object-fit:contain;display:block;"></button>
             <button id="reading-logo-core" class="logo-tab-btn reading-view-btn" data-view="core" onclick="switchReadingSubtab('core')"><img src="CORE%20logo.png" alt="CORE" style="height:24px;object-fit:contain;display:block;"></button>
@@ -1386,6 +1387,16 @@
                     </div>
                 </div>
                 <div id="core-content"></div>
+            </div>
+            <!-- Spelling Benchmark -->
+            <div id="reading-panel-spelling" style="display:none;">
+                <div style="display:flex;align-items:center;justify-content:center;min-height:300px;">
+                    <div style="text-align:center;">
+                        <img src="Spelling%20Benchmark%20Logo.png" alt="Spelling Benchmark" style="height:56px;object-fit:contain;margin-bottom:1.25rem;opacity:0.55;">
+                        <div style="font-size:1.5rem;font-weight:700;color:#1d1d1f;margin-bottom:0.5rem;">Coming Soon</div>
+                        <div style="font-size:0.9rem;color:#86868b;">Spelling Benchmark data will be available here.</div>
+                    </div>
+                </div>
             </div>
             <!-- F&P -->
             <div id="reading-panel-fp" style="display:none;">
@@ -8251,14 +8262,14 @@ function updateWritingSubBtns(sub) {
 
 function switchReadingSubtab(sub) {
     readingSubtab = sub;
-    var assessmentViews = ['core', 'fp', 'lexia', 'map-ela'];
+    var assessmentViews = ['core', 'fp', 'lexia', 'map-ela', 'spelling'];
     var isAssessment = assessmentViews.indexOf(sub) !== -1;
     if (isAssessment) lastAssessmentView = sub;
     document.querySelectorAll('.reading-view-btn').forEach(function(b) {
         b.classList.toggle('active', b.dataset.view === sub);
     });
     updateReadingSubBtns(sub);
-    ['core', 'fp', 'lexia', 'map-ela', 'student-overview', 'xref-read'].forEach(function(n) {
+    ['core', 'fp', 'lexia', 'map-ela', 'spelling', 'student-overview', 'xref-read'].forEach(function(n) {
         var p = document.getElementById('reading-panel-' + n);
         if (p) p.style.display = n === sub ? '' : 'none';
     });
