@@ -3690,23 +3690,29 @@ function portfolioSearchFiltered() {
     });
 }
 
-var clarksonPortfolioData = [
-    { credit: 'Parts of Speech Parade',                attemptDate: '4/23/2026', earnedDate: '5/16/2026' },
-    { credit: 'Suffix Spotter 2',                      attemptDate: '',          earnedDate: '5/14/2026' },
-    { credit: 'Add to 10 (Fluency)',                   attemptDate: '',          earnedDate: '5/12/2026' },
-    { credit: 'Time Teller 1',                         attemptDate: '',          earnedDate: '5/1/2026'  },
-    { credit: 'Word Wizard - Digraph',                 attemptDate: '4/28/2026', earnedDate: ''          },
-    { credit: 'Try By Sight 4',                        attemptDate: '3/25/2026', earnedDate: '4/28/2026' },
-    { credit: 'Syllable Superstar 2',                  attemptDate: '',          earnedDate: '4/22/2026' },
-    { credit: 'Solve That Disagreement!',              attemptDate: '',          earnedDate: '4/21/2026' },
-    { credit: 'More Money and Problems',               attemptDate: '',          earnedDate: '4/15/2026' },
-    { credit: 'Add and Subtract Within 20 (Accuracy)', attemptDate: '',          earnedDate: '4/14/2026' },
-    { credit: 'Word Wizard - CCVC/CVCC',               attemptDate: '',          earnedDate: '4/13/2026' },
-    { credit: 'Suffix Spotter 1',                      attemptDate: '',          earnedDate: '4/13/2026' },
-    { credit: "You Can't Always Get What You Want",    attemptDate: '',          earnedDate: '4/10/2026' },
-    { credit: 'Special Friends Specialist 2',          attemptDate: '',          earnedDate: '4/8/2026'  },
-    { credit: 'Money',                                 attemptDate: '',          earnedDate: '4/7/2026'  }
-];
+var CLARKSON_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQzOePPDkYV3iZcKsWcoTVfZ5hwa-76XleIUOws-VGAkrJ0SvGWK78XY-xq6O-vAWUz6PWK3UCdKsAB/pub?gid=2123056742&single=true&output=csv';
+var clarksonData = null; // [{credit, attemptDate, earnedDate}] — loaded fresh each time
+
+function loadClarksonData(cb) {
+    fetch(CLARKSON_CSV_URL, { cache: 'no-store' })
+        .then(function(r) { return r.text(); })
+        .then(function(text) {
+            var rows = parseCSVFull(text);
+            var result = [];
+            for (var i = 1; i < rows.length; i++) {
+                var r = rows[i];
+                var credit = (r[0] || '').trim();
+                if (!credit) continue;
+                result.push({ credit: credit, attemptDate: (r[1] || '').trim(), earnedDate: (r[2] || '').trim() });
+            }
+            clarksonData = result;
+            if (cb) cb();
+        })
+        .catch(function(e) { console.warn('[Clarkson] load failed:', e); clarksonData = clarksonData || []; if (cb) cb(); });
+}
+
+// Alias kept so both portfolio and attainment code share the same live array
+var clarksonPortfolioData = null;
 
 function renderPortfolioStudent(studentId) {
     var s = students.find(function(x) { return x.id === studentId; });
@@ -3716,6 +3722,11 @@ function renderPortfolioStudent(studentId) {
 
     // Clarkson (Clark) s17: use spreadsheet data, bypassing earned array entirely
     if (studentId === 's17') {
+        if (!clarksonData) {
+            el.innerHTML = '<div style="text-align:center;padding:3rem;color:#86868b;">Loading Clarkson data…</div>';
+            loadClarksonData(function() { renderPortfolioStudent(studentId); });
+            return;
+        }
         _portfolioToolbarSync();
 
         // Trigger Drive artifact loading
@@ -3724,7 +3735,7 @@ function renderPortfolioStudent(studentId) {
             !portfolioDriveArtifactsLoading[studentId];
         if (clarkNeedArtifact) portfolioDriveArtifactsLoading[studentId] = true;
 
-        var clarkRows = clarksonPortfolioData.filter(function(r) { return !!r.earnedDate; });
+        var clarkRows = clarksonData.filter(function(r) { return !!r.earnedDate; });
         clarkRows.sort(function(a, b) {
             var pa = a.earnedDate.split('/'), pb = b.earnedDate.split('/');
             var da = pa.length===3 ? new Date(+pa[2],+pa[0]-1,+pa[1]) : null;
@@ -4886,6 +4897,7 @@ function switchDPSubtab(name) {
         portfolioDriveArtifactsLoading = {};
         portfolioNarratives = {};
         portfolioLoadingNarratives = {};
+        clarksonData = null;
         earnedModified = false;
         loadEarnedFromSheet();
         loadStudentALFromSheet();
@@ -4912,7 +4924,7 @@ function openLCSubtab(name) {
     if (backNav) backNav.style.display = '';
     if (backTitle) backTitle.textContent = labels[name] || name;
     if (name === 'available') { earnedModified = false; loadEarnedFromSheet(); enhanceCreditsWithMetadata(); loadStudentALFromSheet(); }
-    if (name === 'earned') { earnedModified = false; loadEarnedFromSheet(); enhanceCreditsWithMetadata(); loadStudentALFromSheet(); }
+    if (name === 'earned') { earnedModified = false; clarksonData = null; loadEarnedFromSheet(); enhanceCreditsWithMetadata(); loadStudentALFromSheet(); }
     switchLCSubtab(name);
 }
 
@@ -4979,6 +4991,7 @@ function applyTabRender(tab) {
         portfolioDriveArtifactsLoading = {};
         portfolioNarratives = {};
         portfolioLoadingNarratives = {};
+        clarksonData = null;
         renderPortfolio();
     }
     if (tab === 'data') showAnalyticsLanding();
@@ -5792,23 +5805,7 @@ function setEarnedGroupStageFilter(stageName, value) {
     renderEarnedCredits();
 }
 
-var clarksonAttainmentData = [
-    { credit: 'Parts of Speech Parade',                  attemptDate: '4/23/2026', earnedDate: '5/16/2026' },
-    { credit: 'Suffix Spotter 2',                        attemptDate: '',          earnedDate: '5/14/2026' },
-    { credit: 'Add to 10 (Fluency)',                     attemptDate: '',          earnedDate: '5/12/2026' },
-    { credit: 'Time Teller 1',                           attemptDate: '',          earnedDate: '5/1/2026'  },
-    { credit: 'Word Wizard - Digraph',                   attemptDate: '4/28/2026', earnedDate: ''          },
-    { credit: 'Try By Sight 4',                          attemptDate: '3/25/2026', earnedDate: '4/28/2026' },
-    { credit: 'Syllable Superstar 2',                    attemptDate: '',          earnedDate: '4/22/2026' },
-    { credit: 'Solve That Disagreement!',                attemptDate: '',          earnedDate: '4/21/2026' },
-    { credit: 'More Money and Problems',                 attemptDate: '',          earnedDate: '4/15/2026' },
-    { credit: 'Add and Subtract Within 20 (Accuracy)',   attemptDate: '',          earnedDate: '4/14/2026' },
-    { credit: 'Word Wizard - CCVC/CVCC',                 attemptDate: '',          earnedDate: '4/13/2026' },
-    { credit: 'Suffix Spotter 1',                        attemptDate: '',          earnedDate: '4/13/2026' },
-    { credit: "You Can't Always Get What You Want",      attemptDate: '',          earnedDate: '4/10/2026' },
-    { credit: 'Special Friends Specialist 2',            attemptDate: '',          earnedDate: '4/8/2026'  },
-    { credit: 'Money',                                   attemptDate: '',          earnedDate: '4/7/2026'  }
-];
+// clarksonAttainmentData removed — use clarksonData (loaded live from CLARKSON_CSV_URL)
 
 var earnedStudentSubject = 'all';
 var earnedStudentStage = 'all';
@@ -5919,8 +5916,13 @@ function renderEarnedStudent(period, container) {
 
     // Clarkson (Clark) s17: same table structure but dates from spreadsheet data
     if (studentId === 's17') {
+        if (!clarksonData) {
+            container.innerHTML = '<div style="text-align:center;padding:3rem;color:#86868b;">Loading Clarkson data…</div>';
+            loadClarksonData(function() { renderEarnedCredits(); });
+            return;
+        }
         var clarkLookup = {};
-        clarksonAttainmentData.forEach(function(row) { clarkLookup[row.credit.toLowerCase()] = row; });
+        clarksonData.forEach(function(row) { clarkLookup[row.credit.toLowerCase()] = row; });
 
         // Split credits: spreadsheet ones first (sorted by earned date desc), rest after
         var clarkSheetCredits = [], clarkOtherCredits = [];
