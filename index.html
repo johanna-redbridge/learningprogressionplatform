@@ -3735,11 +3735,11 @@ function renderPortfolioStudent(studentId) {
             !portfolioDriveArtifactsLoading[studentId];
         if (clarkNeedArtifact) portfolioDriveArtifactsLoading[studentId] = true;
 
-        var clarkRows = clarksonData.filter(function(r) { return !!r.earnedDate; });
+        function _clarkParseDate(d) { if (!d) return null; var p = d.split('/'); return p.length===3 ? new Date(+p[2],+p[0]-1,+p[1]) : null; }
+        var clarkRows = clarksonData.filter(function(r) { return !!(r.earnedDate || r.attemptDate); });
         clarkRows.sort(function(a, b) {
-            var pa = a.earnedDate.split('/'), pb = b.earnedDate.split('/');
-            var da = pa.length===3 ? new Date(+pa[2],+pa[0]-1,+pa[1]) : null;
-            var db = pb.length===3 ? new Date(+pb[2],+pb[0]-1,+pb[1]) : null;
+            var da = _clarkParseDate(a.earnedDate || a.attemptDate);
+            var db = _clarkParseDate(b.earnedDate || b.attemptDate);
             if (!da&&!db) return 0; if (!da) return 1; if (!db) return -1;
             return db - da;
         });
@@ -5935,8 +5935,10 @@ function renderEarnedStudent(period, container) {
             return p.length === 3 ? new Date(+p[2], +p[0]-1, +p[1]) : null;
         }
         clarkSheetCredits.sort(function(a, b) {
-            var da = _parseSlashDate((clarkLookup[a.title.toLowerCase()] || {}).earnedDate);
-            var db = _parseSlashDate((clarkLookup[b.title.toLowerCase()] || {}).earnedDate);
+            var ra = clarkLookup[a.title.toLowerCase()] || {};
+            var rb = clarkLookup[b.title.toLowerCase()] || {};
+            var da = _parseSlashDate(ra.earnedDate || ra.attemptDate);
+            var db = _parseSlashDate(rb.earnedDate || rb.attemptDate);
             if (!da && !db) return 0;
             if (!da) return 1;
             if (!db) return -1;
