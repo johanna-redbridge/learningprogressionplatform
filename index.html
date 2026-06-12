@@ -3699,7 +3699,7 @@ function loadClarksonData(cb) {
         .then(function(text) {
             var rows = parseCSVFull(text);
             var result = [];
-            for (var i = 1; i < rows.length; i++) {
+            for (var i = 0; i < rows.length; i++) {
                 var r = rows[i];
                 var credit = (r[0] || '').trim();
                 if (!credit) continue;
