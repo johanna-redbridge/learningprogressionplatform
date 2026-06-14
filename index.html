@@ -5691,7 +5691,7 @@ function renderEarnedWholeSchool(period, container) {
                 var afd = formatDate(att.date);
                 html += `<td style="text-align:center;"><span class="earned-icon attempted-icon" style="cursor:pointer;" onclick="toggleAttempted('${s.id}','${c.id}')"${afd ? ' title="Attempted ' + afd + '"' : ''}>a</span>${afd ? '<span class="earned-date" style="cursor:pointer;" onclick="event.stopPropagation();editAttemptedDate(\'' + s.id + '\',\'' + c.id + '\')">'+afd+'</span>' : ''}</td>`;
             } else {
-                html += `<td style="text-align:center;"><span class="earned-icon earned-no" style="cursor:pointer;" onclick="toggleEarned('${s.id}','${c.id}')"></span></td>`;
+                html += `<td style="text-align:center;"><span class="earned-icon earned-no" style="cursor:pointer;" onclick="startAttempt('${s.id}','${c.id}')"></span></td>`;
             }
         });
         html += `<td style="text-align:center;font-weight:600;">${studentTotal} / ${allCredits.length}</td>`;
@@ -5822,7 +5822,7 @@ function renderEarnedGroup(period, container) {
                     var afd = formatDate(att.date);
                     html += `<td style="text-align:center;"><span class="earned-icon attempted-icon" style="cursor:pointer;" onclick="toggleAttempted('${s.id}','${c.id}')"${afd ? ' title="Attempted ' + afd + '"' : ''}>a</span>${afd ? '<br><span style="font-size:0.62rem;color:#86868b;white-space:nowrap;">'+afd+'</span>' : ''}</td>`;
                 } else {
-                    html += `<td style="text-align:center;"><span class="earned-icon earned-no" style="cursor:pointer;" onclick="toggleEarned('${s.id}','${c.id}')"></span></td>`;
+                    html += `<td style="text-align:center;"><span class="earned-icon earned-no" style="cursor:pointer;" onclick="startAttempt('${s.id}','${c.id}')"></span></td>`;
                 }
             });
             html += `<td style="text-align:center;font-weight:600;">${studentTotal} / ${displayCredits.length}</td>`;
