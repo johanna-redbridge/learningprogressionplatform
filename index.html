@@ -8800,12 +8800,12 @@ function drawMapLineGraph(canvas, pts, lineColor, goalSegs, opts) {
         }
     }
 
-    // Line (skip null slots)
+    // Line (connect through null slots — null = no data point, but line continues)
     ctx.beginPath();
     ctx.strokeStyle = lineColor; ctx.lineWidth = 2.5; ctx.setLineDash([]);
     var _lnStarted = false;
     for (var i = 0; i < n; i++) {
-        if (pts[i].score === null) { _lnStarted = false; continue; }
+        if (pts[i].score === null) continue;
         if (!_lnStarted) { ctx.moveTo(xOf(i), yOf(pts[i].score)); _lnStarted = true; }
         else ctx.lineTo(xOf(i), yOf(pts[i].score));
     }
