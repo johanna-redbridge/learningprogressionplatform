@@ -1338,6 +1338,7 @@
             <button onclick="showAnalyticsLanding()" style="padding:0.55rem 0.9rem;border:none;background:none;cursor:pointer;font-size:0.82rem;font-family:inherit;color:#86868b;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;" onmouseover="this.style.color='#1d1d1f'" onmouseout="this.style.color='#86868b'">&larr; Back</button>
             <span style="padding:0.55rem 0.5rem;font-size:0.82rem;font-weight:600;color:#1d1d1f;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-2px;">Writing</span>
             <span style="width:1px;background:#e8e8ed;margin:4px 8px;align-self:stretch;"></span>
+            <button id="writing-sub-overview-btn" class="data-subtab-btn" onclick="switchWritingSubtab('student-overview')">Student Overview</button>
             <button id="writing-sub-rubric-btn" class="data-subtab-btn" onclick="switchWritingSubtab('writing-benchmark')">Writing Benchmark Rubric</button>
             <button id="writing-sub-survey-btn" class="data-subtab-btn" onclick="switchWritingSubtab('survey')" style="display:none;">Writing Survey</button>
             <span style="width:1px;background:#e8e8ed;margin:4px 8px;align-self:stretch;"></span>
@@ -1623,6 +1624,11 @@
                         <div id="wd-view-category" style="display:none;"></div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Writing Student Overview panel -->
+            <div id="writing-panel-student-overview" style="display:none;">
+                <div id="writing-student-overview-content"></div>
             </div>
 
             <!-- Writing Benchmark panel -->
@@ -8293,8 +8299,10 @@ function updateCompSubBtns(sub) {
 function updateWritingSubBtns(sub) {
     var rbBtn = document.getElementById('writing-sub-rubric-btn');
     var svBtn = document.getElementById('writing-sub-survey-btn');
+    var ovBtn = document.getElementById('writing-sub-overview-btn');
     if (rbBtn) rbBtn.classList.toggle('active', sub === 'writing-benchmark');
     if (svBtn) svBtn.classList.toggle('active', sub === 'survey');
+    if (ovBtn) ovBtn.classList.toggle('active', sub === 'student-overview');
 }
 
 function switchReadingSubtab(sub) {
@@ -9007,13 +9015,86 @@ function switchWritingSubtab(sub) {
         b.classList.toggle('active', b.dataset.wsub === sub);
     });
     updateWritingSubBtns(sub);
-    ['writing-benchmark', 'wb', 'survey'].forEach(function(n) {
+    ['writing-benchmark', 'wb', 'survey', 'student-overview'].forEach(function(n) {
         var p = document.getElementById('writing-panel-' + n);
         if (p) p.style.display = n === sub ? '' : 'none';
     });
     if (sub === 'writing-benchmark') initWbRubrics();
     if (sub === 'wb') renderWb();
     if (sub === 'survey') renderSurvey();
+    if (sub === 'student-overview') renderWritingStudentOverview();
+}
+
+var writingOvStudent = '';
+function renderWritingStudentOverview() {
+    var el = document.getElementById('writing-student-overview-content');
+    if (!el) return;
+
+    if (!wbLongData) {
+        el.innerHTML = '<p style="padding:2rem;color:#aeaeb2;text-align:center;">Loading writing data…</p>';
+        fetch(WB_LONG_URL).then(function(r){return r.text();}).then(function(t){
+            wbLongData = parseWbLongCsv(t);
+            if (writingSubtab === 'student-overview') renderWritingStudentOverview();
+        }).catch(function(){ wbLongData = []; renderWritingStudentOverview(); });
+        return;
+    }
+
+    var names = {};
+    (wbLongData || []).forEach(function(s){ var n=(s.name||'').trim(); if(n) names[n]=true; });
+    var nameList = Object.keys(names).sort();
+    if (!nameList.length) {
+        el.innerHTML = '<p style="padding:2rem;color:#aeaeb2;text-align:center;">No Writing Benchmark data loaded. Visit the Writing Benchmark tab first.</p>';
+        return;
+    }
+    if (!writingOvStudent || !names[writingOvStudent]) writingOvStudent = nameList[0];
+    var sel = writingOvStudent;
+    var norm = xrefNorm(sel);
+
+    var wbRec = xrefFindStudent(wbLongData, sel);
+    var wbLinePts = [], wbGoalSegs = [], wbGrowthSegs = [];
+    if (wbRec) {
+        WB_LONG_YEARS.forEach(function(yr){
+            var d = wbRec.years[yr.key]; if (!d) return;
+            if (d.boy !== null) wbLinePts.push({period: yr.label+' BOY', score: d.boy, pct: null});
+            if (d.moy !== null) wbLinePts.push({period: yr.label+' MOY', score: d.moy, pct: null});
+            if (d.eof !== null) wbLinePts.push({period: yr.label+' EOY', score: d.eof, pct: null});
+            var fromP = xrefNormPeriod(yr.label+' BOY'), toP = xrefNormPeriod(yr.label+' EOY');
+            if (d.eoyGle !== null) wbGoalSegs.push({fromPeriod: fromP, toPeriod: toP, value: d.eoyGle});
+            if (d.boy !== null) wbGrowthSegs.push({fromPeriod: fromP, toPeriod: toP, value: Math.round((d.boy + 1.0) * 100) / 100});
+        });
+    }
+
+    var html = '<div style="padding:.75rem 1.25rem;background:#f5f5f7;border-bottom:1px solid #e8e8ed;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">'
+        + '<label style="font-size:.82rem;font-weight:600;color:#1d1d1f;">Student</label>'
+        + '<select id="writing-ov-sel" class="redact-select" onchange="writingOvStudent=this.value;renderWritingStudentOverview();" style="padding:5px 10px;border-radius:8px;border:1px solid #d1d1d6;font-family:inherit;font-size:.82rem;min-width:180px;">'
+        + nameList.map(function(n){ return '<option value="'+n.replace(/"/g,'&quot;')+'"'+(n===sel?' selected':'')+'>'+n+'</option>'; }).join('')
+        + '</select></div>';
+
+    html += '<div style="padding:1.25rem;display:flex;flex-direction:column;gap:1rem;">';
+    if (wbLinePts.length >= 2) {
+        html += '<div style="background:#fff;border-radius:16px;box-shadow:0 1px 6px rgba(0,0,0,.07);overflow:hidden;">'
+            + '<div style="background:#5c5b5a;color:#fff;padding:0.5rem 1rem;font-weight:700;font-size:.85rem;display:flex;align-items:center;gap:8px;">'
+            + '<span style="width:12px;height:12px;border-radius:3px;display:inline-block;background:#E87BB0;"></span>Writing Benchmark</div>'
+            + '<canvas id="writing-ov-wb-canvas" style="width:100%;height:220px;display:block;"></canvas>'
+            + '</div>';
+    } else {
+        html += '<p style="color:#aeaeb2;font-size:.82rem;">No Writing Benchmark longitudinal data for this student.</p>';
+    }
+    html += '</div>';
+    el.innerHTML = html;
+
+    if (wbLinePts.length >= 2) {
+        requestAnimationFrame(function(){
+            var c = document.getElementById('writing-ov-wb-canvas');
+            if (!c) return;
+            c.width = c.offsetWidth || 700; c.height = 220;
+            drawXrefAlignedGraph(c, wbLinePts, '#E87BB0', XREF_MASTER_PERIODS, {
+                goalSegs: wbGoalSegs.length ? wbGoalSegs : null,
+                intY: true,
+                growthGoalSegs: wbGrowthSegs.length ? wbGrowthSegs : null
+            });
+        });
+    }
 }
 
 var wbRubric = 'ls';
