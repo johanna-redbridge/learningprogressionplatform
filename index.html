@@ -11994,8 +11994,8 @@ function xrefReadDetailHTML(){
         html += '<div style="border-radius:12px;border:1px solid #f0f0f0;overflow:hidden;">';
         html += '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
         html += '<thead><tr style="background:#5c5b5a;">';
-        ['CCSS','Description','Learning Credit','Credit Status','Lexia %'].forEach(function(h){
-            html += '<th style="text-align:left;padding:0.45rem 0.6rem;color:#ffffff;font-weight:600;white-space:nowrap;position:sticky;top:32px;z-index:10;background:#5c5b5a;">'+h+'</th>';
+        [{h:'CCSS',w:''},{h:'Description',w:'width:20%;'},{h:'Learning Credit',w:'width:30%;'},{h:'Credit Status',w:''},{h:'Lexia %',w:''}].forEach(function(col){
+            html += '<th style="text-align:left;padding:0.45rem 0.6rem;color:#ffffff;font-weight:600;white-space:nowrap;position:sticky;top:32px;z-index:10;background:#5c5b5a;'+col.w+'">'+col.h+'</th>';
         });
         html += '</tr></thead><tbody>';
 
@@ -12017,7 +12017,7 @@ function xrefReadDetailHTML(){
             html += '<tr style="background:'+rowBg+';color:#1d1d1f;border-bottom:1px solid #f0f0f0;">';
             html += '<td style="padding:0.45rem 0.6rem;font-weight:600;color:#1d1d1f;white-space:nowrap;font-size:0.75rem;">'+std.id.replace(/</g,'&lt;')+'</td>';
             html += '<td style="padding:0.45rem 0.6rem;color:#1d1d1f;font-size:0.72rem;line-height:1.4;">'+std.desc.replace(/</g,'&lt;')+'</td>';
-            html += '<td style="padding:0.45rem 0.6rem;max-width:160px;">';
+            html += '<td style="padding:0.45rem 0.6rem;max-width:240px;">';
             if(credits.length){
                 credits.forEach(function(r,ci){
                     if(ci>0) html += '<br>';
@@ -12495,8 +12495,8 @@ function xrefCompDetailHTML(){
         html += '<div style="border-radius:12px;border:1px solid #f0f0f0;overflow:hidden;">';
         html += '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
         html += '<thead><tr style="background:#5c5b5a;">';
-        ['CCSS','Description','Learning Credit','Credit Status','Benchmark Q#','Benchmark Status','STmath %'].forEach(function(h){
-            html += '<th style="text-align:left;padding:0.45rem 0.6rem;color:#ffffff;font-weight:600;white-space:nowrap;position:sticky;top:32px;z-index:10;background:#5c5b5a;">'+h+'</th>';
+        [{h:'CCSS',w:''},{h:'Description',w:'width:18%;'},{h:'Learning Credit',w:'width:28%;'},{h:'Credit Status',w:''},{h:'Benchmark Q#',w:''},{h:'Benchmark Status',w:''},{h:'STmath %',w:''}].forEach(function(col){
+            html += '<th style="text-align:left;padding:0.45rem 0.6rem;color:#ffffff;font-weight:600;white-space:nowrap;position:sticky;top:32px;z-index:10;background:#5c5b5a;'+col.w+'">'+col.h+'</th>';
         });
         html += '</tr></thead><tbody>';
 
@@ -12532,7 +12532,7 @@ function xrefCompDetailHTML(){
             html += '<td style="padding:0.45rem 0.6rem;color:#1d1d1f;font-size:0.72rem;line-height:1.4;">'+std.desc.replace(/</g,'&lt;')+'</td>';
 
             // C: Learning Credit(s)
-            html += '<td style="padding:0.45rem 0.6rem;max-width:160px;">';
+            html += '<td style="padding:0.45rem 0.6rem;max-width:240px;">';
             if(credits.length){
                 credits.forEach(function(r,ci){
                     if(ci>0) html += '<br>';
