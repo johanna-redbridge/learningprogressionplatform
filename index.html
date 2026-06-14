@@ -8745,10 +8745,24 @@ function drawMapLineGraph(canvas, pts, lineColor, goalSegs, opts) {
     });
 
     // X axis labels — BOY/MOY/EOY bold on top, YY/YY school year lighter below
-    function _shortYr(raw) {
-        var m = raw.match(/(\d{2,4})[\/\-](\d{2,4})/);
-        if (!m) return raw;
-        return m[1].slice(-2) + '/' + m[2].slice(-2);
+    function _mapAxisLabel(rawPeriod) {
+        var lbl = rawPeriod || '', upper = lbl.toUpperCase();
+        function p2(n) { return ('0' + (n % 100)).slice(-2); }
+        // Try 4-digit year first (e.g. "BOY 2022", "EOY 2023")
+        var cal4 = lbl.match(/(\d{4})/);
+        if (cal4) {
+            var cy = parseInt(cal4[1]);
+            if (upper.indexOf('BOY') >= 0) return { season: 'BOY', yr: p2(cy) + '/' + p2(cy + 1) };
+            if (upper.indexOf('EOY') >= 0) return { season: 'EOY', yr: p2(cy - 1) + '/' + p2(cy) };
+            if (upper.indexOf('MOY') >= 0) return { season: 'MOY', yr: p2(cy - 1) + '/' + p2(cy) };
+        }
+        // Fallback: try YY/YY or YY-YY range in label (e.g. "22/23 BOY")
+        var rng = lbl.match(/(\d{2,4})[\/\-](\d{2,4})/);
+        var yr = rng ? rng[1].slice(-2) + '/' + rng[2].slice(-2) : '';
+        if (upper.indexOf('BOY') >= 0) return { season: 'BOY', yr: yr };
+        if (upper.indexOf('EOY') >= 0) return { season: 'EOY', yr: yr };
+        if (upper.indexOf('MOY') >= 0) return { season: 'MOY', yr: yr };
+        return { season: lbl, yr: '' };
     }
     ctx.strokeStyle = '#d1d1d6'; ctx.lineWidth = 1;
     pts.forEach(function(p, i) {
@@ -8758,22 +8772,10 @@ function drawMapLineGraph(canvas, pts, lineColor, goalSegs, opts) {
             ctx.fillStyle = '#64748b'; ctx.font = 'bold 9px -apple-system,sans-serif'; ctx.textAlign = 'center';
             ctx.fillText(i + 1, x, padT + plotH + 16);
         } else {
-            var raw = p.period || '';
-            var parts = raw.split(' ');
-            var season, yr;
-            var _SEASONS = /^(BOY|MOY|EOY)$/i;
-            if (parts.length >= 2 && _SEASONS.test(parts[parts.length - 1])) {
-                season = parts[parts.length - 1].toUpperCase();
-                yr = _shortYr(parts.slice(0, parts.length - 1).join(' '));
-            } else if (parts.length >= 2 && _SEASONS.test(parts[0])) {
-                season = parts[0].toUpperCase();
-                yr = _shortYr(parts.slice(1).join(' '));
-            } else {
-                season = raw; yr = '';
-            }
+            var parsed = _mapAxisLabel(p.period);
             ctx.fillStyle = '#64748b'; ctx.font = 'bold 9px -apple-system,sans-serif'; ctx.textAlign = 'center';
-            ctx.fillText(season, x, padT + plotH + 16);
-            if (yr) { ctx.fillStyle = '#94a3b8'; ctx.font = '8px -apple-system,sans-serif'; ctx.fillText(yr, x, padT + plotH + 28); }
+            ctx.fillText(parsed.season, x, padT + plotH + 16);
+            if (parsed.yr) { ctx.fillStyle = '#94a3b8'; ctx.font = '8px -apple-system,sans-serif'; ctx.fillText(parsed.yr, x, padT + plotH + 28); }
         }
     });
 }
