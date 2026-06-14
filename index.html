@@ -9304,31 +9304,29 @@ function renderCompStudentOverview() {
 
     html += '</div></div>'; // end flex row + card
 
-    // ── 2. Two-column layout: Left = BA/STMath + Fact Fluency, Right = Benchmark Growth + MAP Math ──
-    html += '<div style="display:flex;gap:1.5rem;flex-wrap:wrap;align-items:flex-start;">';
+    // ── 2. Two-column layout: Left = Fact Fluency + STMath, Right = MAP Math ──
+    html += '<div style="display:flex;gap:1.5rem;flex-wrap:wrap;align-items:stretch;">';
 
     // ── LEFT COLUMN ──
     html += '<div style="flex:1;min-width:260px;display:flex;flex-direction:column;gap:1.5rem;">';
 
     // Fact Fluency (top of left column)
     var ffRec = factFluencyData ? factFluencyData.students.find(function(s){ return xrefNorm(s.name)===norm; }) : null;
-    html += '<div style="background:#fff;border-radius:16px;box-shadow:0 1px 6px rgba(0,0,0,.07);overflow:hidden;">';
+    html += '<div id="comp-ff-card" style="background:#fff;border-radius:16px;box-shadow:0 1px 6px rgba(0,0,0,.07);overflow:hidden;">';
     html += '<div style="background:#5c5b5a;color:#fff;padding:0.7rem 1.25rem;font-weight:700;font-size:.88rem;">Fact Fluency</div>';
-    html += '<div style="padding:1rem 1.25rem;">';
+    html += '<div style="padding:0.75rem 1rem;">';
     if (ffRec && ffRec.facts && ffRec.facts.length) {
         ffRec.facts.forEach(function(f) {
             var dispCount = f.boyCount !== undefined ? f.boyCount : f.count || '';
             var dispPct   = f.boyPct   !== undefined ? f.boyPct   : f.pct   || '';
             var pct = ffPctNum(dispPct);
             var bg = pct !== null ? pctColor(pct) : '#f0f0f0';
-            html += '<div style="margin-bottom:0.6rem;">';
-            html += '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px;">';
-            html += '<span style="font-size:.7rem;font-weight:600;color:#3a3a3c;">'+f.label+'</span>';
-            var scoreStr = (dispCount||'—')+(f.max?'/'+f.max:'');
-            html += '<span style="font-size:.68rem;color:#5c5b5a;font-weight:600;">'+scoreStr+'&nbsp;<span style="color:#86868b;font-weight:400;">'+(pct!==null?pct+'%':'')+'</span></span>';
-            html += '</div>';
-            html += '<div style="background:#f0f0f0;border-radius:4px;height:10px;overflow:hidden;">';
+            var scoreStr = (dispCount||'—') + (f.max ? '/'+f.max : '');
+            html += '<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.32rem;">';
+            html += '<span style="font-size:.65rem;font-weight:600;color:#3a3a3c;white-space:nowrap;flex-shrink:0;min-width:90px;max-width:110px;overflow:hidden;text-overflow:ellipsis;" title="'+f.label.replace(/"/g,'&quot;')+'">'+f.label+'</span>';
+            html += '<div style="flex:1;background:#f0f0f0;border-radius:4px;height:8px;overflow:hidden;min-width:0;">';
             html += '<div style="height:100%;width:'+(pct||0)+'%;background:'+bg+';border-radius:4px;"></div></div>';
+            html += '<span style="font-size:.63rem;color:#5c5b5a;font-weight:600;white-space:nowrap;flex-shrink:0;">'+scoreStr+(pct!==null?' <span style="color:#86868b;font-weight:400;">'+pct+'%</span>':'')+'</span>';
             html += '</div>';
         });
     } else {
@@ -9378,14 +9376,14 @@ function renderCompStudentOverview() {
 
     // MAP Math
     var mapRec = (mapData && mapData.students) ? mapData.students.find(function(s){ return xrefNorm(s.name)===norm; }) : null;
-    html += '<div style="background:#fff;border-radius:16px;box-shadow:0 1px 6px rgba(0,0,0,.07);overflow:hidden;">';
+    html += '<div id="comp-map-card" style="background:#fff;border-radius:16px;box-shadow:0 1px 6px rgba(0,0,0,.07);overflow:hidden;flex:1;display:flex;flex-direction:column;">';
     html += '<div style="background:#5c5b5a;color:#fff;padding:0.7rem 1.25rem;font-weight:700;font-size:.88rem;">MAP Math</div>';
-    html += '<div style="padding:1rem 1.25rem;">';
+    html += '<div style="padding:1rem 1.25rem;flex:1;display:flex;flex-direction:column;">';
     if (mapRec) {
         var mathPeriods = (mapData && mapData.mathPeriods) ? mapData.mathPeriods : [];
         var validMath = mapRec.mathScores.map(function(s,i){ return { period: mathPeriods[i]||'P'+(i+1), score: parseFloat(s)||null, pct: parseFloat(mapRec.mathPcts[i])||null }; }).filter(function(x){ return x.score!==null; });
         if (validMath.length) {
-            html += '<canvas id="comp-stu-map-canvas" width="500" height="180" style="width:100%;height:180px;border-radius:8px;display:block;"></canvas>';
+            html += '<canvas id="comp-stu-map-canvas" width="500" height="180" style="width:100%;flex:1;min-height:120px;border-radius:8px;display:block;"></canvas>';
         } else {
             html += '<p style="color:#aeaeb2;font-size:.82rem;">No MAP Math scores for this student.</p>';
         }
@@ -9400,6 +9398,23 @@ function renderCompStudentOverview() {
 
     el.innerHTML = html;
 
+    // ── Equalize Fact Fluency and MAP Math card heights ──
+    var _ffCardEl = document.getElementById('comp-ff-card');
+    var _mapCardEl = document.getElementById('comp-map-card');
+    if (_ffCardEl && _mapCardEl) {
+        var _ffH = _ffCardEl.offsetHeight;
+        var _mapH = _mapCardEl.offsetHeight;
+        var _targetH = Math.max(_ffH, _mapH);
+        _ffCardEl.style.minHeight = _targetH + 'px';
+        _mapCardEl.style.height = _targetH + 'px';
+        var _mc = document.getElementById('comp-stu-map-canvas');
+        if (_mc) {
+            var _mapHdrH = (_mapCardEl.querySelector('div') || {}).offsetHeight || 38;
+            var _canvasH = Math.max(80, _targetH - _mapHdrH - 32);
+            _mc.setAttribute('height', _canvasH);
+            _mc.style.height = _canvasH + 'px';
+        }
+    }
 
     // ── Draw computation graphs — year-band shading + shared x-axis alignment ──
     // Slot layout: BENCH_LONG_YEARS × 3 seasons = 15 slots (BOY=0, MOY=1, EOY=2 per year)
