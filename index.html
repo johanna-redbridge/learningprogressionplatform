@@ -9335,16 +9335,11 @@ function renderCompStudentOverview() {
     var _mathPdsAll = (mapData && mapData.mathPeriods) ? mapData.mathPeriods : [];
     var _validMathAll = mapRec ? mapRec.mathScores.map(function(s,i){ return { period: _mathPdsAll[i]||'', score: parseFloat(s)||null, pct: parseFloat((mapRec.mathPcts||[])[i])||null }; }).filter(function(x){ return x.score!==null; }) : [];
 
-    html += '<div style="background:#fff;border-radius:16px;box-shadow:0 1px 6px rgba(0,0,0,.07);overflow:hidden;">';
-    // Split header row — same dark bar as Benchmark
-    html += '<div style="display:flex;background:#5c5b5a;color:#fff;">';
-    html += '<div style="flex:1;padding:0.7rem 1.25rem;font-weight:700;font-size:.88rem;">Fact Fluency</div>';
-    html += '<div style="flex:1;padding:0.7rem 1.25rem;font-weight:700;font-size:.88rem;border-left:1px solid rgba(255,255,255,0.2);">MAP Math</div>';
-    html += '</div>';
-    // Content panels
-    html += '<div style="display:flex;gap:0;align-items:flex-start;">';
-    // Left: Fact Fluency bars
-    html += '<div style="flex:1;min-width:0;padding:0.75rem 1rem;border-right:1px solid #f0f0f0;">';
+    // Fact Fluency card
+    html += '<div style="display:flex;gap:1.5rem;align-items:flex-start;">';
+    html += '<div style="flex:1;min-width:0;background:#fff;border-radius:16px;box-shadow:0 1px 6px rgba(0,0,0,.07);overflow:hidden;">';
+    html += '<div style="background:#5c5b5a;color:#fff;padding:0.7rem 1.25rem;font-weight:700;font-size:.88rem;">Fact Fluency</div>';
+    html += '<div style="padding:0.75rem 1rem;">';
     if (ffRec && ffRec.facts && ffRec.facts.length) {
         ffRec.facts.forEach(function(f) {
             var dispCount = f.boyCount !== undefined ? f.boyCount : f.count || '';
@@ -9362,16 +9357,18 @@ function renderCompStudentOverview() {
     } else {
         html += '<p style="color:#aeaeb2;font-size:.82rem;">No Fact Fluency data. Visit the Fact Fluency tab to load data.</p>';
     }
-    html += '</div>';
-    // Right: MAP Math graph only — same flex:1 + padding as Benchmark right panel → pixel-perfect alignment
-    html += '<div style="flex:1;min-width:0;padding:0.5rem 0.75rem;">';
+    html += '</div></div>';
+    // MAP Math card — graph only
+    html += '<div style="flex:1;min-width:0;background:#fff;border-radius:16px;box-shadow:0 1px 6px rgba(0,0,0,.07);overflow:hidden;">';
+    html += '<div style="background:#5c5b5a;color:#fff;padding:0.7rem 1.25rem;font-weight:700;font-size:.88rem;">MAP Math</div>';
+    html += '<div style="padding:0.5rem 0.75rem;">';
     if (_validMathAll.length) {
         html += '<canvas id="comp-stu-map-canvas" width="600" height="360" style="width:100%;height:360px;border-radius:8px;display:block;"></canvas>';
     } else {
         html += '<p style="color:#aeaeb2;font-size:.78rem;">' + (mapRec ? 'No MAP Math scores.' : 'No MAP Math data.') + '</p>';
     }
-    html += '</div>';
-    html += '</div></div>'; // end panels + combined card
+    html += '</div></div>';
+    html += '</div>'; // end FF + MAP row
 
     // ── STMath (AL1 only) ──
     var alStr = compStudentAL(sel) || '';
