@@ -8474,10 +8474,9 @@ function renderReadingStudentOverview() {
         allPeriods.forEach(function(p) {
             var lv = p.key === '_glegoal' ? gleGoal : p.key === '_growth' ? growthGoal : fpRec[p.key];
             var pct = fpPct(lv);
-            var col = lv ? (p.key === '_glegoal' ? '#3b82f6' : p.key === '_growth' ? '#4ade80' : pctColor(pct)) : '#e0e0e0';
             html += '<div style="text-align:center;flex:1;">'
                 + '<div style="font-size:.65rem;font-weight:700;color:#86868b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">'+p.label+'</div>'
-                + '<div style="font-size:2.2rem;font-weight:800;color:'+(lv?col:'#c7c7cc')+';line-height:1;">'+((lv||'—').toUpperCase())+'</div>'
+                + '<div style="font-size:2.2rem;font-weight:800;color:'+(lv?'#1d1d1f':'#c7c7cc')+';line-height:1;">'+((lv||'—').toUpperCase())+'</div>'
                 + (p.key !== '_glegoal' && p.key !== '_growth' && fpRec['note'+p.label[0]] ? '<div style="font-size:.6rem;color:#86868b;margin-top:4px;">'+fpRec['note'+p.label[0]]+'</div>' : '')
                 + '</div>';
         });
