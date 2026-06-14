@@ -3703,6 +3703,7 @@ function portfolioSearchFiltered() {
 
 var CLARKSON_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQzOePPDkYV3iZcKsWcoTVfZ5hwa-76XleIUOws-VGAkrJ0SvGWK78XY-xq6O-vAWUz6PWK3UCdKsAB/pub?gid=2123056742&single=true&output=csv';
 var clarksonData = null; // [{credit, attemptDate, earnedDate}] — loaded fresh each time
+var clarksonLocalAttempts = {}; // creditTitle.toLowerCase() → date string (local overrides)
 
 function loadClarksonData(cb) {
     fetch(CLARKSON_CSV_URL, { cache: 'no-store' })
@@ -3720,6 +3721,28 @@ function loadClarksonData(cb) {
             if (cb) cb();
         })
         .catch(function(e) { console.warn('[Clarkson] load failed:', e); clarksonData = clarksonData || []; if (cb) cb(); });
+}
+
+function clarksonSetAttempt(creditTitle) {
+    var key = creditTitle.toLowerCase();
+    var existing = clarksonLocalAttempts[key] || '';
+    // Convert stored M/D/YYYY → ISO for the date input
+    var isoVal = '';
+    if (existing) {
+        var p = existing.split('/');
+        if (p.length === 3) isoVal = p[2] + '-' + ('0'+p[0]).slice(-2) + '-' + ('0'+p[1]).slice(-2);
+    }
+    openDateModal(isoVal, function(isoDate) {
+        if (isoDate) {
+            // Convert ISO → M/D/YYYY for display/sort consistency
+            var dp = isoDate.split('-');
+            var slashDate = (+dp[1]) + '/' + (+dp[2]) + '/' + dp[0];
+            clarksonLocalAttempts[key] = slashDate;
+        } else {
+            delete clarksonLocalAttempts[key];
+        }
+        renderEarnedCredits();
+    });
 }
 
 // Alias kept so both portfolio and attainment code share the same live array
@@ -4910,7 +4933,7 @@ function switchDPSubtab(name) {
         portfolioDriveArtifactsLoading = {};
         portfolioNarratives = {};
         portfolioLoadingNarratives = {};
-        clarksonData = null;
+        clarksonData = null; clarksonLocalAttempts = {};
         earnedModified = false;
         loadEarnedFromSheet();
         loadStudentALFromSheet();
@@ -4937,7 +4960,7 @@ function openLCSubtab(name) {
     if (backNav) backNav.style.display = '';
     if (backTitle) backTitle.textContent = labels[name] || name;
     if (name === 'available') { earnedModified = false; loadEarnedFromSheet(); enhanceCreditsWithMetadata(); loadStudentALFromSheet(); }
-    if (name === 'earned') { earnedModified = false; clarksonData = null; loadEarnedFromSheet(); enhanceCreditsWithMetadata(); loadStudentALFromSheet(); }
+    if (name === 'earned') { earnedModified = false; clarksonData = null; clarksonLocalAttempts = {}; loadEarnedFromSheet(); enhanceCreditsWithMetadata(); loadStudentALFromSheet(); }
     switchLCSubtab(name);
 }
 
@@ -5004,7 +5027,7 @@ function applyTabRender(tab) {
         portfolioDriveArtifactsLoading = {};
         portfolioNarratives = {};
         portfolioLoadingNarratives = {};
-        clarksonData = null;
+        clarksonData = null; clarksonLocalAttempts = {};
         renderPortfolio();
     }
     if (tab === 'data') showAnalyticsLanding();
@@ -5950,8 +5973,10 @@ function renderEarnedStudent(period, container) {
         clarkSheetCredits.sort(function(a, b) {
             var ra = clarkLookup[a.title.toLowerCase()] || {};
             var rb = clarkLookup[b.title.toLowerCase()] || {};
-            var da = _parseSlashDate(ra.earnedDate || ra.attemptDate);
-            var db = _parseSlashDate(rb.earnedDate || rb.attemptDate);
+            var aAttempt = clarksonLocalAttempts[a.title.toLowerCase()] || ra.attemptDate;
+            var bAttempt = clarksonLocalAttempts[b.title.toLowerCase()] || rb.attemptDate;
+            var da = _parseSlashDate(ra.earnedDate || aAttempt);
+            var db = _parseSlashDate(rb.earnedDate || bAttempt);
             if (!da && !db) return 0;
             if (!da) return 1;
             if (!db) return -1;
@@ -5967,7 +5992,8 @@ function renderEarnedStudent(period, container) {
             html += '</tr></thead><tbody>';
             clarkSortedCredits.forEach(function(c) {
                 var sheetRow = clarkLookup[c.title.toLowerCase()] || null;
-                var afd = sheetRow && sheetRow.attemptDate ? sheetRow.attemptDate : '';
+                var _sheetAttempt = sheetRow && sheetRow.attemptDate ? sheetRow.attemptDate : '';
+                var afd = clarksonLocalAttempts[c.title.toLowerCase()] || _sheetAttempt;
                 var fd = sheetRow && sheetRow.earnedDate ? sheetRow.earnedDate : '';
                 var aKey = artifactKey(studentId, c.id);
                 var art = artifacts[aKey];
@@ -5977,10 +6003,10 @@ function renderEarnedStudent(period, container) {
                 html += '<td style="font-size:0.78rem;color:#555;">' + (c.stage || '') + '</td>';
                 html += '<td style="text-align:center;">';
                 if (afd) {
-                    html += '<span class="earned-icon attempted-icon">a</span>';
+                    html += '<span class="earned-icon attempted-icon" style="cursor:pointer;" onclick="clarksonSetAttempt(' + JSON.stringify(c.title) + ')">a</span>';
                     html += '<div style="font-size:0.65rem;color:#555;margin-top:1px;">' + afd + '</div>';
                 } else {
-                    html += '<span class="earned-icon earned-no"></span>';
+                    html += '<span class="earned-icon earned-no" style="cursor:pointer;" onclick="clarksonSetAttempt(' + JSON.stringify(c.title) + ')"></span>';
                 }
                 html += '</td>';
                 html += '<td style="text-align:center;">';
@@ -8393,7 +8419,6 @@ function renderReadingStudentOverview() {
         + '</select>'
         + (readOvAL ? smallChipR(readOvAL, 'background:#fff3e0;color:#FF8200;') : '')
         + (readOvGLE ? smallChipR('GLE ' + readOvGLE, 'background:#f3f4f6;color:#374151;') : '')
-        + (readOvMapChip ? smallChipR(readOvMapChip, 'background:#fff0ed;color:#c2410c;') : '')
         + (readOvBoyTier ? smallChipR('BOY Tier: ' + readOvBoyTier.replace(/^tier\s*/i,''), tierChipStyle(readOvBoyTier)) : '')
         + (readOvMoyTier ? smallChipR('MOY Tier: ' + readOvMoyTier.replace(/^tier\s*/i,''), tierChipStyle(readOvMoyTier)) : '');
 
@@ -8692,10 +8717,32 @@ function drawMapLineGraph(canvas, pts, lineColor, goalSegs, opts) {
         }
     });
 
-    // X axis labels
-    ctx.fillStyle = '#8e8e93'; ctx.font = '9px -apple-system,sans-serif'; ctx.textAlign = 'center';
+    // X axis labels — BOY/MOY/EOY bold on top, year lighter below
+    ctx.strokeStyle = '#d1d1d6'; ctx.lineWidth = 1;
     pts.forEach(function(p, i) {
-        ctx.fillText(opts && opts.seqX ? (i + 1) : p.period, xOf(i), padT + plotH + 28);
+        var x = xOf(i);
+        ctx.beginPath(); ctx.moveTo(x, padT + plotH); ctx.lineTo(x, padT + plotH + 4); ctx.stroke();
+        if (opts && opts.seqX) {
+            ctx.fillStyle = '#64748b'; ctx.font = 'bold 9px -apple-system,sans-serif'; ctx.textAlign = 'center';
+            ctx.fillText(i + 1, x, padT + plotH + 16);
+        } else {
+            var raw = p.period || '';
+            var parts = raw.split(' ');
+            var season, yr;
+            var _SEASONS = /^(BOY|MOY|EOY)$/i;
+            if (parts.length >= 2 && _SEASONS.test(parts[parts.length - 1])) {
+                season = parts[parts.length - 1].toUpperCase();
+                yr = parts.slice(0, parts.length - 1).join(' ');
+            } else if (parts.length >= 2 && _SEASONS.test(parts[0])) {
+                season = parts[0].toUpperCase();
+                yr = parts.slice(1).join(' ');
+            } else {
+                season = raw; yr = '';
+            }
+            ctx.fillStyle = '#64748b'; ctx.font = 'bold 9px -apple-system,sans-serif'; ctx.textAlign = 'center';
+            ctx.fillText(season, x, padT + plotH + 16);
+            if (yr) { ctx.fillStyle = '#94a3b8'; ctx.font = '8px -apple-system,sans-serif'; ctx.fillText(yr, x, padT + plotH + 28); }
+        }
     });
 }
 
@@ -9051,7 +9098,6 @@ function renderCompStudentOverview() {
         + '</select>'
         + (compOvAL ? smallChip(compOvAL, 'background:#fff3e0;color:#FF8200;') : '')
         + (compOvGLE ? smallChip('GLE ' + compOvGLE, 'background:#f3f4f6;color:#374151;') : '')
-        + (compOvMapChip ? smallChip(compOvMapChip, 'background:#e0faff;color:#0369a1;') : '')
         + (compOvBoyTier ? smallChip('BOY Tier: ' + compOvBoyTier.replace(/^tier\s*/i,''), compTierChipStyle(compOvBoyTier)) : '')
         + (compOvMoyTier ? smallChip('MOY Tier: ' + compOvMoyTier.replace(/^tier\s*/i,''), compTierChipStyle(compOvMoyTier)) : '');
 
@@ -13793,14 +13839,17 @@ function drawFpGrowthGraph(canvas, points, gle, opts) {
         ctx.fillText(p.level.toUpperCase(), x, y - 11);
     });
 
-    // X axis labels (rotated)
-    ctx.fillStyle = '#64748b'; ctx.font = '10px -apple-system,sans-serif';
+    // X axis labels — BOY/MOY/EOY bold on top, year lighter below
     ctx.strokeStyle = '#d1d1d6'; ctx.lineWidth = 1;
     points.forEach(function(p, i) {
         var x = xOf(i);
         ctx.beginPath(); ctx.moveTo(x, padT + plotH); ctx.lineTo(x, padT + plotH + 4); ctx.stroke();
-        ctx.save(); ctx.translate(x, padT + plotH + 8); ctx.rotate(-Math.PI / 4);
-        ctx.textAlign = 'right'; ctx.fillText(p.label, 0, 0); ctx.restore();
+        var parts = (p.label || '').split(' ');
+        var season = parts[0] || '', yr = parts[1] || '';
+        ctx.fillStyle = '#64748b'; ctx.font = 'bold 9px -apple-system,sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText(season, x, padT + plotH + 16);
+        ctx.fillStyle = '#94a3b8'; ctx.font = '8px -apple-system,sans-serif';
+        ctx.fillText(yr, x, padT + plotH + 28);
     });
 
     // Legend for goal lines
