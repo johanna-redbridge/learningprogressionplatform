@@ -1108,6 +1108,7 @@
     <div id="lc-subtab-earned" class="lc-subtab-panel" style="display:none;">
         <div class="view-container">
             <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;flex-wrap:nowrap;">
+                <label for="earned-student-sel" style="font-size:0.82rem;font-weight:600;color:#1d1d1f;white-space:nowrap;">Student</label>
                 <select id="earned-student-sel" class="redact-select" style="padding:0.3rem 0.6rem;border:1px solid #d2d2d7;border-radius:7px;font-size:0.82rem;background:#fff;cursor:pointer;font-family:inherit;" onchange="selectEarnedStudent(this.value, this.options[this.selectedIndex].text)">
                     <option value="">— Select Student —</option>
                 </select>
@@ -1120,7 +1121,7 @@
                     </div>
                 </div>
                 <div style="flex:1;"></div>
-                <input type="text" id="earned-search" placeholder="Search credits…" oninput="earnedCreditSearch=this.value.toLowerCase();renderEarnedCredits()" style="width:140px;padding:0.3rem 0.75rem;border:1.5px solid #d2d2d7;border-radius:20px;font-size:0.78rem;font-family:inherit;outline:none;box-sizing:border-box;flex-shrink:0;" onfocus="this.style.borderColor='#FF8200'" onblur="this.style.borderColor='#d2d2d7'">
+                <input type="text" id="earned-search" placeholder="Search credit…" oninput="earnedCreditSearch=this.value.toLowerCase();renderEarnedCredits()" style="width:140px;padding:0.3rem 0.75rem;border:1.5px solid #d2d2d7;border-radius:20px;font-size:0.78rem;font-family:inherit;outline:none;box-sizing:border-box;flex-shrink:0;" onfocus="this.style.borderColor='#FF8200'" onblur="this.style.borderColor='#d2d2d7'">
             </div>
             <div id="earned-content"></div>
         </div>
@@ -9101,8 +9102,16 @@ function renderCompStudentOverview() {
     // Resolve to the comp spreadsheet key for mastery lookups
     var compSel = compNameFor[sel] || sel;
 
-    // AL, GLE, MAP Math, tier chips
+    // AL, GLE, tier chips
     var compOvAL = compStudentAL(sel) || '';
+    if (!compOvAL) {
+        ['al1','al2','al34'].forEach(function(k) {
+            if (!compOvAL && coreData[k]) {
+                var _cr = coreData[k].find(function(s){ return xrefNorm(s.name)===norm; });
+                if (_cr && _cr.al) compOvAL = 'AL' + _cr.al;
+            }
+        });
+    }
     var compOvLongRec = benchLongData ? benchLongData.find(function(s){ return xrefNorm(s.name)===norm; }) : null;
     var compOvGLE = compOvLongRec && compOvLongRec.gle ? compOvLongRec.gle : '';
 
