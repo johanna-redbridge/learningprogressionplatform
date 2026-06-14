@@ -15149,8 +15149,8 @@ function ffCellBg(pct) {
 function parseFactFluencyCsv(text) {
     var rows = parseCSVFull(text);
     if (rows.length < 4) return { ops: [], students: [] };
-    var opRow  = rows[1] || [];   // row 2: operation labels (KG Addition Facts, etc.)
-    var subRow = rows[2] || [];   // row 3: sub-headers (# correct up to N, % correct)
+    var opRow  = rows[0] || [];   // row 1: operation labels (KG Addition Facts, etc.)
+    var subRow = rows[1] || [];   // row 2: sub-headers (# correct up to N, % correct)
     // Each operation spans 4 columns: BOY count, BOY %, MOY count, MOY %
     var ops = [];
     for (var c = 4; c < Math.max(opRow.length, subRow.length); c += 4) {
