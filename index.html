@@ -9369,63 +9369,6 @@ function renderCompStudentOverview() {
         }
         if (!foundStmath) html += '<p style="color:#aeaeb2;font-size:.82rem;">No STMath data for this student. Visit the STMath tab to load data.</p>';
         html += '</div></div>';
-    } else {
-        html += '<div style="background:#fff;border-radius:16px;box-shadow:0 1px 6px rgba(0,0,0,.07);overflow:hidden;">';
-        html += '<div style="background:#5c5b5a;color:#fff;padding:0.7rem 1.25rem;font-weight:700;font-size:.88rem;">Beast Academy</div>';
-        html += '<div style="padding:1rem 1.25rem;">';
-        if (!baData) {
-            html += '<p style="color:#aeaeb2;font-size:.82rem;" id="comp-stu-ba-loading">Loading Beast Academy data...</p>';
-        } else {
-            var _baMatches = baData.filter(function(r){ return xrefNorm(r.name)===norm; });
-            var baRec = _baMatches.find(function(r){ return r.hasData; }) || _baMatches[0] || null;
-            if (!baRec) {
-                var selFirst = sel.trim().split(/\s+/)[0].toLowerCase();
-                var _baFirst = baData.filter(function(r){ return (r.name||'').trim().split(/\s+/)[0].toLowerCase()===selFirst; });
-                baRec = _baFirst.find(function(r){ return r.hasData; }) || _baFirst[0] || null;
-            }
-            if (!baRec || !baRec.hasData) {
-                html += '<p style="color:#aeaeb2;font-size:.82rem;">No Beast Academy data for this student.</p>';
-            } else {
-                if (baRec.group) {
-                    html += '<div style="margin-bottom:0.85rem;font-size:.72rem;font-weight:700;color:#5c5b5a;">Group: <span data-redact="group" style="background:#f0f0f0;border-radius:6px;padding:2px 8px;color:#3a3a3c;">'+baRec.group+'</span></div>';
-                }
-                var baStats = [
-                    { label:'Stars',   val: baRec.stars,   max: null, color:'#f59e0b' },
-                    { label:'Checks',  val: baRec.checks,  max: null, color:'#00E3FF' },
-                    { label:'Minutes', val: baRec.minutes, max: null, color:'#a78bfa' }
-                ];
-                ['stars','checks','minutes'].forEach(function(field, i) {
-                    var vals = baData.filter(function(r){ return r.hasData; }).map(function(r){ return parseFloat(r[field])||0; });
-                    baStats[i].max = vals.length ? Math.max.apply(null, vals) : 1;
-                });
-                baStats.forEach(function(st) {
-                    var v = parseFloat(st.val) || 0;
-                    var pct = st.max ? Math.min(100, Math.round(v / st.max * 100)) : 0;
-                    html += '<div style="margin-bottom:0.6rem;">';
-                    html += '<div style="display:flex;justify-content:space-between;margin-bottom:3px;">';
-                    html += '<span style="font-size:.7rem;font-weight:600;color:#3a3a3c;">'+st.label+'</span>';
-                    html += '<span style="font-size:.68rem;color:#5c5b5a;font-weight:600;">'+(st.val||'—')+'</span>';
-                    html += '</div>';
-                    html += '<div style="background:#f0f0f0;border-radius:4px;height:8px;overflow:hidden;">';
-                    html += '<div style="height:100%;width:'+pct+'%;background:'+st.color+';border-radius:4px;"></div></div>';
-                    html += '</div>';
-                });
-                var growth = baRec.growth;
-                var growthNum = parseFloat(growth);
-                var growthColor = !isNaN(growthNum) ? (growthNum >= 0 ? '#34c759' : '#ff3b30') : '#aeaeb2';
-                html += '<div style="margin-top:0.75rem;display:flex;gap:0.75rem;flex-wrap:wrap;">';
-                html += '<div style="flex:1;min-width:80px;background:#f5f5f7;border-radius:10px;padding:0.5rem 0.75rem;">';
-                html += '<div style="font-size:.6rem;font-weight:700;color:#86868b;margin-bottom:3px;">BOY→MOY</div>';
-                html += '<div style="font-size:.88rem;font-weight:700;color:'+growthColor+';">'+(growth||'—')+'</div>';
-                html += '</div>';
-                html += '<div style="flex:1;min-width:80px;background:#f5f5f7;border-radius:10px;padding:0.5rem 0.75rem;">';
-                html += '<div style="font-size:.6rem;font-weight:700;color:#86868b;margin-bottom:3px;">MOY→EOY</div>';
-                html += '<div style="font-size:.82rem;color:#aeaeb2;font-style:italic;">no data yet</div>';
-                html += '</div>';
-                html += '</div>';
-            }
-        }
-        html += '</div></div>';
     }
 
     html += '</div>'; // end left column
@@ -9457,13 +9400,6 @@ function renderCompStudentOverview() {
 
     el.innerHTML = html;
 
-    // If AL2+ and baData not yet loaded, fetch it then re-render
-    if (!isAL1 && !baData) {
-        fetch(BA_URL).then(function(r){ return r.text(); }).then(function(text){
-            baData = parseBACsv(text);
-            renderCompStudentOverview();
-        }).catch(function(){ /* silently fail */ });
-    }
 
     // ── Draw benchmark longitudinal canvas ──
     if (longRec) {
