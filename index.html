@@ -11994,7 +11994,7 @@ function xrefReadDetailHTML(){
         html += '<div style="border-radius:12px;border:1px solid #f0f0f0;overflow:hidden;">';
         html += '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
         html += '<thead><tr style="background:#5c5b5a;">';
-        ['CCSC Code','Description','Learning Credit','Credit Status','Lexia %'].forEach(function(h){
+        ['CCSS','Description','Learning Credit','Credit Status','Lexia %'].forEach(function(h){
             html += '<th style="text-align:left;padding:0.45rem 0.6rem;color:#ffffff;font-weight:600;white-space:nowrap;position:sticky;top:32px;z-index:10;background:#5c5b5a;">'+h+'</th>';
         });
         html += '</tr></thead><tbody>';
@@ -12495,7 +12495,7 @@ function xrefCompDetailHTML(){
         html += '<div style="border-radius:12px;border:1px solid #f0f0f0;overflow:hidden;">';
         html += '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
         html += '<thead><tr style="background:#5c5b5a;">';
-        ['CCSC Code','Description','Learning Credit','Credit Status','Benchmark Q#','Benchmark Status','STmath %'].forEach(function(h){
+        ['CCSS','Description','Learning Credit','Credit Status','Benchmark Q#','Benchmark Status','STmath %'].forEach(function(h){
             html += '<th style="text-align:left;padding:0.45rem 0.6rem;color:#ffffff;font-weight:600;white-space:nowrap;position:sticky;top:32px;z-index:10;background:#5c5b5a;">'+h+'</th>';
         });
         html += '</tr></thead><tbody>';
@@ -12525,7 +12525,7 @@ function xrefCompDetailHTML(){
 
             html += '<tr style="background:'+rowBg+';color:#1d1d1f;border-bottom:1px solid #f0f0f0;">';
 
-            // A: CCSC Code
+            // A: CCSS
             html += '<td style="padding:0.45rem 0.6rem;font-weight:600;color:#1d1d1f;white-space:nowrap;font-size:0.75rem;">'+std.id.replace(/</g,'&lt;')+'</td>';
 
             // B: Description
