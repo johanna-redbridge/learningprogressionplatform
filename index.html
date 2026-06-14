@@ -9293,12 +9293,12 @@ function renderCompStudentOverview() {
     html += '</div>';
 
     // Right: growth graph
-    html += '<div style="flex:1.4;min-width:0;padding:0.5rem 0.75rem;">';
-    html += '<div style="font-size:.6rem;font-weight:700;color:#86868b;margin-bottom:4px;">Growth over time</div>';
+    html += '<div style="flex:1;min-width:0;padding:0.5rem 0.75rem;">';
+    html += '<div style="font-size:.65rem;font-weight:700;color:#86868b;margin-bottom:6px;">Growth over time</div>';
     if (longRec) {
-        html += '<canvas id="comp-stu-bench-canvas" width="500" height="160" style="width:100%;height:160px;display:block;border-radius:6px;"></canvas>';
+        html += '<canvas id="comp-stu-bench-canvas" width="600" height="360" style="width:100%;height:360px;border-radius:8px;display:block;"></canvas>';
     } else {
-        html += '<p style="color:#aeaeb2;font-size:.75rem;">No longitudinal data.</p>';
+        html += '<p style="color:#aeaeb2;font-size:.78rem;">No longitudinal data.</p>';
     }
     html += '</div>';
 
