@@ -9291,8 +9291,8 @@ function renderCompStudentOverview() {
             var total = grp.items.length;
             var pct = total ? Math.round(mastered/total*100) : 0;
             var col = pctColor(pct);
-            html += '<div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.28rem;">';
-            html += '<div style="display:flex;flex-direction:column;gap:2px;min-width:46px;flex-shrink:0;">';
+            html += '<div style="display:flex;align-items:flex-start;gap:0.4rem;margin-bottom:0.38rem;">';
+            html += '<div style="display:flex;flex-direction:column;gap:2px;min-width:46px;flex-shrink:0;padding-top:1px;">';
             html += '<div style="display:flex;align-items:baseline;gap:3px;">';
             html += '<span style="font-size:.58rem;font-weight:700;color:#5c5b5a;white-space:nowrap;">GLE '+grp.gle+'</span>';
             html += '<span style="font-size:.54rem;color:#86868b;white-space:nowrap;">'+mastered+'/'+total+'</span>';
@@ -9300,7 +9300,7 @@ function renderCompStudentOverview() {
             html += '<div style="background:#f0f0f0;border-radius:3px;height:4px;overflow:hidden;">';
             html += '<div style="height:100%;width:'+pct+'%;background:'+col+';border-radius:3px;"></div></div>';
             html += '</div>';
-            html += '<div style="display:flex;gap:2px;overflow-x:auto;flex:1;padding-bottom:2px;">';
+            html += '<div style="display:flex;flex-wrap:wrap;gap:2px;flex:1;">';
             grp.items.forEach(function(it) {
                 var done = it.q.mastery[compSel];
                 var bg = done ? '#34c759' : '#e8e8ed';
