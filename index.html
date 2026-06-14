@@ -8349,6 +8349,11 @@ function renderReadingStudentOverview() {
     var el = document.getElementById('reading-student-overview-content');
     if (!el) return;
 
+    // Lazy-load MAP data so MAP ELA graph appears without visiting the MAP tab first
+    if (!mapData) {
+        loadMapData(function() { if (readingSubtab === 'student-overview') renderReadingStudentOverview(); });
+    }
+
     // Gather all student names across sources
     var names = {};
     function addNames(arr, nameKey) {
@@ -9047,6 +9052,11 @@ var compStudOverviewName = '';
 function renderCompStudentOverview() {
     var el = document.getElementById('math-student-overview-content');
     if (!el) return;
+
+    // Lazy-load MAP data so MAP Math graph appears without visiting the MAP tab first
+    if (!mapData) {
+        loadMapData(function() { if (mathSubtab === 'student-overview') renderCompStudentOverview(); });
+    }
 
     // Collect every raw name from all loaded sources
     var rawNames = [];
