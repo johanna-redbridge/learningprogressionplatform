@@ -9297,6 +9297,32 @@ function renderCompStudentOverview() {
     // ── LEFT COLUMN ──
     html += '<div style="flex:1;min-width:260px;display:flex;flex-direction:column;gap:1.5rem;">';
 
+    // Fact Fluency (top of left column)
+    var ffRec = factFluencyData ? factFluencyData.students.find(function(s){ return xrefNorm(s.name)===norm; }) : null;
+    html += '<div style="background:#fff;border-radius:16px;box-shadow:0 1px 6px rgba(0,0,0,.07);overflow:hidden;">';
+    html += '<div style="background:#5c5b5a;color:#fff;padding:0.7rem 1.25rem;font-weight:700;font-size:.88rem;">Fact Fluency</div>';
+    html += '<div style="padding:1rem 1.25rem;">';
+    if (ffRec && ffRec.facts && ffRec.facts.length) {
+        ffRec.facts.forEach(function(f) {
+            var dispCount = f.boyCount !== undefined ? f.boyCount : f.count || '';
+            var dispPct   = f.boyPct   !== undefined ? f.boyPct   : f.pct   || '';
+            var pct = ffPctNum(dispPct);
+            var bg = pct !== null ? pctColor(pct) : '#f0f0f0';
+            html += '<div style="margin-bottom:0.6rem;">';
+            html += '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px;">';
+            html += '<span style="font-size:.7rem;font-weight:600;color:#3a3a3c;">'+f.label+'</span>';
+            var scoreStr = (dispCount||'—')+(f.max?'/'+f.max:'');
+            html += '<span style="font-size:.68rem;color:#5c5b5a;font-weight:600;">'+scoreStr+'&nbsp;<span style="color:#86868b;font-weight:400;">'+(pct!==null?pct+'%':'')+'</span></span>';
+            html += '</div>';
+            html += '<div style="background:#f0f0f0;border-radius:4px;height:10px;overflow:hidden;">';
+            html += '<div style="height:100%;width:'+(pct||0)+'%;background:'+bg+';border-radius:4px;"></div></div>';
+            html += '</div>';
+        });
+    } else {
+        html += '<p style="color:#aeaeb2;font-size:.82rem;">No Fact Fluency data. Visit the Fact Fluency tab to load data.</p>';
+    }
+    html += '</div></div>';
+
     // STMath (AL1) or Beast Academy (AL2+)
     var alStr = compStudentAL(sel) || '';
     var alNum = parseInt(alStr.replace(/[^0-9]/g,'')) || 0;
@@ -9388,33 +9414,6 @@ function renderCompStudentOverview() {
         }
         html += '</div></div>';
     }
-
-    // Fact Fluency
-    var ffRec = factFluencyData ? factFluencyData.students.find(function(s){ return xrefNorm(s.name)===norm; }) : null;
-    html += '<div style="background:#fff;border-radius:16px;box-shadow:0 1px 6px rgba(0,0,0,.07);overflow:hidden;">';
-    html += '<div style="background:#5c5b5a;color:#fff;padding:0.7rem 1.25rem;font-weight:700;font-size:.88rem;">Fact Fluency</div>';
-    html += '<div style="padding:1rem 1.25rem;">';
-    if (ffRec && ffRec.facts && ffRec.facts.length) {
-        ffRec.facts.forEach(function(f) {
-            // Always show BOY data only
-            var dispCount = f.boyCount !== undefined ? f.boyCount : f.count || '';
-            var dispPct   = f.boyPct   !== undefined ? f.boyPct   : f.pct   || '';
-            var pct = ffPctNum(dispPct);
-            var bg = pct !== null ? pctColor(pct) : '#f0f0f0';
-            html += '<div style="margin-bottom:0.6rem;">';
-            html += '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px;">';
-            html += '<span style="font-size:.7rem;font-weight:600;color:#3a3a3c;">'+f.label+'</span>';
-            var scoreStr = (dispCount||'—')+(f.max?'/'+f.max:'');
-            html += '<span style="font-size:.68rem;color:#5c5b5a;font-weight:600;">'+scoreStr+'&nbsp;<span style="color:#86868b;font-weight:400;">'+(pct!==null?pct+'%':'')+'</span></span>';
-            html += '</div>';
-            html += '<div style="background:#f0f0f0;border-radius:4px;height:10px;overflow:hidden;">';
-            html += '<div style="height:100%;width:'+(pct||0)+'%;background:'+bg+';border-radius:4px;"></div></div>';
-            html += '</div>';
-        });
-    } else {
-        html += '<p style="color:#aeaeb2;font-size:.82rem;">No Fact Fluency data. Visit the Fact Fluency tab to load data.</p>';
-    }
-    html += '</div></div>';
 
     html += '</div>'; // end left column
 
