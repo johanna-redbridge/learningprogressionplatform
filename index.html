@@ -8726,6 +8726,11 @@ function drawMapLineGraph(canvas, pts, lineColor, goalSegs, opts) {
             if (g.value !== null) { minS = Math.min(minS, g.value); maxS = Math.max(maxS, g.value); }
         });
     }
+    if (opts.growthGoalSegs && opts.growthGoalSegs.length) {
+        opts.growthGoalSegs.forEach(function(g) {
+            if (g.value !== null) { minS = Math.min(minS, g.value); maxS = Math.max(maxS, g.value); }
+        });
+    }
     var rng = maxS - minS || 10;
     var yMin = minS - rng * 0.2, yMax = maxS + rng * 0.2;
 
@@ -8777,6 +8782,26 @@ function drawMapLineGraph(canvas, pts, lineColor, goalSegs, opts) {
             ctx.setLineDash([]);
             ctx.fillStyle = '#3b82f6'; ctx.font = 'bold 8px -apple-system,sans-serif'; ctx.textAlign = 'left';
             ctx.fillText('GLE', x2 + 3, gy + 3);
+            ctx.restore();
+        });
+    }
+
+    // +1.0 growth goal lines (green dashed)
+    if (opts.growthGoalSegs && opts.growthGoalSegs.length) {
+        var _ggStepW = n > 1 ? plotW / (n - 1) : plotW;
+        opts.growthGoalSegs.forEach(function(g) {
+            if (g.value === null) return;
+            var gy = yOf(g.value);
+            var x1 = xOf(g.from) - _ggStepW * 0.3;
+            var x2 = xOf(g.to)   + _ggStepW * 0.3;
+            x1 = Math.max(padL, x1); x2 = Math.min(padL + plotW, x2);
+            ctx.save();
+            ctx.strokeStyle = '#86efac'; ctx.lineWidth = 1.5;
+            ctx.setLineDash([5, 3]);
+            ctx.beginPath(); ctx.moveTo(x1, gy); ctx.lineTo(x2, gy); ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = '#4ade80'; ctx.font = 'bold 8px -apple-system,sans-serif'; ctx.textAlign = 'left';
+            ctx.fillText('+1.0', x2 + 3, gy + 3);
             ctx.restore();
         });
     }
@@ -9483,12 +9508,31 @@ function renderCompStudentOverview() {
             .map(function(b) { return { label: b.label, s: b.s - _cFirst, e: b.e - _cFirst }; });
         var _cSlotRange = { first: 0, last: _cN - 1 };
 
+        // Build EOY GLE goal segments and +1.0 growth goal segments (indices relative to slice)
+        var _benchGoalSegs = [], _benchGrowthSegs = [];
+        if (longRec) {
+            BENCH_LONG_YEARS.forEach(function(y, yi) {
+                var d = longRec.years[y.key];
+                if (!d) return;
+                var boyIdx = yi * 3 - _cFirst;     // BOY slot in slice
+                var eoyIdx = yi * 3 + 2 - _cFirst; // EOY slot in slice
+                if (boyIdx < 0 || eoyIdx >= _cN) return;
+                if (d.goal !== null && d.goal !== undefined) {
+                    _benchGoalSegs.push({ from: Math.max(0, boyIdx), to: Math.min(_cN - 1, eoyIdx), value: d.goal });
+                }
+                if (d.boy !== null && d.boy !== undefined) {
+                    _benchGrowthSegs.push({ from: Math.max(0, boyIdx), to: Math.min(_cN - 1, eoyIdx), value: Math.round((d.boy + 1.0) * 10) / 10 });
+                }
+            });
+        }
+
         // Draw benchmark
         var benchCanvas = document.getElementById('comp-stu-bench-canvas');
         if (benchCanvas) {
             var _bSlice = _benchAllPts.slice(_cFirst, _cLast + 1);
-            drawMapLineGraph(benchCanvas, _bSlice, '#00E3FF', null, {
-                padL: 44, padR: 16, fpYearBands: _cBands, slotRange: _cSlotRange
+            drawMapLineGraph(benchCanvas, _bSlice, '#00E3FF', _benchGoalSegs.length ? _benchGoalSegs : null, {
+                padL: 44, padR: 16, fpYearBands: _cBands, slotRange: _cSlotRange,
+                growthGoalSegs: _benchGrowthSegs.length ? _benchGrowthSegs : null
             });
         }
 
