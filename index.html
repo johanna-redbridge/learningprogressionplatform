@@ -9775,7 +9775,8 @@ function parsePromoCsv(text) {
         var name = (r[1]||'').trim(); if (!name) continue;
         out.push({ id:(r[0]||'').trim(), name:name, gender:(r[2]||'').trim(), ethnicity:(r[3]||'').trim(),
             boyAL:parseInt(r[4])||null, midAttempted:pb(r[5]), midSuccess:pb(r[6]),
-            moyAL:parseInt(r[7])||null, eoyAttempted:pb(r[8]), eoySuccess:pb(r[9]) });
+            moyAL:parseInt(r[7])||null, eoyAttempted:pb(r[8]), eoySuccess:pb(r[9]),
+            eoyAL:parseInt(r[10])||null });
     }
     return out;
 }
@@ -10468,8 +10469,8 @@ function _drawPromoStuChart(canvas, sy) {
     sy.forEach(function(y){
         if(y.r.boyAL) pts.push({lbl:y.label+' BOY',al:y.r.boyAL,att:false,suc:false,isBoy:true});
         if(y.r.moyAL) pts.push({lbl:y.label+' MOY',al:y.r.moyAL,att:y.r.midAttempted,suc:y.r.midSuccess,isBoy:false});
-        var _eAL2=y.r.moyAL||y.r.boyAL;
-        if(_eAL2&&y.r.eoyAttempted===true) pts.push({lbl:y.label+' EOY',al:_eAL2,att:true,suc:y.r.eoySuccess,isBoy:false});
+        var _eAL2=y.r.eoyAL||(y.r.moyAL||y.r.boyAL);
+        if(_eAL2&&(y.r.eoyAL||y.r.eoyAttempted===true)) pts.push({lbl:y.label+' EOY',al:_eAL2,att:y.r.eoyAttempted===true,suc:y.r.eoySuccess,isBoy:false});
     });
     if(!pts.length) return;
     var n=pts.length;
@@ -10637,9 +10638,8 @@ function _renderPromoXrefStudent() {
     promoYears.forEach(function(y){
         if (y.r.boyAL) alPts.push({lbl:y.label+' BOY', al:y.r.boyAL, att:false, suc:false});
         if (y.r.moyAL) alPts.push({lbl:y.label+' MOY', al:y.r.moyAL, att:y.r.midAttempted, suc:y.r.midSuccess});
-        // EOY: show if there was an EOY attempt; AL level is same as MOY (before promotion)
-        var _eAL = y.r.moyAL || y.r.boyAL;
-        if (_eAL && y.r.eoyAttempted === true) alPts.push({lbl:y.label+' EOY', al:_eAL, att:true, suc:y.r.eoySuccess});
+        var _eAL = y.r.eoyAL || (y.r.moyAL || y.r.boyAL);
+        if (_eAL && (y.r.eoyAL || y.r.eoyAttempted === true)) alPts.push({lbl:y.label+' EOY', al:_eAL, att:y.r.eoyAttempted===true, suc:y.r.eoySuccess});
     });
 
     // --- F&P data ---
@@ -10777,7 +10777,7 @@ function _renderPromoXrefStudent() {
         var _alRight = '';
         if (promoYears.length) {
             var _ly = promoYears[promoYears.length - 1].r;
-            var _boy = _ly.boyAL, _eoy = (_ly.eoySuccess === true) ? Math.min((_ly.moyAL || _boy) + 1, 4) : (_ly.moyAL || _boy);
+            var _boy = _ly.boyAL, _eoy = _ly.eoyAL || ((_ly.eoySuccess === true) ? Math.min((_ly.moyAL || _boy) + 1, 4) : (_ly.moyAL || _boy));
             var _alParts = [];
             if (_boy) _alParts.push('BOY: AL' + _boy);
             if (_eoy) _alParts.push('EOY: AL' + _eoy);
