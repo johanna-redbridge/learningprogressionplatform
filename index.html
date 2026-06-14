@@ -8454,16 +8454,17 @@ function renderReadingStudentOverview() {
         }
         var periods = [{key:'boy',label:'BOY'},{key:'moy',label:'MOY'},{key:'eoy',label:'EOY'}];
         var gleGoal = fpRec.gle ? gleTargetLevel(fpRec.gle) : '';
-        var allPeriods = periods.concat(gleGoal ? [{key:'_goal',label:'Goal'}] : []);
+        var growthGoal = fpRec.boy ? fpTargetLevel(fpRec.boy) : '';
+        var allPeriods = periods.concat(gleGoal ? [{key:'_glegoal',label:'GLE Goal'}] : []).concat(growthGoal ? [{key:'_growth',label:'+1.0 Growth'}] : []);
         html += '<div style="display:flex;gap:0;justify-content:space-around;align-items:flex-start;">';
         allPeriods.forEach(function(p) {
-            var lv = p.key === '_goal' ? gleGoal : fpRec[p.key];
+            var lv = p.key === '_glegoal' ? gleGoal : p.key === '_growth' ? growthGoal : fpRec[p.key];
             var pct = fpPct(lv);
-            var col = lv ? (p.key === '_goal' ? '#5c5b5a' : pctColor(pct)) : '#e0e0e0';
+            var col = lv ? (p.key === '_glegoal' ? '#3b82f6' : p.key === '_growth' ? '#4ade80' : pctColor(pct)) : '#e0e0e0';
             html += '<div style="text-align:center;flex:1;">'
                 + '<div style="font-size:.65rem;font-weight:700;color:#86868b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">'+p.label+'</div>'
                 + '<div style="font-size:2.2rem;font-weight:800;color:'+(lv?col:'#c7c7cc')+';line-height:1;">'+((lv||'—').toUpperCase())+'</div>'
-                + (p.key !== '_goal' && fpRec['note'+p.label[0]] ? '<div style="font-size:.6rem;color:#86868b;margin-top:4px;">'+fpRec['note'+p.label[0]]+'</div>' : '')
+                + (p.key !== '_glegoal' && p.key !== '_growth' && fpRec['note'+p.label[0]] ? '<div style="font-size:.6rem;color:#86868b;margin-top:4px;">'+fpRec['note'+p.label[0]]+'</div>' : '')
                 + '</div>';
         });
         html += '</div>';
@@ -8487,7 +8488,7 @@ function renderReadingStudentOverview() {
     html += '<div style="display:flex;gap:1.5rem;flex-wrap:wrap;align-items:flex-start;">';
     var lxPerf = lexiaPerfData ? lexiaPerfData.find(function(s){ return xrefNorm(s.name)===norm; }) : null;
     var lxProg = lexiaProgData ? lexiaProgData.find(function(s){ return xrefNorm(s.name)===norm; }) : null;
-    html += '<div style="flex:1;min-width:260px;background:#fff;border-radius:16px;box-shadow:0 1px 6px rgba(0,0,0,.07);overflow:hidden;">';
+    html += '<div style="flex:1;min-width:260px;background:#fff;border-radius:16px;box-shadow:0 1px 6px rgba(0,0,0,.07);overflow:hidden;display:flex;flex-direction:column;">';
     html += '<div style="background:#5c5b5a;color:#fff;padding:0.7rem 1.25rem;font-weight:700;font-size:.88rem;">Lexia</div>';
     html += '<div style="padding:1rem 1.25rem;">';
     if (lxPerf || lxProg) {
@@ -8534,7 +8535,27 @@ function renderReadingStudentOverview() {
     }
     html += '</div></div>';
 
-    html += '</div>'; // flex row (Lexia)
+    // MAP ELA graph (right of Lexia, aligned with F&P growth graph)
+    var _mapElaPts = [];
+    if (readOvMapRec && readOvMapRec.elaScores && mapData && mapData.elaPeriods) {
+        readOvMapRec.elaScores.forEach(function(sc, i) {
+            var s = parseFloat(sc); if (isNaN(s) || !sc || sc === '---') return;
+            var period = mapData.elaPeriods[i] || ('P'+(i+1));
+            var pct = parseFloat((readOvMapRec.elaPcts||[])[i]); if (isNaN(pct)) pct = null;
+            _mapElaPts.push({ period: period, score: s, pct: pct });
+        });
+    }
+    html += '<div style="flex:1;min-width:0;background:#fff;border-radius:16px;box-shadow:0 1px 6px rgba(0,0,0,.07);overflow:hidden;">';
+    html += '<div style="background:#5c5b5a;color:#fff;padding:0.7rem 1.25rem;font-weight:700;font-size:.88rem;">MAP ELA</div>';
+    html += '<div style="padding:1rem 1.25rem;">';
+    if (_mapElaPts.length) {
+        html += '<canvas id="stu-ov-mapela-canvas" width="600" height="200" style="width:100%;height:200px;border-radius:8px;display:block;"></canvas>';
+    } else {
+        html += '<p style="color:#aeaeb2;font-size:.82rem;">No MAP ELA data. Visit the MAP tab to load data.</p>';
+    }
+    html += '</div></div>';
+
+    html += '</div>'; // flex row (Lexia + MAP ELA)
 
     // ── 3. CORE Word Knowledge ──
     var coreRec = null, coreALKey = null;
@@ -8612,6 +8633,12 @@ function renderReadingStudentOverview() {
             yearGoals: fpLong.yearGoals || null,
             gleGoalCurrentYear: readOvTierRec && readOvTierRec.gleGoal ? readOvTierRec.gleGoal : null
         });
+    }
+
+    // ── Draw MAP ELA canvas ──
+    if (_mapElaPts && _mapElaPts.length) {
+        var _meCanvas = document.getElementById('stu-ov-mapela-canvas');
+        if (_meCanvas) drawMapLineGraph(_meCanvas, _mapElaPts, '#FFC8BB');
     }
 
 }
@@ -8717,7 +8744,12 @@ function drawMapLineGraph(canvas, pts, lineColor, goalSegs, opts) {
         }
     });
 
-    // X axis labels — BOY/MOY/EOY bold on top, year lighter below
+    // X axis labels — BOY/MOY/EOY bold on top, YY/YY school year lighter below
+    function _shortYr(raw) {
+        var m = raw.match(/(\d{2,4})[\/\-](\d{2,4})/);
+        if (!m) return raw;
+        return m[1].slice(-2) + '/' + m[2].slice(-2);
+    }
     ctx.strokeStyle = '#d1d1d6'; ctx.lineWidth = 1;
     pts.forEach(function(p, i) {
         var x = xOf(i);
@@ -8732,10 +8764,10 @@ function drawMapLineGraph(canvas, pts, lineColor, goalSegs, opts) {
             var _SEASONS = /^(BOY|MOY|EOY)$/i;
             if (parts.length >= 2 && _SEASONS.test(parts[parts.length - 1])) {
                 season = parts[parts.length - 1].toUpperCase();
-                yr = parts.slice(0, parts.length - 1).join(' ');
+                yr = _shortYr(parts.slice(0, parts.length - 1).join(' '));
             } else if (parts.length >= 2 && _SEASONS.test(parts[0])) {
                 season = parts[0].toUpperCase();
-                yr = parts.slice(1).join(' ');
+                yr = _shortYr(parts.slice(1).join(' '));
             } else {
                 season = raw; yr = '';
             }
@@ -13781,7 +13813,7 @@ function drawFpGrowthGraph(canvas, points, gle, opts) {
         ctx.fillText(band.label, (x1 + x2) / 2, padT + 10);
     });
 
-    // Grid lines + Y labels
+    // Grid lines + Y labels — whole numbers only
     var allLvls = Object.keys(fpLevelScoreMap).sort(function(a,b){ return fpLevelScoreMap[a]-fpLevelScoreMap[b]; });
     allLvls.forEach(function(lv) {
         var s = fpLevelScoreMap[lv];
@@ -13789,9 +13821,10 @@ function drawFpGrowthGraph(canvas, points, gle, opts) {
         var y = yOf(s);
         ctx.strokeStyle = '#ebebf0'; ctx.lineWidth = 1; ctx.setLineDash([]);
         ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + plotW, y); ctx.stroke();
-        ctx.fillStyle = '#8e8e93'; ctx.font = '11px -apple-system,sans-serif'; ctx.textAlign = 'right';
-        var _lvNum = fpLevelScoreMap[lv];
-        ctx.fillText(_lvNum % 1 === 0 ? _lvNum : _lvNum.toFixed(1), padL - 6, y + 4);
+        if (s % 1 === 0) {
+            ctx.fillStyle = '#8e8e93'; ctx.font = '11px -apple-system,sans-serif'; ctx.textAlign = 'right';
+            ctx.fillText(s, padL - 6, y + 4);
+        }
     });
 
     // Per-year GLE goal lines (blue dashed) and +1.0 growth goal lines (light green dashed)
@@ -13839,13 +13872,17 @@ function drawFpGrowthGraph(canvas, points, gle, opts) {
         ctx.fillText(p.level.toUpperCase(), x, y - 11);
     });
 
-    // X axis labels — BOY/MOY/EOY bold on top, year lighter below
+    // X axis labels — BOY/MOY/EOY bold on top, YY/YY school year lighter below
+    var _fpBandYr = [];
+    FP_YEAR_BANDS.forEach(function(band) {
+        for (var ii = band.s; ii <= band.e; ii++) _fpBandYr[ii] = band.label.replace('-', '/');
+    });
     ctx.strokeStyle = '#d1d1d6'; ctx.lineWidth = 1;
     points.forEach(function(p, i) {
         var x = xOf(i);
         ctx.beginPath(); ctx.moveTo(x, padT + plotH); ctx.lineTo(x, padT + plotH + 4); ctx.stroke();
-        var parts = (p.label || '').split(' ');
-        var season = parts[0] || '', yr = parts[1] || '';
+        var season = (p.season || '').toUpperCase();
+        var yr = _fpBandYr[i] || '';
         ctx.fillStyle = '#64748b'; ctx.font = 'bold 9px -apple-system,sans-serif'; ctx.textAlign = 'center';
         ctx.fillText(season, x, padT + plotH + 16);
         ctx.fillStyle = '#94a3b8'; ctx.font = '8px -apple-system,sans-serif';
