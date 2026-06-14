@@ -9401,28 +9401,93 @@ function renderCompStudentOverview() {
     el.innerHTML = html;
 
 
-    // ── Draw benchmark longitudinal canvas ──
+    // ── Draw computation graphs — year-band shading + shared x-axis alignment ──
+    // Slot layout: BENCH_LONG_YEARS × 3 seasons = 15 slots (BOY=0, MOY=1, EOY=2 per year)
+    var _compYearBands = BENCH_LONG_YEARS.map(function(y, yi) {
+        return { label: y.label, s: yi * 3, e: yi * 3 + 2 };
+    });
+    var _compTotalSlots = BENCH_LONG_YEARS.length * 3;
+
+    // Build null-padded bench array
+    var _benchAllPts = [];
+    for (var _bci = 0; _bci < _compTotalSlots; _bci++) _benchAllPts.push({ score: null, pct: null, period: '' });
     if (longRec) {
-        var benchCanvas = document.getElementById('comp-stu-bench-canvas');
-        if (benchCanvas) {
-            var benchPts = [];
-            BENCH_LONG_YEARS.forEach(function(y) {
-                var d = longRec.years[y.key];
-                if (!d) return;
-                ['boy','moy','eoy'].forEach(function(k) {
-                    if (d[k] !== null) benchPts.push({ period: y.label+' '+k.toUpperCase(), score: d[k], pct: null });
-                });
+        BENCH_LONG_YEARS.forEach(function(y, yi) {
+            var d = longRec.years[y.key];
+            if (!d) return;
+            [['boy',0],['moy',1],['eoy',2]].forEach(function(sk) {
+                if (d[sk[0]] !== null && d[sk[0]] !== undefined) {
+                    _benchAllPts[yi * 3 + sk[1]] = { score: d[sk[0]], pct: null, period: y.label + ' ' + sk[0].toUpperCase() };
+                }
             });
-            if (benchPts.length) drawMapLineGraph(benchCanvas, benchPts, '#00E3FF');
-        }
+        });
     }
 
-    // ── Draw MAP Math canvas ──
+    // Map a MAP period string (e.g. "BOY 2022") to a comp slot index
+    function _mapPeriodToCompSlot(period) {
+        var upper = (period || '').toUpperCase();
+        var m = (period || '').match(/(\d{4})/);
+        if (!m) return null;
+        var cy = parseInt(m[1]);
+        var season = upper.indexOf('BOY') >= 0 ? 'boy' : upper.indexOf('EOY') >= 0 ? 'eoy' : upper.indexOf('MOY') >= 0 ? 'moy' : null;
+        if (!season) return null;
+        var yr1 = (season === 'boy') ? cy : cy - 1;
+        var yr2 = (yr1 + 1) % 100;
+        var yearKey = yr1 + '-' + (yr2 < 10 ? '0' + yr2 : '' + yr2);
+        for (var ii = 0; ii < BENCH_LONG_YEARS.length; ii++) {
+            if (BENCH_LONG_YEARS[ii].key === yearKey) {
+                return ii * 3 + (season === 'boy' ? 0 : season === 'moy' ? 1 : 2);
+            }
+        }
+        return null;
+    }
+
+    // Build null-padded MAP math array
+    var _mapMathAllPts = [];
+    for (var _mci = 0; _mci < _compTotalSlots; _mci++) _mapMathAllPts.push({ score: null, pct: null, period: '' });
     if (mapRec) {
-        var mathPeriods2 = (mapData && mapData.mathPeriods) ? mapData.mathPeriods : [];
-        var validMath2 = mapRec.mathScores.map(function(s,i){ return { period: mathPeriods2[i]||'P'+(i+1), score: parseFloat(s)||null, pct: parseFloat(mapRec.mathPcts[i])||null }; }).filter(function(x){ return x.score!==null; });
+        var _mathPdsC = (mapData && mapData.mathPeriods) ? mapData.mathPeriods : [];
+        mapRec.mathScores.forEach(function(s, i) {
+            var sc = parseFloat(s) || null;
+            if (sc === null) return;
+            var period = _mathPdsC[i] || '';
+            var si = _mapPeriodToCompSlot(period);
+            if (si !== null && si >= 0 && si < _compTotalSlots) {
+                _mapMathAllPts[si] = { score: sc, pct: parseFloat((mapRec.mathPcts || [])[i]) || null, period: period };
+            }
+        });
+    }
+
+    // Compute shared slot range across both datasets
+    var _cFirst = _compTotalSlots - 1, _cLast = 0, _cHasAny = false;
+    _benchAllPts.forEach(function(p, i) { if (p.score !== null) { _cFirst = Math.min(_cFirst, i); _cLast = Math.max(_cLast, i); _cHasAny = true; } });
+    _mapMathAllPts.forEach(function(p, i) { if (p.score !== null) { _cFirst = Math.min(_cFirst, i); _cLast = Math.max(_cLast, i); _cHasAny = true; } });
+
+    if (_cHasAny) {
+        var _cN = _cLast - _cFirst + 1;
+        // Adjust band indices relative to slice start
+        var _cBands = _compYearBands
+            .filter(function(b) { return b.e >= _cFirst && b.s <= _cLast; })
+            .map(function(b) { return { label: b.label, s: b.s - _cFirst, e: b.e - _cFirst }; });
+        var _cSlotRange = { first: 0, last: _cN - 1 };
+
+        // Draw benchmark
+        var benchCanvas = document.getElementById('comp-stu-bench-canvas');
+        if (benchCanvas) {
+            var _bSlice = _benchAllPts.slice(_cFirst, _cLast + 1);
+            drawMapLineGraph(benchCanvas, _bSlice, '#00E3FF', null, {
+                padL: 44, padR: 16, fpYearBands: _cBands, slotRange: _cSlotRange
+            });
+        }
+
+        // Draw MAP Math
         var mapCanvas2 = document.getElementById('comp-stu-map-canvas');
-        if (mapCanvas2 && validMath2.length) drawMapLineGraph(mapCanvas2, validMath2, '#00E3FF');
+        if (mapCanvas2) {
+            var _mSlice = _mapMathAllPts.slice(_cFirst, _cLast + 1);
+            drawMapLineGraph(mapCanvas2, _mSlice, '#00E3FF', null, {
+                padL: 44, padR: 16, fpYearBands: _cBands, slotRange: _cSlotRange
+            });
+        }
     }
 }
 // ─────────────────────────────────────────────────────────────────────────────
