@@ -9371,50 +9371,47 @@ function renderCompStudentOverview() {
 
     html += '</div>'; // end left column
 
-    // ── RIGHT COLUMN: Benchmark Growth + MAP Math stacked ──
-    html += '<div style="flex:1;min-width:260px;display:flex;flex-direction:column;gap:1.5rem;">';
+    // Right spacer — keeps FF/STMath at ~50% width matching the Benchmark drilldown panel
+    html += '<div style="flex:1;min-width:260px;"></div>';
 
-    // MAP Math
-    var mapRec = (mapData && mapData.students) ? mapData.students.find(function(s){ return xrefNorm(s.name)===norm; }) : null;
-    html += '<div id="comp-map-card" style="background:#fff;border-radius:16px;box-shadow:0 1px 6px rgba(0,0,0,.07);overflow:hidden;flex:1;display:flex;flex-direction:column;">';
+    html += '</div>'; // end 2-column layout
+
+    // ── MAP Math: full-width card, graph in right flex:1 panel — aligns exactly with Benchmark graph ──
+    var mapRec = compOvMapRec;
+    var _mathPdsAll = (mapData && mapData.mathPeriods) ? mapData.mathPeriods : [];
+    var _validMathAll = mapRec ? mapRec.mathScores.map(function(s,i){ return { period: _mathPdsAll[i]||'', score: parseFloat(s)||null, pct: parseFloat((mapRec.mathPcts||[])[i])||null }; }).filter(function(x){ return x.score!==null; }) : [];
+    html += '<div id="comp-map-card" style="background:#fff;border-radius:16px;box-shadow:0 1px 6px rgba(0,0,0,.07);overflow:hidden;">';
     html += '<div style="background:#5c5b5a;color:#fff;padding:0.7rem 1.25rem;font-weight:700;font-size:.88rem;">MAP Math</div>';
-    html += '<div style="padding:1rem 1.25rem;flex:1;display:flex;flex-direction:column;">';
-    if (mapRec) {
-        var mathPeriods = (mapData && mapData.mathPeriods) ? mapData.mathPeriods : [];
-        var validMath = mapRec.mathScores.map(function(s,i){ return { period: mathPeriods[i]||'P'+(i+1), score: parseFloat(s)||null, pct: parseFloat(mapRec.mathPcts[i])||null }; }).filter(function(x){ return x.score!==null; });
-        if (validMath.length) {
-            html += '<canvas id="comp-stu-map-canvas" width="500" height="180" style="width:100%;flex:1;min-height:120px;border-radius:8px;display:block;"></canvas>';
-        } else {
-            html += '<p style="color:#aeaeb2;font-size:.82rem;">No MAP Math scores for this student.</p>';
+    html += '<div style="display:flex;gap:0;align-items:flex-start;">';
+    // Left panel — summary info, same flex:1 as Benchmark drilldown
+    html += '<div style="flex:1;min-width:0;padding:0.5rem 0.75rem;border-right:1px solid #f0f0f0;">';
+    if (_validMathAll.length) {
+        var _mlast = _validMathAll[_validMathAll.length - 1];
+        html += '<div style="font-size:2rem;font-weight:800;color:#1d1d1f;line-height:1;">' + _mlast.score + '</div>';
+        if (_mlast.pct !== null) html += '<div style="font-size:.7rem;color:#86868b;margin-top:3px;">' + _mlast.pct + '%ile</div>';
+        html += '<div style="font-size:.6rem;color:#aeaeb2;margin-top:2px;">' + (_mlast.period || '') + '</div>';
+        if (_validMathAll.length > 1) {
+            var _mfirst = _validMathAll[0];
+            var _mgrow = _mlast.score - _mfirst.score;
+            html += '<div style="margin-top:0.6rem;font-size:.68rem;font-weight:600;color:' + (_mgrow >= 0 ? '#34c759' : '#ff3b30') + ';">' + (_mgrow >= 0 ? '+' : '') + _mgrow + ' since ' + (_mfirst.period || 'start') + '</div>';
         }
     } else {
-        html += '<p style="color:#aeaeb2;font-size:.82rem;">No MAP Math data. Visit the MAP Math tab to load data.</p>';
+        html += '<p style="color:#aeaeb2;font-size:.78rem;">' + (mapRec ? 'No MAP Math scores.' : 'No MAP Math data.') + '</p>';
     }
-    html += '</div></div>';
+    html += '</div>';
+    // Right panel — graph, same flex:1 as Benchmark graph panel → pixel-perfect width match
+    html += '<div style="flex:1;min-width:0;padding:0.5rem 0.75rem;">';
+    if (_validMathAll.length) {
+        html += '<canvas id="comp-stu-map-canvas" width="600" height="360" style="width:100%;height:360px;border-radius:8px;display:block;"></canvas>';
+    } else {
+        html += '<p style="color:#aeaeb2;font-size:.78rem;">No data to display.</p>';
+    }
+    html += '</div>';
+    html += '</div></div>'; // end panels + MAP Math card
 
-    html += '</div>'; // end right column
-    html += '</div>'; // end 2-column layout
     html += '</div>'; // main body
 
     el.innerHTML = html;
-
-    // ── Equalize Fact Fluency and MAP Math card heights ──
-    var _ffCardEl = document.getElementById('comp-ff-card');
-    var _mapCardEl = document.getElementById('comp-map-card');
-    if (_ffCardEl && _mapCardEl) {
-        var _ffH = _ffCardEl.offsetHeight;
-        var _mapH = _mapCardEl.offsetHeight;
-        var _targetH = Math.max(_ffH, _mapH);
-        _ffCardEl.style.minHeight = _targetH + 'px';
-        _mapCardEl.style.height = _targetH + 'px';
-        var _mc = document.getElementById('comp-stu-map-canvas');
-        if (_mc) {
-            var _mapHdrH = (_mapCardEl.querySelector('div') || {}).offsetHeight || 38;
-            var _canvasH = Math.max(80, _targetH - _mapHdrH - 32);
-            _mc.setAttribute('height', _canvasH);
-            _mc.style.height = _canvasH + 'px';
-        }
-    }
 
     // ── Draw computation graphs — year-band shading + shared x-axis alignment ──
     // Slot layout: BENCH_LONG_YEARS × 3 seasons = 15 slots (BOY=0, MOY=1, EOY=2 per year)
