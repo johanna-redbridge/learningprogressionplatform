@@ -9248,14 +9248,9 @@ function _buildWbCatsHtml(data) {
         return '#ff6961';
     }
     function growthColor(g) {
-        if (g==null) return '#e5e5e5';
-        if (g > 0.9) return '#34c759'; if (g > 0.4) return '#a8df9e';
-        if (g > 0) return '#d4f5dc';
-        if (g === 0) return '#e5e5e5';
-        return '#ff6961';
-    }
-    function textFor(bg) {
-        return (bg==='#34c759'||bg==='#ff6961') ? '#fff' : '#1d1d1f';
+        if (g==null||g===0) return '#86868b';
+        if (g > 0) return '#1a7f3c';
+        return '#c0392b';
     }
     var boyD = data.fall, moyD = data.winter;
     var hasBoy = boyD && boyD.scores && boyD.scores.some(function(x){return x!=null;});
@@ -9282,16 +9277,16 @@ function _buildWbCatsHtml(data) {
     if (hasBoy) {
         html += '<tr><td style="'+LBL+'">BOY</td>';
         data.cats.forEach(function(cat,i){
-            var v=boyD.scores[i], bg=catColor(v), tc=(v!=null&&v>0&&v<3)?'#fff':'#1d1d1f';
-            html += '<td style="'+CELL+'background:'+bg+';color:'+tc+';">'+(v!=null?v.toFixed(1):'—')+'</td>';
+            var v=boyD.scores[i];
+            html += '<td style="'+CELL+'color:#1d1d1f;">'+(v!=null?v.toFixed(1):'—')+'</td>';
         });
         html += '</tr>';
     }
     if (hasMoy) {
         html += '<tr><td style="'+LBL+'">MOY</td>';
         data.cats.forEach(function(cat,i){
-            var v=moyD.scores[i], bg=catColor(v), tc=(v!=null&&v>0&&v<3)?'#fff':'#1d1d1f';
-            html += '<td style="'+CELL+'background:'+bg+';color:'+tc+';">'+(v!=null?v.toFixed(1):'—')+'</td>';
+            var v=moyD.scores[i];
+            html += '<td style="'+CELL+'color:#1d1d1f;">'+(v!=null?v.toFixed(1):'—')+'</td>';
         });
         html += '</tr>';
     }
@@ -9300,9 +9295,9 @@ function _buildWbCatsHtml(data) {
         data.cats.forEach(function(cat,i){
             var b=boyD.scores[i], m=moyD.scores[i];
             var g=(b!=null&&m!=null)?Math.round((m-b)*10)/10:null;
-            var bg=growthColor(g), tc=textFor(bg);
+            var tc=growthColor(g);
             var lbl=g!=null?(g>0?'+':'')+g.toFixed(1):'—';
-            html += '<td style="'+CELL+'background:'+bg+';color:'+tc+';border-top:2px solid #1d1d1f;">'+lbl+'</td>';
+            html += '<td style="'+CELL+'color:'+tc+';border-top:2px solid #1d1d1f;">'+lbl+'</td>';
         });
         html += '</tr>';
     }
