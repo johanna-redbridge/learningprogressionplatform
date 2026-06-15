@@ -8502,21 +8502,17 @@ function renderReadingStudentOverview() {
             return idx < 0 ? 0 : Math.round((idx+1)/FP_LEVELS.length*100);
         }
         var periods = [{key:'boy',label:'BOY'},{key:'moy',label:'MOY'},{key:'eoy',label:'EOY'}];
-        var gleGoal = fpRec.gle ? gleTargetLevel(fpRec.gle) : '';
-        var growthGoal = fpRec.boy ? fpTargetLevel(fpRec.boy) : '';
-        var allPeriods = periods.concat(gleGoal ? [{key:'_glegoal',label:'GLE Goal'}] : []).concat(growthGoal ? [{key:'_growth',label:'+1.0 Growth'}] : []);
         html += '<div style="display:flex;gap:0;justify-content:space-around;align-items:flex-start;">';
-        allPeriods.forEach(function(p) {
-            var lv = p.key === '_glegoal' ? gleGoal : p.key === '_growth' ? growthGoal : fpRec[p.key];
+        periods.forEach(function(p) {
+            var lv = fpRec[p.key];
             var pct = fpPct(lv);
             html += '<div style="text-align:center;flex:1;">'
                 + '<div style="font-size:.65rem;font-weight:700;color:#86868b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">'+p.label+'</div>'
                 + '<div style="font-size:2.2rem;font-weight:800;color:'+(lv?'#1d1d1f':'#c7c7cc')+';line-height:1;">'+((lv||'—').toUpperCase())+'</div>'
-                + (p.key !== '_glegoal' && p.key !== '_growth' && fpRec['note'+p.label[0]] ? '<div style="font-size:.6rem;color:#86868b;margin-top:4px;">'+fpRec['note'+p.label[0]]+'</div>' : '')
                 + '</div>';
         });
         html += '</div>';
-        if (fpRec.noteE) html += '<div style="margin-top:0.75rem;font-size:.72rem;color:#5c5b5a;background:#f5f5f7;border-radius:6px;padding:0.4rem 0.6rem;">'+fpRec.noteE+'</div>';
+        if (fpRec.noteM) html += '<div style="margin-top:0.75rem;font-size:.72rem;color:#5c5b5a;background:#f5f5f7;border-radius:6px;padding:0.4rem 0.6rem;">'+fpRec.noteM+'</div>';
     } else {
         html += '<p style="color:#aeaeb2;font-size:.78rem;">No current F&P data.</p>';
     }
@@ -14193,16 +14189,27 @@ function drawFpGrowthGraph(canvas, points, gle, opts) {
         ctx.fillText(yr, x, padT + plotH + 28);
     });
 
-    // Legend for goal lines
-    if (hasAnyGoals) {
-        var lx = padL + 2, ly = padT + plotH + 44;
-        ctx.save(); ctx.setLineDash([5, 3]); ctx.lineWidth = 1.5;
-        ctx.strokeStyle = '#3b82f6'; ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + 18, ly); ctx.stroke();
-        ctx.setLineDash([]); ctx.fillStyle = '#3b82f6'; ctx.font = '9px -apple-system,sans-serif'; ctx.textAlign = 'left';
-        ctx.fillText('GLE Goal', lx + 22, ly + 3);
-        lx += 78;
-        ctx.setLineDash([5, 3]); ctx.strokeStyle = '#86efac'; ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + 18, ly); ctx.stroke();
-        ctx.setLineDash([]); ctx.fillStyle = '#4ade80'; ctx.fillText('+1.0 Growth', lx + 22, ly + 3);
+    // Legend for goal lines — top-right corner box
+    var _fpLgItems2=[];
+    if(gleSegs.some(function(g){return g.value!==null;})) _fpLgItems2.push({color:'#3b82f6',label:'EOY GLE Goal'});
+    if(growthSegs.some(function(g){return g.value!==null;})) _fpLgItems2.push({color:'#86efac',label:'+1.0 Growth Goal'});
+    if(_fpLgItems2.length){
+        ctx.save();ctx.font='8px -apple-system,sans-serif';
+        var _llLen=18,_lgGap=4,_lgItemGap=10,_lgPad=5,_lgH=18;
+        var _lgTotalW=_lgPad,_lgLabelWs=[];
+        _fpLgItems2.forEach(function(it,i){var lw=ctx.measureText(it.label).width;_lgLabelWs.push(lw);_lgTotalW+=_llLen+_lgGap+lw+(i<_fpLgItems2.length-1?_lgItemGap:0);});
+        _lgTotalW+=_lgPad;
+        var _lgX=padL+plotW-_lgTotalW-4,_lgY=2;
+        ctx.fillStyle='rgba(255,255,255,0.92)';ctx.fillRect(_lgX,_lgY,_lgTotalW,_lgH);
+        ctx.strokeStyle='#e8e8ed';ctx.lineWidth=0.5;ctx.setLineDash([]);ctx.strokeRect(_lgX,_lgY,_lgTotalW,_lgH);
+        var _cx=_lgX+_lgPad,_midY=_lgY+_lgH/2;
+        _fpLgItems2.forEach(function(it,i){
+            ctx.strokeStyle=it.color;ctx.lineWidth=1.5;ctx.setLineDash([4,2]);
+            ctx.beginPath();ctx.moveTo(_cx,_midY);ctx.lineTo(_cx+_llLen,_midY);ctx.stroke();
+            ctx.setLineDash([]);ctx.fillStyle='#3a3a3c';ctx.font='8px -apple-system,sans-serif';ctx.textAlign='left';
+            ctx.fillText(it.label,_cx+_llLen+_lgGap,_midY+3);
+            _cx+=_llLen+_lgGap+_lgLabelWs[i]+(i<_fpLgItems2.length-1?_lgItemGap:0);
+        });
         ctx.restore();
     }
 
