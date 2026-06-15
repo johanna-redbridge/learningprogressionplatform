@@ -8664,7 +8664,7 @@ function renderReadingStudentOverview() {
         var coreOvFallT   = coreStudentTotal(coreRec, 'fall');
         var coreOvWinterT = coreStudentTotal(coreRec, 'winter');
         var coreOvSpringT = coreStudentTotal(coreRec, 'spring');
-        var coreOvKnown   = coreOvSpringT !== null ? coreOvSpringT : (coreOvWinterT !== null ? coreOvWinterT : coreOvFallT);
+        var coreOvKnown   = coreOvWinterT !== null ? coreOvWinterT : coreOvFallT; // EOY not shown yet
 
         // Layout: [period labels left] [category bars grid flex:1] [donut right]
         html += '<div style="display:flex;gap:6px;align-items:flex-start;">';
@@ -8689,7 +8689,7 @@ function renderReadingStudentOverview() {
         corePeriods.forEach(function(p, pi) {
             html += '<div style="display:flex;gap:3px;' + (pi > 0 ? 'margin-top:' + barGap + 'px;' : '') + '">';
             CORE_CATS.forEach(function(cat, ci) {
-                var pd = coreRec[p.key];
+                var pd = p.key !== 'spring' ? coreRec[p.key] : null; // EOY not shown yet
                 var raw = pd ? pd.scores[ci] : null;
                 var n = raw === null || raw === undefined ? null : (coreRawIsMastered(raw) ? cat.max : parseInt(raw,10));
                 var pct = (n !== null && !isNaN(n)) ? Math.min(100, Math.round(n/cat.max*100)) : null;
