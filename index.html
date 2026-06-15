@@ -5988,49 +5988,31 @@ function renderEarnedStudent(period, container) {
             loadClarksonData(function() { renderEarnedCredits(); });
             return;
         }
-        var clarkLookup = {};
-        clarksonData.forEach(function(row) { clarkLookup[row.credit.toLowerCase()] = row; });
+        // Iterate spreadsheet rows in exact sheet order; look up credit library details per row
+        var clarkTableRows = clarksonData.filter(function(r) { return !!r.credit; });
 
-        // Build position map: credit name → first index in spreadsheet (preserves sheet order)
-        var clarkPosMap = {};
-        clarksonData.forEach(function(row, idx) {
-            var k = row.credit.toLowerCase();
-            if (!clarkPosMap.hasOwnProperty(k)) clarkPosMap[k] = idx;
-        });
-
-        // Split credits: spreadsheet ones first (in spreadsheet order), rest after
-        var clarkSheetCredits = [], clarkOtherCredits = [];
-        tableCredits.forEach(function(c) {
-            (clarkPosMap.hasOwnProperty(c.title.toLowerCase()) ? clarkSheetCredits : clarkOtherCredits).push(c);
-        });
-        clarkSheetCredits.sort(function(a, b) {
-            return (clarkPosMap[a.title.toLowerCase()] || 0) - (clarkPosMap[b.title.toLowerCase()] || 0);
-        });
-        var clarkSortedCredits = clarkSheetCredits.concat(clarkOtherCredits);
-
-        if (clarkSortedCredits.length === 0) {
-            html += '<p style="text-align:center;color:#86868b;padding:2rem;">No credits match the selected filters.</p>';
+        if (clarkTableRows.length === 0) {
+            html += '<p style="text-align:center;color:#86868b;padding:2rem;">No credits in spreadsheet.</p>';
         } else {
             html += '<div class="progress-table-wrapper"><table><thead><tr>';
             html += _thSort('credit','Credit',false) + _thSort('subject','Subject',false) + _thSort('stage','Stage',false) + _thSort('attempted','Attempted',true) + _thSort('earned','Earned',true) + _thSort('artifact','Artifact',true);
             html += '</tr></thead><tbody>';
-            clarkSortedCredits.forEach(function(c) {
-                var sheetRow = clarkLookup[c.title.toLowerCase()] || null;
-                var _sheetAttempt = sheetRow && sheetRow.attemptDate ? sheetRow.attemptDate : '';
-                var afd = clarksonLocalAttempts[c.title.toLowerCase()] || _sheetAttempt;
-                var fd = sheetRow && sheetRow.earnedDate ? sheetRow.earnedDate : '';
-                var aKey = artifactKey(studentId, c.id);
-                var art = artifacts[aKey];
+            clarkTableRows.forEach(function(sheetRow) {
+                var c = credits.find(function(x) { return x.title.toLowerCase() === sheetRow.credit.toLowerCase(); });
+                var afd = clarksonLocalAttempts[sheetRow.credit.toLowerCase()] || sheetRow.attemptDate || '';
+                var fd = sheetRow.earnedDate || '';
+                var aKey = c ? artifactKey(studentId, c.id) : null;
+                var art = aKey ? artifacts[aKey] : null;
                 html += '<tr>';
-                html += '<td style="font-weight:500;">' + c.title + '</td>';
-                html += '<td><span class="tag ' + subjectTagClass(c.subject) + '" style="font-size:0.65rem;padding:0.1rem 0.4rem;">' + c.subject + '</span></td>';
-                html += '<td style="font-size:0.78rem;color:#555;">' + (c.stage || '') + '</td>';
+                html += '<td style="font-weight:500;">' + sheetRow.credit + '</td>';
+                html += '<td><span class="tag ' + subjectTagClass(c ? c.subject : '') + '" style="font-size:0.65rem;padding:0.1rem 0.4rem;">' + (c ? c.subject : '') + '</span></td>';
+                html += '<td style="font-size:0.78rem;color:#555;">' + (c ? c.stage || '' : '') + '</td>';
                 html += '<td style="text-align:center;">';
                 if (afd) {
-                    html += '<span class="earned-icon attempted-icon" style="cursor:pointer;" onclick="clarksonSetAttempt(' + JSON.stringify(c.title) + ')">a</span>';
+                    html += '<span class="earned-icon attempted-icon" style="cursor:pointer;" onclick="clarksonSetAttempt(' + JSON.stringify(sheetRow.credit) + ')">a</span>';
                     html += '<div style="font-size:0.65rem;color:#555;margin-top:1px;">' + afd + '</div>';
                 } else {
-                    html += '<span class="earned-icon earned-no" style="cursor:pointer;" onclick="clarksonSetAttempt(' + JSON.stringify(c.title) + ')"></span>';
+                    html += '<span class="earned-icon earned-no" style="cursor:pointer;" onclick="clarksonSetAttempt(' + JSON.stringify(sheetRow.credit) + ')"></span>';
                 }
                 html += '</td>';
                 html += '<td style="text-align:center;">';
@@ -6042,7 +6024,7 @@ function renderEarnedStudent(period, container) {
                 }
                 html += '</td>';
                 html += '<td style="text-align:center;">';
-                if (art) {
+                if (c && art) {
                     html += '<div class="artifact-preview">';
                     var isImg = art.type && art.type.startsWith('image/');
                     if (isImg && art.dataUrl) {
@@ -6058,7 +6040,7 @@ function renderEarnedStudent(period, container) {
                         html += '<span class="artifact-remove" onclick="removeArtifact(\'' + studentId + '\',\'' + c.id + '\')" title="Remove">&times;</span>';
                     }
                     html += '</div>';
-                } else {
+                } else if (c) {
                     html += '<div style="display:flex;gap:4px;align-items:center;justify-content:center;">';
                     html += '<div class="artifact-drop" ondragover="artifactDragOver(event)" ondragleave="artifactDragLeave(event)" ondrop="handleArtifactDrop(event,\'' + studentId + '\',\'' + c.id + '\')">';
                     html += '<span style="pointer-events:none;">&#128206; drop</span>';
