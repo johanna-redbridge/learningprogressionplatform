@@ -8743,7 +8743,7 @@ function renderReadingStudentOverview() {
                 padL: 50, padR: 22,
                 slotRange: { first: _sharedFirst, last: _sharedLast },
                 fpYearBands: FP_YEAR_BANDS,
-                fixedYTicks: [150, 175, 200, 225, 250, 275, 300]
+                fixedYTicks: [150, 175, 200, 225, 250]
             });
         }
     }
@@ -9794,7 +9794,7 @@ function renderCompStudentOverview() {
             var _mSlice = _mapMathAllPts.slice(_cFirst, _cLast + 1);
             drawMapLineGraph(mapCanvas2, _mSlice, '#00E3FF', null, {
                 padL: 44, padR: 16, fpYearBands: _cBands, slotRange: _cSlotRange,
-                fixedYTicks: [150, 175, 200, 225, 250, 275, 300]
+                fixedYTicks: [150, 175, 200, 225, 250]
             });
         }
     }
