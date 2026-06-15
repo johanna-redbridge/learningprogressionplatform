@@ -8845,8 +8845,6 @@ function drawMapLineGraph(canvas, pts, lineColor, goalSegs, opts) {
             ctx.setLineDash([5, 3]);
             ctx.beginPath(); ctx.moveTo(x1, gy); ctx.lineTo(x2, gy); ctx.stroke();
             ctx.setLineDash([]);
-            ctx.fillStyle = '#3b82f6'; ctx.font = 'bold 8px -apple-system,sans-serif'; ctx.textAlign = 'left';
-            ctx.fillText('GLE', x2 + 3, gy + 3);
             ctx.restore();
         });
     }
@@ -8865,10 +8863,31 @@ function drawMapLineGraph(canvas, pts, lineColor, goalSegs, opts) {
             ctx.setLineDash([5, 3]);
             ctx.beginPath(); ctx.moveTo(x1, gy); ctx.lineTo(x2, gy); ctx.stroke();
             ctx.setLineDash([]);
-            ctx.fillStyle = '#4ade80'; ctx.font = 'bold 8px -apple-system,sans-serif'; ctx.textAlign = 'left';
-            ctx.fillText('+1.0', x2 + 3, gy + 3);
             ctx.restore();
         });
+    }
+
+    // Top-right legend for goal lines
+    var _lgItems = [];
+    if (goalSegs && goalSegs.length) _lgItems.push({color:'#3b82f6', label:'EOY GLE Goal'});
+    if (opts.growthGoalSegs && opts.growthGoalSegs.length) _lgItems.push({color:'#86efac', label:'+1.0 Growth Goal'});
+    if (_lgItems.length) {
+        ctx.save();
+        ctx.font = '8px -apple-system,sans-serif';
+        var _llLen=18,_lgGap=5,_lgPad=5,_lgIH=13,_lgLW=0;
+        _lgItems.forEach(function(it){ _lgLW=Math.max(_lgLW,ctx.measureText(it.label).width); });
+        var _lgW=_llLen+_lgGap+_lgLW+_lgPad*2, _lgH=_lgItems.length*_lgIH+_lgPad*2;
+        var _lgX=padL+plotW-_lgW-4, _lgY=padT+4;
+        ctx.fillStyle='rgba(255,255,255,0.9)'; ctx.fillRect(_lgX,_lgY,_lgW,_lgH);
+        ctx.strokeStyle='#e8e8ed'; ctx.lineWidth=0.5; ctx.setLineDash([]); ctx.strokeRect(_lgX,_lgY,_lgW,_lgH);
+        _lgItems.forEach(function(it,ii){
+            var _iy=_lgY+_lgPad+ii*_lgIH+7;
+            ctx.strokeStyle=it.color; ctx.lineWidth=1.5; ctx.setLineDash([4,2]);
+            ctx.beginPath(); ctx.moveTo(_lgX+_lgPad,_iy-2); ctx.lineTo(_lgX+_lgPad+_llLen,_iy-2); ctx.stroke();
+            ctx.setLineDash([]); ctx.fillStyle='#3a3a3c'; ctx.font='8px -apple-system,sans-serif'; ctx.textAlign='left';
+            ctx.fillText(it.label,_lgX+_lgPad+_llLen+_lgGap,_iy);
+        });
+        ctx.restore();
     }
 
     // Area fill under line (skip null slots)
@@ -9616,7 +9635,7 @@ function renderCompStudentOverview() {
                 var eoyIdx = yi * 3 + 2 - _cFirst; // EOY slot in slice
                 if (boyIdx < 0 || eoyIdx >= _cN) return;
                 if (d.goal !== null && d.goal !== undefined) {
-                    _benchGoalSegs.push({ from: Math.max(0, boyIdx), to: Math.min(_cN - 1, eoyIdx), value: d.goal });
+                    _benchGoalSegs.push({ from: Math.max(0, boyIdx), to: Math.min(_cN - 1, eoyIdx), value: Math.round(d.goal) });
                 }
                 if (d.boy !== null && d.boy !== undefined) {
                     _benchGrowthSegs.push({ from: Math.max(0, boyIdx), to: Math.min(_cN - 1, eoyIdx), value: Math.round((d.boy + 1.0) * 10) / 10 });
@@ -11246,6 +11265,27 @@ function drawXrefAlignedFpGraph(canvas, points, gle, masterPeriods, opts) {
     if (opts.seqX) {
         var seq=0; mapped.forEach(function(p){seq++;var x=padL+(_XREF_POS[p.idx]/_XREF_TOTAL)*plotW;ctx.fillStyle='#64748b';ctx.font='bold 9px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillText(seq,x,padT+plotH+14);});
     } else { _xrefAxisLabels(ctx,mapped,N,padL,padT,plotW,plotH); }
+    // Top-right legend for goal lines
+    var _fpLgItems=[];
+    if(opts.goalSegs&&opts.goalSegs.length) _fpLgItems.push({color:'#3b82f6',label:'EOY GLE Goal'});
+    if(opts.growthGoalSegs&&opts.growthGoalSegs.length) _fpLgItems.push({color:'#86efac',label:'+1.0 Growth Goal'});
+    if(_fpLgItems.length){
+        ctx.save(); ctx.font='8px -apple-system,sans-serif';
+        var _llLen=18,_lgGap=5,_lgPad=5,_lgIH=13,_lgLW=0;
+        _fpLgItems.forEach(function(it){_lgLW=Math.max(_lgLW,ctx.measureText(it.label).width);});
+        var _lgW=_llLen+_lgGap+_lgLW+_lgPad*2,_lgH=_fpLgItems.length*_lgIH+_lgPad*2;
+        var _lgX=padL+plotW-_lgW-4,_lgY=padT+4;
+        ctx.fillStyle='rgba(255,255,255,0.9)'; ctx.fillRect(_lgX,_lgY,_lgW,_lgH);
+        ctx.strokeStyle='#e8e8ed'; ctx.lineWidth=0.5; ctx.setLineDash([]); ctx.strokeRect(_lgX,_lgY,_lgW,_lgH);
+        _fpLgItems.forEach(function(it,ii){
+            var _iy=_lgY+_lgPad+ii*_lgIH+7;
+            ctx.strokeStyle=it.color; ctx.lineWidth=1.5; ctx.setLineDash([4,2]);
+            ctx.beginPath(); ctx.moveTo(_lgX+_lgPad,_iy-2); ctx.lineTo(_lgX+_lgPad+_llLen,_iy-2); ctx.stroke();
+            ctx.setLineDash([]); ctx.fillStyle='#3a3a3c'; ctx.font='8px -apple-system,sans-serif'; ctx.textAlign='left';
+            ctx.fillText(it.label,_lgX+_lgPad+_llLen+_lgGap,_iy);
+        });
+        ctx.restore();
+    }
     ctx.strokeStyle='#d1d1d6';ctx.lineWidth=1;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(padL,padT);ctx.lineTo(padL,padT+plotH);ctx.lineTo(padL+plotW,padT+plotH);ctx.stroke();
 }
 function drawXrefAlignedALGraph(canvas, alPts, masterPeriods) {
