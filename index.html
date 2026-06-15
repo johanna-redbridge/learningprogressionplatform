@@ -9287,13 +9287,13 @@ function _buildWbCatsHtml(data) {
         html += '</tr>';
     }
     if (hasGrowth) {
-        html += '<tr><td style="'+LBL+'">Growth</td>';
+        html += '<tr><td style="'+LBL+'border-top:2px solid #1d1d1f;">Growth</td>';
         data.cats.forEach(function(cat,i){
             var b=boyD.scores[i], m=moyD.scores[i];
             var g=(b!=null&&m!=null)?Math.round((m-b)*10)/10:null;
             var bg=growthColor(g), tc=textFor(bg);
             var lbl=g!=null?(g>0?'+':'')+g.toFixed(1):'—';
-            html += '<td style="'+CELL+'background:'+bg+';color:'+tc+';">'+lbl+'</td>';
+            html += '<td style="'+CELL+'background:'+bg+';color:'+tc+';border-top:2px solid #1d1d1f;">'+lbl+'</td>';
         });
         html += '</tr>';
     }
