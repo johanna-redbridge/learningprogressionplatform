@@ -14254,6 +14254,7 @@ function drawFpGrowthGraph(canvas, points, gle, opts) {
 
     // Grid lines + Y labels — whole numbers only
     var allLvls = Object.keys(fpLevelScoreMap).sort(function(a,b){ return fpLevelScoreMap[a]-fpLevelScoreMap[b]; });
+    var _drawnInts = {};
     allLvls.forEach(function(lv) {
         var s = fpLevelScoreMap[lv];
         if (s < yMin - 0.01 || s > yMax + 0.01) return;
@@ -14261,10 +14262,20 @@ function drawFpGrowthGraph(canvas, points, gle, opts) {
         ctx.strokeStyle = '#ebebf0'; ctx.lineWidth = 1; ctx.setLineDash([]);
         ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + plotW, y); ctx.stroke();
         if (s % 1 === 0) {
+            _drawnInts[s] = true;
             ctx.fillStyle = '#8e8e93'; ctx.font = '11px -apple-system,sans-serif'; ctx.textAlign = 'right';
             ctx.fillText(s, padL - 6, y + 4);
         }
     });
+    // Fill in any integer labels not covered by a level score (e.g. 8)
+    for (var _iv = Math.ceil(yMin); _iv <= Math.floor(yMax); _iv++) {
+        if (_drawnInts[_iv]) continue;
+        var _iy = yOf(_iv);
+        ctx.strokeStyle = '#ebebf0'; ctx.lineWidth = 1; ctx.setLineDash([]);
+        ctx.beginPath(); ctx.moveTo(padL, _iy); ctx.lineTo(padL + plotW, _iy); ctx.stroke();
+        ctx.fillStyle = '#8e8e93'; ctx.font = '11px -apple-system,sans-serif'; ctx.textAlign = 'right';
+        ctx.fillText(_iv, padL - 6, _iy + 4);
+    }
 
     // Per-year GLE goal lines (blue dashed) and +1.0 growth goal lines (light green dashed)
     var hasAnyGoals = gleSegs.some(function(g){ return g.value !== null; }) || growthSegs.some(function(g){ return g.value !== null; });
