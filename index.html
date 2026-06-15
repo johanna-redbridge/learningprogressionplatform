@@ -8867,25 +8867,27 @@ function drawMapLineGraph(canvas, pts, lineColor, goalSegs, opts) {
         });
     }
 
-    // Top-right legend for goal lines
+    // Top-right legend (single horizontal line)
     var _lgItems = [];
     if (goalSegs && goalSegs.length) _lgItems.push({color:'#3b82f6', label:'EOY GLE Goal'});
     if (opts.growthGoalSegs && opts.growthGoalSegs.length) _lgItems.push({color:'#86efac', label:'+1.0 Growth Goal'});
     if (_lgItems.length) {
         ctx.save();
         ctx.font = '8px -apple-system,sans-serif';
-        var _llLen=18,_lgGap=5,_lgPad=5,_lgIH=13,_lgLW=0;
-        _lgItems.forEach(function(it){ _lgLW=Math.max(_lgLW,ctx.measureText(it.label).width); });
-        var _lgW=_llLen+_lgGap+_lgLW+_lgPad*2, _lgH=_lgItems.length*_lgIH+_lgPad*2;
-        var _lgX=padL+plotW-_lgW-4, _lgY=padT+4;
-        ctx.fillStyle='rgba(255,255,255,0.9)'; ctx.fillRect(_lgX,_lgY,_lgW,_lgH);
-        ctx.strokeStyle='#e8e8ed'; ctx.lineWidth=0.5; ctx.setLineDash([]); ctx.strokeRect(_lgX,_lgY,_lgW,_lgH);
-        _lgItems.forEach(function(it,ii){
-            var _iy=_lgY+_lgPad+ii*_lgIH+7;
+        var _llLen=18,_lgGap=4,_lgItemGap=10,_lgPad=5,_lgH=18;
+        var _lgTotalW=_lgPad, _lgLabelWs=[];
+        _lgItems.forEach(function(it,i){var lw=ctx.measureText(it.label).width;_lgLabelWs.push(lw);_lgTotalW+=_llLen+_lgGap+lw+(i<_lgItems.length-1?_lgItemGap:0);});
+        _lgTotalW+=_lgPad;
+        var _lgX=padL+plotW-_lgTotalW-4, _lgY=2;
+        ctx.fillStyle='rgba(255,255,255,0.92)'; ctx.fillRect(_lgX,_lgY,_lgTotalW,_lgH);
+        ctx.strokeStyle='#e8e8ed'; ctx.lineWidth=0.5; ctx.setLineDash([]); ctx.strokeRect(_lgX,_lgY,_lgTotalW,_lgH);
+        var _cx=_lgX+_lgPad, _midY=_lgY+_lgH/2;
+        _lgItems.forEach(function(it,i){
             ctx.strokeStyle=it.color; ctx.lineWidth=1.5; ctx.setLineDash([4,2]);
-            ctx.beginPath(); ctx.moveTo(_lgX+_lgPad,_iy-2); ctx.lineTo(_lgX+_lgPad+_llLen,_iy-2); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(_cx,_midY); ctx.lineTo(_cx+_llLen,_midY); ctx.stroke();
             ctx.setLineDash([]); ctx.fillStyle='#3a3a3c'; ctx.font='8px -apple-system,sans-serif'; ctx.textAlign='left';
-            ctx.fillText(it.label,_lgX+_lgPad+_llLen+_lgGap,_iy);
+            ctx.fillText(it.label,_cx+_llLen+_lgGap,_midY+3);
+            _cx+=_llLen+_lgGap+_lgLabelWs[i]+(i<_lgItems.length-1?_lgItemGap:0);
         });
         ctx.restore();
     }
@@ -11265,24 +11267,25 @@ function drawXrefAlignedFpGraph(canvas, points, gle, masterPeriods, opts) {
     if (opts.seqX) {
         var seq=0; mapped.forEach(function(p){seq++;var x=padL+(_XREF_POS[p.idx]/_XREF_TOTAL)*plotW;ctx.fillStyle='#64748b';ctx.font='bold 9px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillText(seq,x,padT+plotH+14);});
     } else { _xrefAxisLabels(ctx,mapped,N,padL,padT,plotW,plotH); }
-    // Top-right legend for goal lines
+    // Top-right legend (single horizontal line)
     var _fpLgItems=[];
     if(opts.goalSegs&&opts.goalSegs.length) _fpLgItems.push({color:'#3b82f6',label:'EOY GLE Goal'});
     if(opts.growthGoalSegs&&opts.growthGoalSegs.length) _fpLgItems.push({color:'#86efac',label:'+1.0 Growth Goal'});
     if(_fpLgItems.length){
         ctx.save(); ctx.font='8px -apple-system,sans-serif';
-        var _llLen=18,_lgGap=5,_lgPad=5,_lgIH=13,_lgLW=0;
-        _fpLgItems.forEach(function(it){_lgLW=Math.max(_lgLW,ctx.measureText(it.label).width);});
-        var _lgW=_llLen+_lgGap+_lgLW+_lgPad*2,_lgH=_fpLgItems.length*_lgIH+_lgPad*2;
-        var _lgX=padL+plotW-_lgW-4,_lgY=padT+4;
-        ctx.fillStyle='rgba(255,255,255,0.9)'; ctx.fillRect(_lgX,_lgY,_lgW,_lgH);
-        ctx.strokeStyle='#e8e8ed'; ctx.lineWidth=0.5; ctx.setLineDash([]); ctx.strokeRect(_lgX,_lgY,_lgW,_lgH);
-        _fpLgItems.forEach(function(it,ii){
-            var _iy=_lgY+_lgPad+ii*_lgIH+7;
+        var _llLen=18,_lgGap=4,_lgItemGap=10,_lgPad=5,_lgH=18,_lgTotalW=_lgPad,_lgLabelWs=[];
+        _fpLgItems.forEach(function(it,i){var lw=ctx.measureText(it.label).width;_lgLabelWs.push(lw);_lgTotalW+=_llLen+_lgGap+lw+(i<_fpLgItems.length-1?_lgItemGap:0);});
+        _lgTotalW+=_lgPad;
+        var _lgX=padL+plotW-_lgTotalW-4,_lgY=2,_midY=_lgY+_lgH/2;
+        ctx.fillStyle='rgba(255,255,255,0.92)'; ctx.fillRect(_lgX,_lgY,_lgTotalW,_lgH);
+        ctx.strokeStyle='#e8e8ed'; ctx.lineWidth=0.5; ctx.setLineDash([]); ctx.strokeRect(_lgX,_lgY,_lgTotalW,_lgH);
+        var _cx=_lgX+_lgPad;
+        _fpLgItems.forEach(function(it,i){
             ctx.strokeStyle=it.color; ctx.lineWidth=1.5; ctx.setLineDash([4,2]);
-            ctx.beginPath(); ctx.moveTo(_lgX+_lgPad,_iy-2); ctx.lineTo(_lgX+_lgPad+_llLen,_iy-2); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(_cx,_midY); ctx.lineTo(_cx+_llLen,_midY); ctx.stroke();
             ctx.setLineDash([]); ctx.fillStyle='#3a3a3c'; ctx.font='8px -apple-system,sans-serif'; ctx.textAlign='left';
-            ctx.fillText(it.label,_lgX+_lgPad+_llLen+_lgGap,_iy);
+            ctx.fillText(it.label,_cx+_llLen+_lgGap,_midY+3);
+            _cx+=_llLen+_lgGap+_lgLabelWs[i]+(i<_fpLgItems.length-1?_lgItemGap:0);
         });
         ctx.restore();
     }
