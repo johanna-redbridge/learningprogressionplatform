@@ -9404,12 +9404,23 @@ function switchMathSubtab(sub) {
     renderMathSubtab();
 }
 
+function _refreshFFForStudentOv() {
+    factFluencyData = null;
+    fetch(FACT_FLUENCY_URL, {cache: 'no-store'}).then(function(r){ return r.text(); }).then(function(text){
+        factFluencyData = parseFactFluencyCsv(text);
+        if (mathSubtab === 'student-overview') renderCompStudentOverview();
+    }).catch(function(){
+        factFluencyData = { ops: [], students: [] };
+        if (mathSubtab === 'student-overview') renderCompStudentOverview();
+    });
+}
+
 function renderMathSubtab() {
     if (mathSubtab === 'benchmark')        renderComp();
     if (mathSubtab === 'map-math')         renderMapMath();
     if (mathSubtab === 'fact-fluency')     renderFactFluency();
     if (mathSubtab === 'stmath')           renderSTMath();
-    if (mathSubtab === 'student-overview') { loadCompTierData(); renderCompStudentOverview(); }
+    if (mathSubtab === 'student-overview') { loadCompTierData(); _refreshFFForStudentOv(); }
     if (mathSubtab === 'beast-academy')    renderBeastAcademy();
     if (mathSubtab === 'xref-comp')        renderCompXref();
 }
