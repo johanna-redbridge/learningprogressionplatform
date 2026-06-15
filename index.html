@@ -9144,6 +9144,10 @@ function renderWritingStudentOverview() {
         + nameList.map(function(n){ return '<option value="'+n.replace(/"/g,'&quot;')+'"'+(n===sel?' selected':'')+'>'+n+'</option>'; }).join('')
         + '</select></div>';
 
+    // Category scores — check if WD level data is already cached
+    var _wdAllLoaded = ['al1','al2','al34','ms'].every(function(k){ return WD.getData().levelCache[k]; });
+    var _wdCats = _wdAllLoaded ? WD.getStudentLatestCats(sel) : null;
+
     html += '<div style="padding:1.25rem;display:flex;flex-direction:column;gap:1rem;">';
     if (wbLinePts.length >= 2) {
         html += '<div style="background:#fff;border-radius:16px;box-shadow:0 1px 6px rgba(0,0,0,.07);overflow:hidden;">'
@@ -9154,6 +9158,16 @@ function renderWritingStudentOverview() {
     } else {
         html += '<p style="color:#aeaeb2;font-size:.82rem;">No Writing Benchmark longitudinal data for this student.</p>';
     }
+
+    // Category scores card
+    html += '<div id="writing-ov-cats-wrap">';
+    if (_wdAllLoaded) {
+        html += _buildWbCatsHtml(_wdCats);
+    } else {
+        html += '<p style="color:#aeaeb2;font-size:.78rem;text-align:center;padding:.5rem 0;">Loading category scores…</p>';
+    }
+    html += '</div>';
+
     html += '</div>';
     el.innerHTML = html;
 
@@ -9169,6 +9183,48 @@ function renderWritingStudentOverview() {
             });
         });
     }
+
+    if (!_wdAllLoaded) {
+        WD.fetchAllData(function() {
+            var wrap = document.getElementById('writing-ov-cats-wrap');
+            if (wrap) wrap.innerHTML = _buildWbCatsHtml(WD.getStudentLatestCats(sel));
+        });
+    }
+}
+
+function _buildWbCatsHtml(data) {
+    if (!data) return '<p style="color:#aeaeb2;font-size:.78rem;">No category score data found for this student.</p>';
+    function catColor(v) {
+        if (v==null||v===0) return '#e5e5e5';
+        if (v>=5.0) return '#6edc5a'; if (v>=4.0) return '#a8df9e';
+        if (v>=3.0) return '#F8D66D'; if (v>=2.0) return '#ffb54c';
+        return '#ff6961';
+    }
+    var header = data.season + (data.genre ? ' · ' + data.genre : '') + ' — ' + data.levelLabel;
+    var html = '<div style="background:#fff;border-radius:16px;box-shadow:0 1px 6px rgba(0,0,0,.07);overflow:hidden;">'
+        + '<div style="background:#5c5b5a;color:#fff;padding:0.5rem 1rem;font-weight:700;font-size:.85rem;display:flex;align-items:center;gap:8px;">'
+        + '<span style="width:12px;height:12px;border-radius:3px;display:inline-block;background:#E87BB0;"></span>'
+        + 'Category Scores'
+        + '<span style="font-weight:400;font-size:.75rem;opacity:.8;margin-left:4px;">'+header+'</span>'
+        + '</div>'
+        + '<div style="padding:1rem;display:flex;flex-wrap:wrap;gap:0.6rem;">';
+    data.cats.forEach(function(cat, i) {
+        var v = data.scores[i];
+        var bg = catColor(v);
+        var textCol = (v != null && v >= 3.0) ? '#1d1d1f' : (v != null && v > 0) ? '#fff' : '#aeaeb2';
+        html += '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:70px;flex:1;">'
+            + '<div style="font-size:.6rem;font-weight:600;color:#86868b;text-transform:uppercase;letter-spacing:.04em;text-align:center;line-height:1.2;">' + cat + '</div>'
+            + '<div style="width:44px;height:44px;border-radius:10px;background:'+bg+';display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:800;color:'+textCol+';">'
+            + (v != null ? v.toFixed(1) : '—')
+            + '</div>'
+            + '</div>';
+    });
+    html += '</div>';
+    if (data.notes) {
+        html += '<div style="padding:0 1rem 1rem;font-size:.72rem;color:#5c5b5a;background:#f5f5f7;border-radius:6px;margin:0 1rem 1rem;padding:.4rem .6rem;">'+data.notes+'</div>';
+    }
+    html += '</div>';
+    return html;
 }
 
 var wbRubric = 'ls';
@@ -18382,7 +18438,31 @@ function fetchAllData(cb) {
         }
     });
 }
-return { init:init, refresh:refresh, switchView:switchView, setLevel:setLevel, setRosterGrowth:setRosterGrowth, setStudentGrowth:setStudentGrowth, setCatDive:setCatDive, alDD:_wdALDD, getData:getData, ensureLoaded:ensureLoaded, fetchAllData:fetchAllData };
+function getStudentLatestCats(name) {
+    var normName = (name || '').trim().toLowerCase();
+    var lKeys = ['al1','al2','al34','ms'];
+    for (var ki = 0; ki < lKeys.length; ki++) {
+        var key = lKeys[ki];
+        var students = levelCache[key];
+        if (!students) continue;
+        var stu = null;
+        for (var si = 0; si < students.length; si++) {
+            if ((students[si].name || '').trim().toLowerCase() === normName) { stu = students[si]; break; }
+        }
+        if (!stu) continue;
+        var seasons = ['spring','winter','fall'];
+        var seasonLabels = { spring:'EOY', winter:'MOY', fall:'BOY' };
+        for (var sj = 0; sj < seasons.length; sj++) {
+            var s = seasons[sj];
+            var d = stu[s];
+            if (d && d.scores && d.scores.some(function(x){ return x != null; })) {
+                return { cats: LEVELS[key].cats, scores: d.scores, season: seasonLabels[s], genre: d.genre || '', notes: d.notes || '', levelKey: key, levelLabel: LEVELS[key].label, avg: d.avg };
+            }
+        }
+    }
+    return null;
+}
+return { init:init, refresh:refresh, switchView:switchView, setLevel:setLevel, setRosterGrowth:setRosterGrowth, setStudentGrowth:setStudentGrowth, setCatDive:setCatDive, alDD:_wdALDD, getData:getData, ensureLoaded:ensureLoaded, fetchAllData:fetchAllData, getStudentLatestCats:getStudentLatestCats };
 })();
 
 /* ═══════════════════════════════════════════════════════════════
