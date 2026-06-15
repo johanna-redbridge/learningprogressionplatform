@@ -8743,7 +8743,7 @@ function renderReadingStudentOverview() {
                 padL: 50, padR: 22,
                 slotRange: { first: _sharedFirst, last: _sharedLast },
                 fpYearBands: FP_YEAR_BANDS,
-                fixedYTicks: [150, 175, 200, 225, 250]
+                fixedYTicks: [125, 150, 175, 200, 225, 250]
             });
         }
     }
@@ -8943,7 +8943,7 @@ function drawMapLineGraph(canvas, pts, lineColor, goalSegs, opts) {
     }
     ctx.stroke();
 
-    // Dots + labels — BOY=light grey, MOY=medium grey, EOY=black (skip null slots)
+    // Dots + score labels — BOY=light grey, MOY=medium grey, EOY=black (skip null slots)
     pts.forEach(function(p, i) {
         if (p.score === null) return;
         var x = xOf(i), y = yOf(p.score);
@@ -8954,13 +8954,17 @@ function drawMapLineGraph(canvas, pts, lineColor, goalSegs, opts) {
         ctx.strokeStyle = lineColor; ctx.lineWidth = 2; ctx.stroke();
         ctx.fillStyle = '#3a3a3c'; ctx.font = 'bold 10px -apple-system,sans-serif'; ctx.textAlign = 'center';
         ctx.fillText(p.score, x, y - 10);
-        if (p.pct !== null) {
-            ctx.fillStyle = '#86868b'; ctx.font = '9px -apple-system,sans-serif';
-            ctx.fillText(p.pct + '%ile', x, y + 20);
-        }
     });
 
     if (opts.fixedYTicks) ctx.restore();
+
+    // Percentile labels drawn after clip restore so they're always visible
+    pts.forEach(function(p, i) {
+        if (p.score === null || p.pct === null) return;
+        var x = xOf(i), y = yOf(p.score);
+        ctx.fillStyle = '#86868b'; ctx.font = '9px -apple-system,sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText(p.pct + '%ile', x, y + 20);
+    });
 
     // X axis labels — BOY/MOY/EOY bold on top, YY/YY school year lighter below
     function _mapAxisLabel(rawPeriod) {
@@ -9804,7 +9808,7 @@ function renderCompStudentOverview() {
             var _mSlice = _mapMathAllPts.slice(_cFirst, _cLast + 1);
             drawMapLineGraph(mapCanvas2, _mSlice, '#00E3FF', null, {
                 padL: 44, padR: 16, fpYearBands: _cBands, slotRange: _cSlotRange,
-                fixedYTicks: [150, 175, 200, 225, 250]
+                fixedYTicks: [125, 150, 175, 200, 225, 250]
             });
         }
     }
