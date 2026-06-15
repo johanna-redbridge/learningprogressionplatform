@@ -9781,7 +9781,7 @@ function renderCompStudentOverview() {
                 if (!d) return;
                 var boyIdx = yi * 3 - _cFirst;     // BOY slot in slice
                 var eoyIdx = yi * 3 + 2 - _cFirst; // EOY slot in slice
-                if (boyIdx < 0 || eoyIdx >= _cN) return;
+                if (boyIdx >= _cN || eoyIdx < 0) return; // year entirely outside visible range
                 if (d.goal !== null && d.goal !== undefined) {
                     _benchGoalSegs.push({ from: Math.max(0, boyIdx), to: Math.min(_cN - 1, eoyIdx), value: Math.round(d.goal) });
                 }
