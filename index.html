@@ -10864,8 +10864,8 @@ function _drawPromoStuChart(canvas, sy) {
         var _sea=p.lbl.indexOf('EOY')>-1?'EOY':p.lbl.indexOf('MOY')>-1?'MOY':'BOY';
         ctx.beginPath();ctx.arc(x,y,6,0,Math.PI*2);ctx.fillStyle=_alDotSC[_sea];ctx.fill();ctx.strokeStyle='#5c5b5a';ctx.lineWidth=2;ctx.stroke();
         ctx.fillStyle='#1d1d1f';ctx.font='bold 9px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillText('AL'+p.al,x,y-11);
-        if(p.att===true){
-            var mc=p.suc===true?'#34c759':p.suc===false?'#ff3b30':'#ff9500';
+        if(p.att===true&&(p.suc===true||p.suc===false)){
+            var mc=p.suc===true?'#34c759':'#ff3b30';
             ctx.fillStyle=mc;ctx.font='bold 13px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillText('▲',x,y-23);
         }
     });
@@ -10873,7 +10873,7 @@ function _drawPromoStuChart(canvas, sy) {
     pts.forEach(function(p,i){ctx.fillStyle='#8e8e93';ctx.font='8px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillText(p.lbl,xOf(i),pT+plotH+20);});
     // Legend
     var lx=pL;
-    [['#34c759','▲ Promoted'],['#ff3b30','▲ Not promoted'],['#ff9500','▲ Pending']].forEach(function(pair){
+    [['#34c759','▲ Promoted'],['#ff3b30','▲ Not promoted']].forEach(function(pair){
         ctx.fillStyle=pair[0];ctx.font='bold 11px -apple-system,sans-serif';ctx.textAlign='left';ctx.fillText(pair[1].slice(0,1),lx,pT-20);
         ctx.fillStyle='#3a3a3c';ctx.font='9px -apple-system,sans-serif';ctx.fillText(pair[1].slice(1),lx+10,pT-18);
         lx+=110;
@@ -11255,8 +11255,8 @@ function _drawPromoXrefALChart(canvas, pts) {
         ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke();
         ctx.fillStyle='#1d1d1f'; ctx.font='bold 9px -apple-system,sans-serif'; ctx.textAlign='center';
         ctx.fillText('AL'+p.al,x,y-11);
-        if(p.att===true){
-            var mc=p.suc===true?'#34c759':p.suc===false?'#ff3b30':'#ff9500';
+        if(p.att===true&&(p.suc===true||p.suc===false)){
+            var mc=p.suc===true?'#34c759':'#ff3b30';
             ctx.fillStyle=mc; ctx.font='bold 13px -apple-system,sans-serif'; ctx.textAlign='center';
             ctx.fillText('▲',x,y-23);
         }
@@ -11266,7 +11266,7 @@ function _drawPromoXrefALChart(canvas, pts) {
         ctx.fillText(p.lbl,xOf(i),pT+plotH+20);
     });
     var lx=pL;
-    [['#34c759','▲ Promoted'],['#ff3b30','▲ Not promoted'],['#ff9500','▲ Pending']].forEach(function(pair){
+    [['#34c759','▲ Promoted'],['#ff3b30','▲ Not promoted']].forEach(function(pair){
         ctx.fillStyle=pair[0]; ctx.font='bold 11px -apple-system,sans-serif'; ctx.textAlign='left';
         ctx.fillText(pair[1].slice(0,1),lx,pT-20);
         ctx.fillStyle='#3a3a3c'; ctx.font='9px -apple-system,sans-serif';
@@ -11426,9 +11426,9 @@ function drawXrefAlignedALGraph(canvas, alPts, masterPeriods) {
     [1,2,3,4].forEach(function(al){var gy=yOf(al);ctx.strokeStyle='#ebebf0';ctx.lineWidth=1;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(padL,gy);ctx.lineTo(padL+plotW,gy);ctx.stroke();ctx.fillStyle='#8e8e93';ctx.font='9px -apple-system,sans-serif';ctx.textAlign='right';ctx.fillText('AL'+al,padL-4,gy+3);});
     if(mapped.length>1){ctx.beginPath();mapped.forEach(function(p,i){i===0?ctx.moveTo(xOf(p.idx),yOf(p.al)):ctx.lineTo(xOf(p.idx),yOf(p.al));});ctx.lineTo(xOf(mapped[mapped.length-1].idx),padT+plotH);ctx.lineTo(xOf(mapped[0].idx),padT+plotH);ctx.closePath();ctx.fillStyle='rgba(92,91,90,0.07)';ctx.fill();}
     ctx.lineWidth=2.5;ctx.setLineDash([]);mapped.forEach(function(p,i){if(i===0)return;var prev=mapped[i-1];if(p.suc===true&&p.al!==prev.al){ctx.beginPath();ctx.strokeStyle='#5c5b5a';ctx.moveTo(xOf(prev.idx),yOf(prev.al));ctx.lineTo(xOf(p.idx),yOf(prev.al));ctx.stroke();ctx.beginPath();ctx.strokeStyle='#34c759';ctx.moveTo(xOf(p.idx),yOf(prev.al));ctx.lineTo(xOf(p.idx),yOf(p.al));ctx.stroke();}else{ctx.beginPath();ctx.strokeStyle='#5c5b5a';ctx.moveTo(xOf(prev.idx),yOf(prev.al));ctx.lineTo(xOf(p.idx),yOf(p.al));ctx.stroke();}});
-    var lx=padL;[['#34c759','▲ Success'],['#ff3b30','▲ Attempt'],['#ff9500','▲ Pending']].forEach(function(pair){ctx.fillStyle=pair[0];ctx.font='bold 11px -apple-system,sans-serif';ctx.textAlign='left';ctx.fillText(pair[1].slice(0,1),lx,padT-20);ctx.fillStyle='#3a3a3c';ctx.font='9px -apple-system,sans-serif';ctx.fillText(pair[1].slice(1),lx+10,padT-18);lx+=90;});
+    var lx=padL;[['#34c759','▲ Success'],['#ff3b30','▲ Attempt']].forEach(function(pair){ctx.fillStyle=pair[0];ctx.font='bold 11px -apple-system,sans-serif';ctx.textAlign='left';ctx.fillText(pair[1].slice(0,1),lx,padT-20);ctx.fillStyle='#3a3a3c';ctx.font='9px -apple-system,sans-serif';ctx.fillText(pair[1].slice(1),lx+10,padT-18);lx+=90;});
     var _alSC={BOY:'#d1d1d6',MOY:'#8e8e93',EOY:'#1c1c1e'};
-    mapped.forEach(function(p){var x=xOf(p.idx),y=yOf(p.al),season=(p.norm.split(' ')[1]||'BOY').toUpperCase();if(p.att===true){var mc=p.suc===true?'#34c759':p.suc===false?'#ff3b30':'#ff9500';ctx.fillStyle=mc;ctx.font='bold 13px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillText('▲',x,y-23);}ctx.beginPath();ctx.arc(x,y,6,0,Math.PI*2);ctx.fillStyle=_alSC[season]||'#d1d1d6';ctx.fill();ctx.strokeStyle='#5c5b5a';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='#1d1d1f';ctx.font='bold 9px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillText('AL'+p.al,x,y-11);});
+    mapped.forEach(function(p){var x=xOf(p.idx),y=yOf(p.al),season=(p.norm.split(' ')[1]||'BOY').toUpperCase();if(p.att===true&&(p.suc===true||p.suc===false)){var mc=p.suc===true?'#34c759':'#ff3b30';ctx.fillStyle=mc;ctx.font='bold 13px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillText('▲',x,y-23);}ctx.beginPath();ctx.arc(x,y,6,0,Math.PI*2);ctx.fillStyle=_alSC[season]||'#d1d1d6';ctx.fill();ctx.strokeStyle='#5c5b5a';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='#1d1d1f';ctx.font='bold 9px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillText('AL'+p.al,x,y-11);});
     _xrefAxisLabels(ctx,mapped,N,padL,padT,plotW,plotH);
     ctx.strokeStyle='#d1d1d6';ctx.lineWidth=1;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(padL,padT);ctx.lineTo(padL,padT+plotH);ctx.lineTo(padL+plotW,padT+plotH);ctx.stroke();
 }
