@@ -8945,7 +8945,7 @@ function drawMapLineGraph(canvas, pts, lineColor, goalSegs, opts) {
     }
     ctx.stroke();
 
-    // Dots + score labels — BOY=light grey, MOY=medium grey, EOY=black (skip null slots)
+    // Dots — BOY=light grey, MOY=medium grey, EOY=black (skip null slots)
     pts.forEach(function(p, i) {
         if (p.score === null) return;
         var x = xOf(i), y = yOf(p.score);
@@ -8954,18 +8954,27 @@ function drawMapLineGraph(canvas, pts, lineColor, goalSegs, opts) {
         ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI*2);
         ctx.fillStyle = dotFill; ctx.fill();
         ctx.strokeStyle = lineColor; ctx.lineWidth = 2; ctx.stroke();
-        ctx.fillStyle = '#3a3a3c'; ctx.font = 'bold 10px -apple-system,sans-serif'; ctx.textAlign = 'center';
-        ctx.fillText(p.score, x, y - 10);
     });
 
     if (opts.fixedYTicks) ctx.restore();
 
-    // Percentile labels drawn after clip restore so they're always visible
+    // Score + percentile labels drawn after clip restore so they're always fully visible
+    var _scoreFont = 'bold 10px -apple-system,sans-serif';
+    var _pctFont   = '9px -apple-system,sans-serif';
     pts.forEach(function(p, i) {
-        if (p.score === null || p.pct === null) return;
+        if (p.score === null) return;
         var x = xOf(i), y = yOf(p.score);
-        ctx.fillStyle = '#86868b'; ctx.font = '9px -apple-system,sans-serif'; ctx.textAlign = 'center';
-        ctx.fillText(p.pct + '%ile', x, y + 20);
+        // Clamp x so label doesn't overflow canvas edges
+        ctx.font = _scoreFont;
+        var _sw = ctx.measureText(p.score).width;
+        var _tx = Math.max(padL + _sw / 2 + 2, Math.min(padL + plotW - _sw / 2 - 2, x));
+        ctx.fillStyle = '#3a3a3c'; ctx.textAlign = 'center';
+        ctx.fillText(p.score, _tx, y - 10);
+        if (p.pct !== null) {
+            ctx.font = _pctFont;
+            ctx.fillStyle = '#86868b';
+            ctx.fillText(p.pct + '%ile', x, y + 20);
+        }
     });
 
     // X axis labels — BOY/MOY/EOY bold on top, YY/YY school year lighter below
