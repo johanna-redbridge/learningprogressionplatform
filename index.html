@@ -11956,24 +11956,24 @@ function xrefReadDetailHTML(){
         if(best==='e'&&lexMastered) totBoth++;
     });
 
-    var headerHtml = '<div style="padding:1rem 1.25rem 0.5rem;">';
-    headerHtml += '<div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;margin-bottom:0.75rem;">';
-    headerHtml += '<div style="font-size:1.05rem;font-weight:700;color:#1d1d1f;">'+xrefStudent.replace(/</g,'&lt;')+'</div>';
-    headerHtml += '<span style="padding:3px 10px;border-radius:10px;font-size:0.75rem;font-weight:600;background:#fff3e0;color:#FF8200;">AL'+sdata.al+'</span>';
-    headerHtml += '<span style="padding:3px 10px;border-radius:10px;font-size:0.75rem;font-weight:600;background:#f3f4f6;color:#374151;">GLE: '+(sdata.gle||'?')+'</span>';
+    var headerHtml = '<div style="padding:0.45rem 1.25rem 0.35rem;">';
+    headerHtml += '<div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;margin-bottom:0;">';
+    headerHtml += '<div style="font-size:0.9rem;font-weight:700;color:#1d1d1f;">'+xrefStudent.replace(/</g,'&lt;')+'</div>';
+    headerHtml += '<span style="padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:600;background:#fff3e0;color:#FF8200;">AL'+sdata.al+'</span>';
+    headerHtml += '<span style="padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:600;background:#f3f4f6;color:#374151;">GLE: '+(sdata.gle||'?')+'</span>';
     var _mapXrefRec = (mapData && mapData.students) ? mapData.students.find(function(s){ return xrefNorm(s.name)===xrefNorm(xrefStudent); }) : null;
     if (_mapXrefRec) {
         var _validEla = _mapXrefRec.elaScores.map(function(sc,i){ return {score:parseFloat(sc)||null, pct:parseFloat((_mapXrefRec.elaPcts||[])[i])||null}; }).filter(function(x){ return x.score!==null; });
         if (_validEla.length) {
             var _latest = _validEla[_validEla.length-1];
-            headerHtml += '<span style="padding:3px 10px;border-radius:10px;font-size:0.75rem;font-weight:600;background:#fff0ed;color:#c2410c;">MAP ELA: '+_latest.score+(_latest.pct!==null?' ('+_latest.pct+'%ile)':'')+'</span>';
+            headerHtml += '<span style="padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:600;background:#fff0ed;color:#c2410c;">MAP ELA: '+_latest.score+(_latest.pct!==null?' ('+_latest.pct+'%ile)':'')+'</span>';
         }
     }
-    if(!lexiaStudent) headerHtml += '<span style="padding:3px 10px;border-radius:10px;font-size:0.72rem;font-weight:600;background:#fef3c7;color:#92400e;">No Lexia data matched</span>';
+    if(!lexiaStudent) headerHtml += '<span style="padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:600;background:#fef3c7;color:#92400e;">No Lexia data matched</span>';
     // F&P BOY / MOY levels
     var fpRec = fpStudents ? fpStudents.find(function(s){ return xrefNorm(s.name)===xrefNorm(xrefStudent) || s.name===xrefStudent; }) : null;
-    if (fpRec && fpRec.boy) headerHtml += '<span style="padding:3px 10px;border-radius:10px;font-size:0.75rem;font-weight:600;background:#fff0ed;color:#9a3412;">F&amp;P BOY: '+fpDisplayLevel(fpRec.boy)+'</span>';
-    if (fpRec && fpRec.moy) headerHtml += '<span style="padding:3px 10px;border-radius:10px;font-size:0.75rem;font-weight:600;background:#ffc8bb;color:#7c2d12;">F&amp;P MOY: '+fpDisplayLevel(fpRec.moy)+'</span>';
+    if (fpRec && fpRec.boy) headerHtml += '<span style="padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:600;background:#fff0ed;color:#9a3412;">F&amp;P BOY: '+fpDisplayLevel(fpRec.boy)+'</span>';
+    if (fpRec && fpRec.moy) headerHtml += '<span style="padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:600;background:#ffc8bb;color:#7c2d12;">F&amp;P MOY: '+fpDisplayLevel(fpRec.moy)+'</span>';
     headerHtml += '<span style="margin-left:auto;display:flex;align-items:center;gap:14px;flex-shrink:0;padding-left:1rem;">'
         + [['#FFF4F1','Credits Earned'],['#FFE6E0','Lexia Mastered'],['#FFC8BB','Both Confirmed']].map(function(pair){
             return '<span style="display:flex;align-items:center;gap:5px;font-size:.72rem;color:#3a3a3c;white-space:nowrap;">'
@@ -12424,13 +12424,13 @@ function xrefCompDetailHTML(){
         if(gleNum >= 0 && gradeN <= gleNum && (stdBenchQs[std.id]||[]).length > 0) totBenchAtGle++;
     });
 
-    var headerHtml = '<div style="padding:1rem 1.25rem 0.5rem;">';
-    headerHtml += '<div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;margin-bottom:0.75rem;">';
-    headerHtml += '<div style="font-size:1.05rem;font-weight:700;color:#1d1d1f;">'+xrefStudent.replace(/</g,'&lt;')+'</div>';
-    headerHtml += '<span style="padding:3px 10px;border-radius:10px;font-size:0.75rem;font-weight:600;background:#fff3e0;color:#FF8200;">AL'+sdata.al+'</span>';
-    headerHtml += '<span style="padding:3px 10px;border-radius:10px;font-size:0.75rem;font-weight:600;background:#f3f4f6;color:#374151;">GLE: '+(sdata.gle||'?')+'</span>';
+    var headerHtml = '<div style="padding:0.45rem 1.25rem 0.35rem;">';
+    headerHtml += '<div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;margin-bottom:0;">';
+    headerHtml += '<div style="font-size:0.9rem;font-weight:700;color:#1d1d1f;">'+xrefStudent.replace(/</g,'&lt;')+'</div>';
+    headerHtml += '<span style="padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:600;background:#fff3e0;color:#FF8200;">AL'+sdata.al+'</span>';
+    headerHtml += '<span style="padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:600;background:#f3f4f6;color:#374151;">GLE: '+(sdata.gle||'?')+'</span>';
     var mapRit = getMapMathRit(xrefStudent);
-    if(mapRit) headerHtml += '<span style="padding:3px 10px;border-radius:10px;font-size:0.75rem;font-weight:600;background:#e0faff;color:#0369a1;" title="MAP Math RIT ('+mapRit.period+')">MAP Math: '+mapRit.score+(mapRit.pct ? ' <span style="font-weight:400;opacity:0.75;">('+mapRit.pct+'%ile)</span>' : '')+'</span>';
+    if(mapRit) headerHtml += '<span style="padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:600;background:#e0faff;color:#0369a1;" title="MAP Math RIT ('+mapRit.period+')">MAP Math: '+mapRit.score+(mapRit.pct ? ' <span style="font-weight:400;opacity:0.75;">('+mapRit.pct+'%ile)</span>' : '')+'</span>';
     // Computation Benchmark BOY/MOY
     var BENCH_MAX = 212;
     function benchTierLabel(score) {
@@ -12445,10 +12445,10 @@ function xrefCompDetailHTML(){
     }
     var blCY = blRec ? blRec.years['2025-26'] : null;
     if (blCY && blCY.boy !== null) {
-        headerHtml += '<span style="padding:3px 10px;border-radius:10px;font-size:0.75rem;font-weight:600;background:#e0faff;color:#0c4a6e;">Bench BOY: '+blCY.boy+'/'+BENCH_MAX+' <span style="font-weight:400;opacity:0.75;">('+benchTierLabel(blCY.boy)+')</span></span>';
+        headerHtml += '<span style="padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:600;background:#e0faff;color:#0c4a6e;">Bench BOY: '+blCY.boy+'/'+BENCH_MAX+' <span style="font-weight:400;opacity:0.75;">('+benchTierLabel(blCY.boy)+')</span></span>';
     }
     if (blCY && blCY.moy !== null) {
-        headerHtml += '<span style="padding:3px 10px;border-radius:10px;font-size:0.75rem;font-weight:600;background:#ccf9ff;color:#0c4a6e;">Bench MOY: '+blCY.moy+'/'+BENCH_MAX+' <span style="font-weight:400;opacity:0.75;">('+benchTierLabel(blCY.moy)+')</span></span>';
+        headerHtml += '<span style="padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:600;background:#ccf9ff;color:#0c4a6e;">Bench MOY: '+blCY.moy+'/'+BENCH_MAX+' <span style="font-weight:400;opacity:0.75;">('+benchTierLabel(blCY.moy)+')</span></span>';
     }
     headerHtml += '</div>';
 
@@ -12458,22 +12458,21 @@ function xrefCompDetailHTML(){
         {l:'Benchmark Mastered',v:totBench,tot:totBenchAtGle,bg:'#8CF2FF',tc:'#1d1d1f'},
         {l:'Both Confirmed',v:totBoth,bg:'#00E3FF',tc:'#1d1d1f'}
     ];
-    headerHtml += '<div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:1rem;">';
+    headerHtml += '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.5rem;">';
     summCards.forEach(function(c){
-        headerHtml += '<div style="flex:1;min-width:120px;background:'+c.bg+';border-radius:10px;padding:0.6rem 0.9rem;">';
+        headerHtml += '<div style="flex:1;min-width:100px;background:'+c.bg+';border-radius:8px;padding:0.35rem 0.7rem;">';
         if(c.tot !== undefined){
-            headerHtml += '<div style="display:flex;align-items:baseline;gap:4px;">'
-                + '<span style="font-size:1.5rem;font-weight:700;color:'+c.tc+';">'+c.v+'</span>'
-                + '<span style="font-size:0.82rem;font-weight:600;color:'+c.tc+';opacity:0.65;">/ '+c.tot+'</span>'
+            headerHtml += '<div style="display:flex;align-items:baseline;gap:3px;">'
+                + '<span style="font-size:1.2rem;font-weight:700;color:'+c.tc+';">'+c.v+'</span>'
+                + '<span style="font-size:0.75rem;font-weight:600;color:'+c.tc+';opacity:0.65;">/ '+c.tot+'</span>'
                 + '</div>';
         } else {
-            headerHtml += '<div style="font-size:1.5rem;font-weight:700;color:'+c.tc+';">'+c.v+'</div>';
+            headerHtml += '<div style="font-size:1.2rem;font-weight:700;color:'+c.tc+';">'+c.v+'</div>';
         }
-        headerHtml += '<div style="font-size:0.72rem;color:'+c.tc+';opacity:0.9;margin-top:2px;">'+c.l+'</div></div>';
+        headerHtml += '<div style="font-size:0.68rem;color:'+c.tc+';opacity:0.9;margin-top:1px;">'+c.l+'</div></div>';
     });
     headerHtml += '</div></div>';
 
-    // Per-grade tables (body)
     var html = '<div style="overflow-y:auto;max-height:65vh;">';
     gradeOrder.forEach(function(g){
         var stds = gradeGroups[g];
