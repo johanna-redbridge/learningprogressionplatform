@@ -9617,7 +9617,7 @@ function renderCompStudentOverview() {
     var _validMathAll = mapRec ? mapRec.mathScores.map(function(s,i){ return { period: _mathPdsAll[i]||'', score: parseFloat(s)||null, pct: parseFloat((mapRec.mathPcts||[])[i])||null }; }).filter(function(x){ return x.score!==null; }) : [];
 
     // Fact Fluency card
-    html += '<div style="display:flex;gap:1.5rem;align-items:flex-start;">';
+    html += '<div style="display:flex;gap:1.5rem;align-items:stretch;">';
     html += '<div style="flex:1;min-width:0;background:#fff;border-radius:16px;box-shadow:0 1px 6px rgba(0,0,0,.07);overflow:hidden;">';
     html += '<div style="background:#5c5b5a;color:#fff;padding:0.7rem 1.25rem;font-weight:700;font-size:.88rem;">Fact Fluency</div>';
     html += '<div style="padding:0.75rem 1rem;">';
