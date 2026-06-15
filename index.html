@@ -8481,17 +8481,7 @@ function renderReadingStudentOverview() {
         + (readOvBoyTier ? smallChipR('BOY Tier: ' + readOvBoyTier.replace(/^tier\s*/i,''), tierChipStyle(readOvBoyTier)) : '')
         + (readOvMoyTier ? smallChipR('MOY Tier: ' + readOvMoyTier.replace(/^tier\s*/i,''), tierChipStyle(readOvMoyTier)) : '');
 
-    if (readOvIntPlan) {
-        html += '<button onclick="var p=document.getElementById(\'read-ov-int-plan\');p.style.display=p.style.display===\'none\'?\'block\':\'none\';" '
-            + 'style="margin-left:auto;padding:4px 12px;border-radius:8px;border:1.5px solid #FF8200;background:#fff;color:#FF8200;font-size:0.75rem;font-weight:600;cursor:pointer;flex-shrink:0;white-space:nowrap;">Intervention Plan</button>';
-    }
     html += '</div>';
-
-    if (readOvIntPlan) {
-        html += '<div id="read-ov-int-plan" style="display:none;padding:10px 1.25rem;background:#fffbf5;border-bottom:1px solid #ffe0b2;">'
-            + '<div style="font-size:0.72rem;color:#1d1d1f;line-height:1.6;max-width:860px;">' + readOvIntPlan.replace(/</g,'&lt;').replace(/\n/g,'<br>') + '</div>'
-            + '</div>';
-    }
 
     html += '<div style="padding:1.25rem;display:flex;flex-direction:column;gap:1.5rem;" id="stu-ov-body">';
 
@@ -9375,17 +9365,7 @@ function renderCompStudentOverview() {
         + (compOvBoyTier ? smallChip('BOY Tier: ' + compOvBoyTier.replace(/^tier\s*/i,''), compTierChipStyle(compOvBoyTier)) : '')
         + (compOvMoyTier ? smallChip('MOY Tier: ' + compOvMoyTier.replace(/^tier\s*/i,''), compTierChipStyle(compOvMoyTier)) : '');
 
-    if (compOvIntPlan) {
-        html += '<button onclick="var p=document.getElementById(\'comp-ov-int-plan\');p.style.display=p.style.display===\'none\'?\'block\':\'none\';" '
-            + 'style="margin-left:auto;padding:4px 12px;border-radius:8px;border:1.5px solid #FF8200;background:#fff;color:#FF8200;font-size:0.75rem;font-weight:600;cursor:pointer;flex-shrink:0;white-space:nowrap;">Intervention Plan</button>';
-    }
     html += '</div>';
-
-    if (compOvIntPlan) {
-        html += '<div id="comp-ov-int-plan" style="display:none;padding:10px 1.25rem;background:#fffbf5;border-bottom:1px solid #ffe0b2;">'
-            + '<div style="font-size:0.72rem;color:#1d1d1f;line-height:1.6;max-width:860px;">' + compOvIntPlan.replace(/</g,'&lt;').replace(/\n/g,'<br>') + '</div>'
-            + '</div>';
-    }
 
     html += '<div style="padding:1.25rem;display:flex;flex-direction:column;gap:1.5rem;">';
 
