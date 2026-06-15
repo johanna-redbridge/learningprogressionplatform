@@ -8520,8 +8520,7 @@ function renderReadingStudentOverview() {
     // Right half: growth graph
     html += '<div style="flex:1;min-width:0;">';
     if (hasFpLong) {
-        html += '<div style="font-size:.65rem;font-weight:700;color:#86868b;margin-bottom:6px;">Growth over time</div>';
-        html += '<canvas id="stu-ov-fp-canvas" width="600" height="360" style="width:100%;height:360px;border-radius:8px;display:block;"></canvas>';
+        html += '<canvas id="stu-ov-fp-canvas" width="600" height="260" style="width:100%;height:260px;border-radius:8px;display:block;"></canvas>';
     } else {
         html += '<p style="color:#aeaeb2;font-size:.78rem;">No longitudinal F&P data.</p>';
     }
@@ -8705,7 +8704,8 @@ function renderReadingStudentOverview() {
         if (fpCanvas) drawFpGrowthGraph(fpCanvas, fpLong.points, fpLong.gle, {
             yearGoals: fpLong.yearGoals || null,
             gleGoalCurrentYear: readOvTierRec && readOvTierRec.gleGoal ? readOvTierRec.gleGoal : null,
-            slotRange: { first: _sharedFirst, last: _sharedLast }
+            slotRange: { first: _sharedFirst, last: _sharedLast },
+            compact: true
         });
     }
 
@@ -14108,7 +14108,7 @@ function drawFpGrowthGraph(canvas, points, gle, opts) {
     var ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
     var W = cssW, H = cssH;
-    var padL = 50, padR = 22, padT = 22, padB = 62;
+    var padL = 50, padR = 22, padT = 22, padB = opts.compact ? 40 : 62;
     var plotW = W - padL - padR, plotH = H - padT - padB;
 
     // Slot range: restrict visible x-axis to a subset of FP_LONG_COLS indices
