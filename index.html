@@ -8456,7 +8456,7 @@ function renderReadingStudentOverview() {
             if (r) readOvCoreRec = r;
         }
     });
-    var readOvAL = readOvCoreRec && readOvCoreRec.al ? 'AL' + readOvCoreRec.al : '';
+    var readOvAL = compStudentAL(sel) || (readOvCoreRec && readOvCoreRec.al ? 'AL' + readOvCoreRec.al : '');
     var readOvFpRec = fpStudents ? fpStudents.find(function(s){ return xrefNorm(s.name)===norm; }) : null;
     var readOvGLE = readOvFpRec && readOvFpRec.gle ? readOvFpRec.gle : '';
 
