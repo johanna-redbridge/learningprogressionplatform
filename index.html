@@ -8845,15 +8845,13 @@ function drawMapLineGraph(canvas, pts, lineColor, goalSegs, opts) {
         }
     }
 
-    // EOY GLE goal lines
+    // EOY GLE goal lines — span full year band (midpoint to midpoint, matching shading edges)
     if (goalSegs && goalSegs.length) {
-        var stepW = n > 1 ? plotW / (n - 1) : plotW;
         goalSegs.forEach(function(g) {
             if (g.value === null) return;
             var gy = yOf(g.value);
-            var x1 = xOf(g.from) - stepW * 0.3;
-            var x2 = xOf(g.to)   + stepW * 0.3;
-            x1 = Math.max(padL, x1); x2 = Math.min(padL + plotW, x2);
+            var x1 = g.from <= 0     ? padL            : (xOf(g.from - 1) + xOf(g.from)) / 2;
+            var x2 = g.to   >= n - 1 ? padL + plotW    : (xOf(g.to) + xOf(g.to + 1)) / 2;
             ctx.save();
             ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 1.5;
             ctx.setLineDash([5, 3]);
@@ -8863,15 +8861,13 @@ function drawMapLineGraph(canvas, pts, lineColor, goalSegs, opts) {
         });
     }
 
-    // +1.0 growth goal lines (green dashed)
+    // +1.0 growth goal lines — span full year band
     if (opts.growthGoalSegs && opts.growthGoalSegs.length) {
-        var _ggStepW = n > 1 ? plotW / (n - 1) : plotW;
         opts.growthGoalSegs.forEach(function(g) {
             if (g.value === null) return;
             var gy = yOf(g.value);
-            var x1 = xOf(g.from) - _ggStepW * 0.3;
-            var x2 = xOf(g.to)   + _ggStepW * 0.3;
-            x1 = Math.max(padL, x1); x2 = Math.min(padL + plotW, x2);
+            var x1 = g.from <= 0     ? padL            : (xOf(g.from - 1) + xOf(g.from)) / 2;
+            var x2 = g.to   >= n - 1 ? padL + plotW    : (xOf(g.to) + xOf(g.to + 1)) / 2;
             ctx.save();
             ctx.strokeStyle = '#86efac'; ctx.lineWidth = 1.5;
             ctx.setLineDash([5, 3]);
