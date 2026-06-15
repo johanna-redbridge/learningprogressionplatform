@@ -3806,14 +3806,8 @@ function renderPortfolioStudent(studentId) {
             !portfolioDriveArtifactsLoading[studentId];
         if (clarkNeedArtifact) portfolioDriveArtifactsLoading[studentId] = true;
 
-        function _clarkParseDate(d) { if (!d) return null; var p = d.split('/'); return p.length===3 ? new Date(+p[2],+p[0]-1,+p[1]) : null; }
+        // Keep spreadsheet order — clarksonData is already in row order
         var clarkRows = clarksonData.filter(function(r) { return !!(r.earnedDate || r.attemptDate); });
-        clarkRows.sort(function(a, b) {
-            var da = _clarkParseDate(a.earnedDate || a.attemptDate);
-            var db = _clarkParseDate(b.earnedDate || b.attemptDate);
-            if (!da&&!db) return 0; if (!da) return 1; if (!db) return -1;
-            return db - da;
-        });
         if (clarkRows.length === 0) { el.innerHTML = '<div style="text-align:center;padding:3rem;color:#86868b;">No portfolio entries yet.</div>'; return; }
 
         // Pre-mark narratives as loading
@@ -5997,27 +5991,20 @@ function renderEarnedStudent(period, container) {
         var clarkLookup = {};
         clarksonData.forEach(function(row) { clarkLookup[row.credit.toLowerCase()] = row; });
 
-        // Split credits: spreadsheet ones first (sorted by earned date desc), rest after
+        // Build position map: credit name → first index in spreadsheet (preserves sheet order)
+        var clarkPosMap = {};
+        clarksonData.forEach(function(row, idx) {
+            var k = row.credit.toLowerCase();
+            if (!clarkPosMap.hasOwnProperty(k)) clarkPosMap[k] = idx;
+        });
+
+        // Split credits: spreadsheet ones first (in spreadsheet order), rest after
         var clarkSheetCredits = [], clarkOtherCredits = [];
         tableCredits.forEach(function(c) {
-            (clarkLookup[c.title.toLowerCase()] ? clarkSheetCredits : clarkOtherCredits).push(c);
+            (clarkPosMap.hasOwnProperty(c.title.toLowerCase()) ? clarkSheetCredits : clarkOtherCredits).push(c);
         });
-        function _parseSlashDate(d) {
-            if (!d) return null;
-            var p = d.split('/');
-            return p.length === 3 ? new Date(+p[2], +p[0]-1, +p[1]) : null;
-        }
         clarkSheetCredits.sort(function(a, b) {
-            var ra = clarkLookup[a.title.toLowerCase()] || {};
-            var rb = clarkLookup[b.title.toLowerCase()] || {};
-            var aAttempt = clarksonLocalAttempts[a.title.toLowerCase()] || ra.attemptDate;
-            var bAttempt = clarksonLocalAttempts[b.title.toLowerCase()] || rb.attemptDate;
-            var da = _parseSlashDate(ra.earnedDate || aAttempt);
-            var db = _parseSlashDate(rb.earnedDate || bAttempt);
-            if (!da && !db) return 0;
-            if (!da) return 1;
-            if (!db) return -1;
-            return db - da;
+            return (clarkPosMap[a.title.toLowerCase()] || 0) - (clarkPosMap[b.title.toLowerCase()] || 0);
         });
         var clarkSortedCredits = clarkSheetCredits.concat(clarkOtherCredits);
 
