@@ -8361,15 +8361,24 @@ function switchReadingSubtab(sub) {
 function renderReadingSubtab() {
     if (readingSubtab === 'core')             renderCore();
     if (readingSubtab === 'fp')               renderFP();
-    if (readingSubtab === 'lexia')            renderLexia();
+    if (readingSubtab === 'lexia')            lexiaReload();
     if (readingSubtab === 'map-ela')          renderMapEla();
-    if (readingSubtab === 'student-overview') { loadReadingTierData(); renderReadingStudentOverview(); }
+    if (readingSubtab === 'student-overview') { loadReadingTierData(); _refreshLexiaForStudentOv(); renderReadingStudentOverview(); }
     if (readingSubtab === 'xref-read')        renderReadXref();
 }
 
 // ── Student Overview ──────────────────────────────────────────────────
 var readingOverviewStudent = '';
 var readingTierData = null;
+
+function _refreshLexiaForStudentOv() {
+    lexiaPerfData = null;
+    lexiaProgData = null;
+    var done = 0;
+    function onDone() { if (++done >= 2 && readingSubtab === 'student-overview') renderReadingStudentOverview(); }
+    lexiaFetch(LEXIA_PERF_URL, 12000).then(function(r){ return r.text(); }).then(function(t){ lexiaPerfData = parsePerformanceCsv(t); onDone(); }).catch(function(){ lexiaPerfData = []; onDone(); });
+    lexiaFetch(LEXIA_PROG_URL, 12000).then(function(r){ return r.text(); }).then(function(t){ lexiaProgData = parseProgressCsv(t); onDone(); }).catch(function(){ lexiaProgData = []; onDone(); });
+}
 
 function loadReadingTierData(cb) {
     if (readingTierData !== null) { if (cb) cb(); return; }
@@ -8528,7 +8537,7 @@ function renderReadingStudentOverview() {
     html += '</div></div>';
 
     // ── 2. Lexia + MAP ELA side by side ──
-    html += '<div style="display:flex;gap:1.5rem;flex-wrap:wrap;align-items:flex-start;">';
+    html += '<div style="display:flex;gap:1.5rem;flex-wrap:wrap;align-items:stretch;">';
     var lxPerf = lexiaPerfData ? lexiaPerfData.find(function(s){ return xrefNorm(s.name)===norm; }) : null;
     var lxProg = lexiaProgData ? lexiaProgData.find(function(s){ return xrefNorm(s.name)===norm; }) : null;
     html += '<div style="flex:1;min-width:260px;background:#fff;border-radius:16px;box-shadow:0 1px 6px rgba(0,0,0,.07);overflow:hidden;display:flex;flex-direction:column;">';
