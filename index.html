@@ -9120,6 +9120,9 @@ function renderWritingStudentOverview() {
         el.innerHTML = '<p style="padding:2rem;color:#aeaeb2;text-align:center;">No Writing Benchmark data loaded. Visit the Writing Benchmark tab first.</p>';
         return;
     }
+    // Load tier data if not yet available; re-render when it arrives
+    if (writingTierData === null) loadWritingTierData(renderWritingStudentOverview);
+
     if (!writingOvStudent || !names[writingOvStudent]) writingOvStudent = nameList[0];
     var sel = writingOvStudent;
     var norm = xrefNorm(sel);
@@ -9138,11 +9141,37 @@ function renderWritingStudentOverview() {
         });
     }
 
+    // Chips data
+    var wbOvAL = wbRec && wbRec.al ? 'AL' + wbRec.al : '';
+    var wbOvGLE = wbRec && wbRec.gle ? wbRec.gle : '';
+    var wbOvTierRec = (writingTierData || []).find(function(r){ return xrefNorm(r.name) === norm; }) || null;
+    var wbOvBoyTier = wbOvTierRec ? wbOvTierRec.boyTier : '';
+    var wbOvMoyTier = wbOvTierRec ? wbOvTierRec.moyTier : '';
+    function wbTierChipStyle(tier) {
+        if (!tier) return 'background:#f3f4f6;color:#374151;';
+        var t = tier.toLowerCase().trim();
+        if (t==='tier 1'||t==='1') return 'background:#dcfce7;color:#15803d;';
+        if (t==='tier 2'||t==='2') return 'background:#fef9c3;color:#854d0e;';
+        if (t==='tier 3'||t==='3') return 'background:#fee2e2;color:#b91c1c;';
+        if (t.indexOf('high')!==-1||t.indexOf('risk')!==-1) return 'background:#fee2e2;color:#b91c1c;';
+        if (t.indexOf('some')!==-1||t.indexOf('moderate')!==-1) return 'background:#fef9c3;color:#854d0e;';
+        if (t.indexOf('benchmark')!==-1||t.indexOf('above')!==-1) return 'background:#dcfce7;color:#15803d;';
+        return 'background:#f3f4f6;color:#374151;';
+    }
+    function wbSmallChip(txt, extraStyle) {
+        return '<span style="display:inline-block;border-radius:6px;padding:2px 7px;font-size:0.68rem;font-weight:600;white-space:nowrap;'+(extraStyle||'background:#e8e8ed;color:#3a3a3c;')+'">'+txt+'</span>';
+    }
+
     var html = '<div style="padding:.75rem 1.25rem;background:#f5f5f7;border-bottom:1px solid #e8e8ed;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">'
         + '<label style="font-size:.82rem;font-weight:600;color:#1d1d1f;">Student</label>'
         + '<select id="writing-ov-sel" class="redact-select" onchange="writingOvStudent=this.value;renderWritingStudentOverview();" style="padding:5px 10px;border-radius:8px;border:1px solid #d1d1d6;font-family:inherit;font-size:.82rem;min-width:180px;">'
         + nameList.map(function(n){ return '<option value="'+n.replace(/"/g,'&quot;')+'"'+(n===sel?' selected':'')+'>'+n+'</option>'; }).join('')
-        + '</select></div>';
+        + '</select>'
+        + (wbOvAL ? wbSmallChip(wbOvAL, 'background:#fff3e0;color:#FF8200;') : '')
+        + (wbOvGLE ? wbSmallChip('GLE ' + wbOvGLE, 'background:#f3f4f6;color:#374151;') : '')
+        + (wbOvBoyTier ? wbSmallChip('BOY Tier: ' + wbOvBoyTier.replace(/^tier\s*/i,''), wbTierChipStyle(wbOvBoyTier)) : '')
+        + (wbOvMoyTier ? wbSmallChip('MOY Tier: ' + wbOvMoyTier.replace(/^tier\s*/i,''), wbTierChipStyle(wbOvMoyTier)) : '')
+        + '</div>';
 
     // Category scores — check if WD level data is already cached
     var _wdAllLoaded = ['al1','al2','al34','ms'].every(function(k){ return WD.getData().levelCache[k]; });
