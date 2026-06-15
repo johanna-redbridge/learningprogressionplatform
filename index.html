@@ -8728,7 +8728,8 @@ function renderReadingStudentOverview() {
             drawMapLineGraph(_meCanvas, _mapElaAlignedPts, '#FFC8BB', null, {
                 padL: 50, padR: 22,
                 slotRange: { first: _sharedFirst, last: _sharedLast },
-                fpYearBands: FP_YEAR_BANDS
+                fpYearBands: FP_YEAR_BANDS,
+                fixedYTicks: [100, 150, 200, 250]
             });
         }
     }
@@ -8768,7 +8769,10 @@ function drawMapLineGraph(canvas, pts, lineColor, goalSegs, opts) {
     }
     var rng = maxS - minS || 10;
     var yMin, yMax;
-    if (opts.yStartAtZero) {
+    if (opts.fixedYTicks && opts.fixedYTicks.length) {
+        yMin = opts.fixedYTicks[0];
+        yMax = opts.fixedYTicks[opts.fixedYTicks.length - 1];
+    } else if (opts.yStartAtZero) {
         yMin = 0;
         yMax = Math.ceil(maxS + rng * 0.15) + 0.5;
     } else {
@@ -8797,7 +8801,16 @@ function drawMapLineGraph(canvas, pts, lineColor, goalSegs, opts) {
     }
 
     // Grid
-    if (opts.intYTicks) {
+    if (opts.fixedYTicks) {
+        opts.fixedYTicks.forEach(function(gv) {
+            var gy = yOf(gv);
+            if (gy < padT - 2 || gy > padT + plotH + 2) return;
+            ctx.strokeStyle = '#ebebf0'; ctx.lineWidth = 1; ctx.setLineDash([]);
+            ctx.beginPath(); ctx.moveTo(padL, gy); ctx.lineTo(padL + plotW, gy); ctx.stroke();
+            ctx.fillStyle = '#8e8e93'; ctx.font = '10px -apple-system,sans-serif'; ctx.textAlign = 'right';
+            ctx.fillText(gv, padL - 5, gy + 4);
+        });
+    } else if (opts.intYTicks) {
         for (var gv = Math.floor(yMin); gv <= Math.ceil(yMax); gv++) {
             var gy = yOf(gv);
             if (gy < padT - 2 || gy > padT + plotH + 2) continue;
@@ -9627,7 +9640,8 @@ function renderCompStudentOverview() {
         if (mapCanvas2) {
             var _mSlice = _mapMathAllPts.slice(_cFirst, _cLast + 1);
             drawMapLineGraph(mapCanvas2, _mSlice, '#00E3FF', null, {
-                padL: 44, padR: 16, fpYearBands: _cBands, slotRange: _cSlotRange
+                padL: 44, padR: 16, fpYearBands: _cBands, slotRange: _cSlotRange,
+                fixedYTicks: [100, 150, 200, 250]
             });
         }
     }
