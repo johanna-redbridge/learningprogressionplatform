@@ -8359,17 +8359,26 @@ function switchReadingSubtab(sub) {
 }
 
 function renderReadingSubtab() {
-    if (readingSubtab === 'core')             renderCore();
+    if (readingSubtab === 'core')             { coreData = {al1:null,al2:null,al34:null}; renderCore(); }
     if (readingSubtab === 'fp')               renderFP();
     if (readingSubtab === 'lexia')            lexiaReload();
     if (readingSubtab === 'map-ela')          renderMapEla();
-    if (readingSubtab === 'student-overview') { loadReadingTierData(); _refreshLexiaForStudentOv(); renderReadingStudentOverview(); }
+    if (readingSubtab === 'student-overview') { loadReadingTierData(); _refreshLexiaForStudentOv(); _refreshCoreForStudentOv(); renderReadingStudentOverview(); }
     if (readingSubtab === 'xref-read')        renderReadXref();
 }
 
 // ── Student Overview ──────────────────────────────────────────────────
 var readingOverviewStudent = '';
 var readingTierData = null;
+
+function _refreshCoreForStudentOv() {
+    coreData = {al1:null, al2:null, al34:null};
+    var done = 0, keys = ['al1','al2','al34'];
+    function onDone() { if (++done >= keys.length && readingSubtab === 'student-overview') renderReadingStudentOverview(); }
+    keys.forEach(function(k) {
+        fetch(CORE_CSV_URLS[k]).then(function(r){ return r.text(); }).then(function(t){ coreData[k]=parseCoreCsv(t); onDone(); }).catch(function(){ coreData[k]=[]; onDone(); });
+    });
+}
 
 function _refreshLexiaForStudentOv() {
     lexiaPerfData = null;
