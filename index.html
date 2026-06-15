@@ -5136,6 +5136,7 @@ function submitPortfolioEntry() {
 function navPortfolioStudent(studentId) {
     portfolioStudent = studentId;
     portfolioSearchQuery = '';
+    if (studentId === 's17') { clarksonData = null; clarksonLocalAttempts = {}; }
     history.pushState({ tab: 'portfolio', portfolioStudent: studentId }, '');
     renderPortfolio();
 }
