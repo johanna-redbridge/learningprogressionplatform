@@ -1173,6 +1173,7 @@
                 <button class="toggle-btn" data-value="goaltracker" onclick="setToggle('manage-mode-toggle', 'goaltracker'); renderManageCombined()">Goal Tracker</button>
                 <button class="toggle-btn" data-value="worktracker" onclick="setToggle('manage-mode-toggle', 'worktracker'); renderManageCombined()">Work Tracker</button>
                 <button class="toggle-btn" data-value="averageearnings" onclick="setToggle('manage-mode-toggle', 'averageearnings'); renderManageCombined()">Average Earnings</button>
+                <button class="toggle-btn" data-value="xref" onclick="setToggle('manage-mode-toggle', 'xref'); renderManageCombined()">Cross Reference</button>
             </div>
             <div id="manage-subject-btns" class="toggle-group"></div>
             <div id="manage-student-search" style="display:none;align-items:center;gap:0.6rem;flex-wrap:wrap;">
@@ -1215,6 +1216,41 @@
         <div id="manage-averageearnings-section" style="display:none;">
             <div id="lc-analytics-panel">
                 <div id="lc-analytics-content" style="padding:0;"></div>
+            </div>
+        </div>
+        <div id="manage-xref-section" style="display:none;">
+            <div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:1rem;">
+                <div class="toggle-group" id="manage-xref-sub-toggle">
+                    <button class="toggle-btn active" data-value="reading" onclick="switchManageXrefSub('reading')">Reading</button>
+                    <button class="toggle-btn" data-value="comp" onclick="switchManageXrefSub('comp')">Computation</button>
+                </div>
+            </div>
+            <div id="manage-xref-reading-wrap" style="">
+                <!-- reading-panel-xref-read content rendered here -->
+                <div style="display:flex;gap:0.6rem;align-items:center;padding:0.55rem 1.25rem;border-bottom:1px solid #e8e8ed;background:#f5f5f7;">
+                    <span style="font-size:0.82rem;font-weight:600;color:#1d1d1f;white-space:nowrap;">Student</span>
+                    <select id="read-xref-sel" onchange="setReadXrefStudent(this.value)" class="redact-select" style="padding:0.3rem 0.6rem;border:1px solid #d2d2d7;border-radius:7px;font-size:0.82rem;background:#fff;cursor:pointer;max-width:220px;">
+                        <option value="">— Select Student —</option>
+                    </select>
+                </div>
+                <div id="read-xref-header" style="display:none;flex-shrink:0;background:#fff;border-bottom:1px solid #e8e8ed;"></div>
+                <div id="read-xref-content" style="padding:0;"></div>
+            </div>
+            <div id="manage-xref-comp-wrap" style="display:none;">
+                <!-- math-panel-xref-comp content rendered here -->
+                <div style="display:flex;gap:0.6rem;align-items:center;padding:0.55rem 1.25rem;border-bottom:1px solid #e8e8ed;background:#f5f5f7;flex-wrap:wrap;">
+                    <span style="font-size:0.82rem;font-weight:600;color:#1d1d1f;white-space:nowrap;">Student</span>
+                    <select id="comp-xref-sel" onchange="setCompXrefStudent(this.value)" class="redact-select" style="padding:0.3rem 0.6rem;border:1px solid #d2d2d7;border-radius:7px;font-size:0.82rem;background:#fff;cursor:pointer;max-width:220px;">
+                        <option value="">— Select Student —</option>
+                    </select>
+                    <div style="margin-left:auto;display:flex;align-items:center;gap:14px;flex-shrink:0;">
+                        <span style="display:flex;align-items:center;gap:6px;font-size:.72rem;color:#3a3a3c;white-space:nowrap;"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#CCF9FF;border:1px solid #a0e8f8;flex-shrink:0;"></span>Credits Earned</span>
+                        <span style="display:flex;align-items:center;gap:6px;font-size:.72rem;color:#3a3a3c;white-space:nowrap;"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#8CF2FF;border:1px solid #5adaf0;flex-shrink:0;"></span>Benchmark Mastered</span>
+                        <span style="display:flex;align-items:center;gap:6px;font-size:.72rem;color:#3a3a3c;white-space:nowrap;"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#00E3FF;border:1px solid #00b8d4;flex-shrink:0;"></span>Both Confirmed</span>
+                    </div>
+                </div>
+                <div id="comp-xref-header" style="display:none;flex-shrink:0;background:#fff;border-bottom:1px solid #e8e8ed;"></div>
+                <div id="comp-xref-content" style="padding:0;"></div>
             </div>
         </div>
     </div>
@@ -1307,7 +1343,7 @@
             <span style="padding:0.55rem 0.5rem;font-size:0.82rem;font-weight:600;color:#1d1d1f;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-2px;">Reading</span>
             <span style="width:1px;background:#e8e8ed;margin:4px 8px;align-self:stretch;"></span>
             <button id="reading-sub-overview-btn" class="data-subtab-btn" onclick="switchReadingSubtab('student-overview')">Student Overview</button>
-            <button id="reading-sub-xref-btn" class="data-subtab-btn" onclick="switchReadingSubtab('xref-read')">Cross Reference</button>
+            <button id="reading-sub-xref-btn" class="data-subtab-btn" onclick="switchReadingSubtab('xref-read')" style="display:none;">Cross Reference</button>
             <span style="width:1px;background:#e8e8ed;margin:4px 8px;align-self:stretch;"></span>
             <button id="reading-logo-spelling" class="logo-tab-btn reading-view-btn" data-view="spelling" onclick="switchReadingSubtab('spelling')"><img src="Spelling%20Benchmark%20Logo.png" alt="Spelling Benchmark" style="height:24px;object-fit:contain;display:block;"></button>
             <button id="reading-logo-fp" class="logo-tab-btn reading-view-btn active" data-view="fp" onclick="switchReadingSubtab('fp')"><img src="F%26P%20Logo.jpg" alt="F&amp;P" style="height:24px;object-fit:contain;display:block;"></button>
@@ -1323,7 +1359,7 @@
             <span style="padding:0.55rem 0.5rem;font-size:0.82rem;font-weight:600;color:#1d1d1f;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-2px;">Computation</span>
             <span style="width:1px;background:#e8e8ed;margin:4px 8px;align-self:stretch;"></span>
             <button id="comp-sub-overview-btn" class="data-subtab-btn" onclick="switchMathSubtab('student-overview')">Student Overview</button>
-            <button id="comp-sub-xref-btn" class="data-subtab-btn" onclick="switchMathSubtab('xref-comp')">Cross Reference</button>
+            <button id="comp-sub-xref-btn" class="data-subtab-btn" onclick="switchMathSubtab('xref-comp')" style="display:none;">Cross Reference</button>
             <span style="width:1px;background:#e8e8ed;margin:4px 8px;align-self:stretch;"></span>
             <button id="comp-logo-benchmark" class="logo-tab-btn math-view-btn active" data-view="benchmark" onclick="switchMathSubtab('benchmark')"><img src="Computation%20Benchmark%20logo.png" alt="Benchmark" style="height:24px;object-fit:contain;display:block;"></button>
             <button id="comp-logo-ff" class="logo-tab-btn math-view-btn" data-view="fact-fluency" onclick="switchMathSubtab('fact-fluency')"><img src="Fact%20Fluency.png" alt="Fact Fluency" style="height:24px;object-fit:contain;display:block;"></button>
@@ -1455,16 +1491,6 @@
                 <div id="reading-student-overview-content"></div>
             </div>
             <!-- Cross Reference (Reading) -->
-            <div id="reading-panel-xref-read" style="display:none;">
-                <div style="display:flex;gap:0.6rem;align-items:center;padding:0.55rem 1.25rem;border-bottom:1px solid #e8e8ed;background:#f5f5f7;">
-                    <span style="font-size:0.82rem;font-weight:600;color:#1d1d1f;white-space:nowrap;">Student</span>
-                    <select id="read-xref-sel" onchange="setReadXrefStudent(this.value)" class="redact-select" style="padding:0.3rem 0.6rem;border:1px solid #d2d2d7;border-radius:7px;font-size:0.82rem;background:#fff;cursor:pointer;max-width:220px;">
-                        <option value="">— Select Student —</option>
-                    </select>
-                </div>
-                <div id="read-xref-header" style="display:none;flex-shrink:0;background:#fff;border-bottom:1px solid #e8e8ed;"></div>
-                <div id="read-xref-content" style="padding:0;"></div>
-            </div>
         </div>
 
         <!-- ── Computation Dashboard ── -->
@@ -1523,21 +1549,6 @@
                 <div id="ba-content"></div>
             </div>
             <!-- Cross Reference (Computation) -->
-            <div id="math-panel-xref-comp" style="display:none;">
-                <div style="display:flex;gap:0.6rem;align-items:center;padding:0.55rem 1.25rem;border-bottom:1px solid #e8e8ed;background:#f5f5f7;flex-wrap:wrap;">
-                    <span style="font-size:0.82rem;font-weight:600;color:#1d1d1f;white-space:nowrap;">Student</span>
-                    <select id="comp-xref-sel" onchange="setCompXrefStudent(this.value)" class="redact-select" style="padding:0.3rem 0.6rem;border:1px solid #d2d2d7;border-radius:7px;font-size:0.82rem;background:#fff;cursor:pointer;max-width:220px;">
-                        <option value="">— Select Student —</option>
-                    </select>
-                    <div style="margin-left:auto;display:flex;align-items:center;gap:14px;flex-shrink:0;">
-                        <span style="display:flex;align-items:center;gap:6px;font-size:.72rem;color:#3a3a3c;white-space:nowrap;"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#CCF9FF;border:1px solid #a0e8f8;flex-shrink:0;"></span>Credits Earned</span>
-                        <span style="display:flex;align-items:center;gap:6px;font-size:.72rem;color:#3a3a3c;white-space:nowrap;"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#8CF2FF;border:1px solid #5adaf0;flex-shrink:0;"></span>Benchmark Mastered</span>
-                        <span style="display:flex;align-items:center;gap:6px;font-size:.72rem;color:#3a3a3c;white-space:nowrap;"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#00E3FF;border:1px solid #00b8d4;flex-shrink:0;"></span>Both Confirmed</span>
-                    </div>
-                </div>
-                <div id="comp-xref-header" style="display:none;flex-shrink:0;background:#fff;border-bottom:1px solid #e8e8ed;"></div>
-                <div id="comp-xref-content" style="padding:0;"></div>
-            </div>
         </div>
 
         <!-- ── Learning Credits sub-tab ── -->
@@ -6187,6 +6198,7 @@ function renderManageCombined() {
     document.getElementById('manage-goaltracker-section').style.display = mode === 'goaltracker' ? '' : 'none';
     document.getElementById('manage-worktracker-section').style.display = mode === 'worktracker' ? '' : 'none';
     document.getElementById('manage-averageearnings-section').style.display = mode === 'averageearnings' ? '' : 'none';
+    document.getElementById('manage-xref-section').style.display = mode === 'xref' ? '' : 'none';
     if (mode === 'groups') {
         renderManageLeft();
         renderManageRight();
@@ -6202,7 +6214,27 @@ function renderManageCombined() {
     } else if (mode === 'averageearnings') {
         loadEarnedFromSheet();
         renderLCAnalytics();
+    } else if (mode === 'xref') {
+        renderManageXref();
     }
+}
+
+var manageXrefSub = 'reading';
+function switchManageXrefSub(sub) {
+    manageXrefSub = sub;
+    document.querySelectorAll('#manage-xref-sub-toggle .toggle-btn').forEach(function(b) {
+        b.classList.toggle('active', b.dataset.value === sub);
+    });
+    var rw = document.getElementById('manage-xref-reading-wrap');
+    var cw = document.getElementById('manage-xref-comp-wrap');
+    if (rw) rw.style.display = sub === 'reading' ? '' : 'none';
+    if (cw) cw.style.display = sub === 'comp' ? '' : 'none';
+    if (sub === 'reading') renderReadXref();
+    if (sub === 'comp') renderCompXref();
+}
+function renderManageXref() {
+    if (manageXrefSub === 'reading') renderReadXref();
+    else renderCompXref();
 }
 
 function renderManage() {
