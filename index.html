@@ -1901,6 +1901,12 @@ var studentPortraitMap = {
 var studentAutonomyLevel = {};
 var autonomyGroups = ['AL1', 'AL2', 'AL3', 'AL4'];
 
+// Manual AL overrides — take priority over any data source
+var STUDENT_AL_OVERRIDES = {
+    'isabella bella':   'AL4',  // xrefNorm('Isabella (Bella)')
+    'isabella araujo':  'AL4'   // xrefNorm('Isabella Araujo')
+};
+
 // Group rosters — maps group IDs to student names
 const groupRosters = {
     // Computation
@@ -9170,7 +9176,7 @@ function renderWritingStudentOverview() {
     }
 
     // Chips data
-    var wbOvAL = wbRec && wbRec.al ? 'AL' + wbRec.al : '';
+    var wbOvAL = compStudentAL(sel) || (wbRec && wbRec.al ? 'AL' + wbRec.al : '');
     var wbOvGLE = wbRec && wbRec.gle ? wbRec.gle : '';
     var wbOvTierRec = (writingTierData || []).find(function(r){ return xrefNorm(r.name) === norm; }) || null;
     var wbOvBoyTier = wbOvTierRec ? wbOvTierRec.boyTier : '';
@@ -16348,8 +16354,9 @@ function fullName(name) {
 function compDisplayName(name) { return fullName(name); }
 
 function compStudentAL(name) {
-    if (studentAutonomyLevel[name]) return studentAutonomyLevel[name];
     var norm = xrefNorm(name);
+    if (STUDENT_AL_OVERRIDES[norm]) return STUDENT_AL_OVERRIDES[norm];
+    if (studentAutonomyLevel[name]) return studentAutonomyLevel[name];
     for (var k in studentAutonomyLevel) {
         if (xrefNorm(k) === norm) return studentAutonomyLevel[k];
     }
