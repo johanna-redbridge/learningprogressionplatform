@@ -8767,7 +8767,13 @@ function drawMapLineGraph(canvas, pts, lineColor, goalSegs, opts) {
         });
     }
     var rng = maxS - minS || 10;
-    var yMin = minS - rng * 0.2, yMax = maxS + rng * 0.2;
+    var yMin, yMax;
+    if (opts.yStartAtZero) {
+        yMin = 0;
+        yMax = Math.ceil(maxS + rng * 0.15) + 0.5;
+    } else {
+        yMin = minS - rng * 0.2; yMax = maxS + rng * 0.2;
+    }
 
     ctx.fillStyle = '#fafafa'; ctx.fillRect(0, 0, W, H);
 
@@ -8791,14 +8797,25 @@ function drawMapLineGraph(canvas, pts, lineColor, goalSegs, opts) {
     }
 
     // Grid
-    var steps = 4;
-    for (var gi = 0; gi <= steps; gi++) {
-        var gv = yMin + (yMax - yMin) * gi / steps;
-        var gy = yOf(gv);
-        ctx.strokeStyle = '#ebebf0'; ctx.lineWidth = 1; ctx.setLineDash([]);
-        ctx.beginPath(); ctx.moveTo(padL, gy); ctx.lineTo(padL + plotW, gy); ctx.stroke();
-        ctx.fillStyle = '#8e8e93'; ctx.font = '10px -apple-system,sans-serif'; ctx.textAlign = 'right';
-        ctx.fillText(Math.round(gv), padL - 5, gy + 4);
+    if (opts.intYTicks) {
+        for (var gv = Math.floor(yMin); gv <= Math.ceil(yMax); gv++) {
+            var gy = yOf(gv);
+            if (gy < padT - 2 || gy > padT + plotH + 2) continue;
+            ctx.strokeStyle = '#ebebf0'; ctx.lineWidth = 1; ctx.setLineDash([]);
+            ctx.beginPath(); ctx.moveTo(padL, gy); ctx.lineTo(padL + plotW, gy); ctx.stroke();
+            ctx.fillStyle = '#8e8e93'; ctx.font = '10px -apple-system,sans-serif'; ctx.textAlign = 'right';
+            ctx.fillText(gv, padL - 5, gy + 4);
+        }
+    } else {
+        var steps = 4;
+        for (var gi = 0; gi <= steps; gi++) {
+            var gv = yMin + (yMax - yMin) * gi / steps;
+            var gy = yOf(gv);
+            ctx.strokeStyle = '#ebebf0'; ctx.lineWidth = 1; ctx.setLineDash([]);
+            ctx.beginPath(); ctx.moveTo(padL, gy); ctx.lineTo(padL + plotW, gy); ctx.stroke();
+            ctx.fillStyle = '#8e8e93'; ctx.font = '10px -apple-system,sans-serif'; ctx.textAlign = 'right';
+            ctx.fillText(Math.round(gv), padL - 5, gy + 4);
+        }
     }
 
     // EOY GLE goal lines
@@ -9600,7 +9617,8 @@ function renderCompStudentOverview() {
             var _bSlice = _benchAllPts.slice(_cFirst, _cLast + 1);
             drawMapLineGraph(benchCanvas, _bSlice, '#00E3FF', _benchGoalSegs.length ? _benchGoalSegs : null, {
                 padL: 44, padR: 16, fpYearBands: _cBands, slotRange: _cSlotRange,
-                growthGoalSegs: _benchGrowthSegs.length ? _benchGrowthSegs : null
+                growthGoalSegs: _benchGrowthSegs.length ? _benchGrowthSegs : null,
+                yStartAtZero: true, intYTicks: true
             });
         }
 
