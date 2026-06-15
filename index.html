@@ -9200,29 +9200,69 @@ function _buildWbCatsHtml(data) {
         if (v>=3.0) return '#F8D66D'; if (v>=2.0) return '#ffb54c';
         return '#ff6961';
     }
-    var header = data.season + (data.genre ? ' · ' + data.genre : '') + ' — ' + data.levelLabel;
+    function growthColor(g) {
+        if (g==null) return '#e5e5e5';
+        if (g > 0.9) return '#34c759'; if (g > 0.4) return '#a8df9e';
+        if (g > 0) return '#d4f5dc';
+        if (g === 0) return '#e5e5e5';
+        return '#ff6961';
+    }
+    function textFor(bg) {
+        return (bg==='#34c759'||bg==='#ff6961') ? '#fff' : '#1d1d1f';
+    }
+    var boyD = data.fall, moyD = data.winter;
+    var hasBoy = boyD && boyD.scores && boyD.scores.some(function(x){return x!=null;});
+    var hasMoy = moyD && moyD.scores && moyD.scores.some(function(x){return x!=null;});
+    var hasGrowth = hasBoy && hasMoy;
+    var genre = (moyD&&moyD.genre) || (boyD&&boyD.genre) || '';
+    var notes = (moyD&&moyD.notes) || (boyD&&boyD.notes) || '';
+
+    var CELL = 'padding:5px 4px;text-align:center;font-size:.78rem;font-weight:700;border-radius:7px;min-width:38px;';
+    var LBL  = 'padding:5px 6px;font-size:.68rem;font-weight:700;color:#86868b;white-space:nowrap;text-align:right;';
+    var HDR  = 'padding:3px 4px;font-size:.58rem;font-weight:600;color:#86868b;text-transform:uppercase;letter-spacing:.04em;text-align:center;line-height:1.2;';
+
     var html = '<div style="background:#fff;border-radius:16px;box-shadow:0 1px 6px rgba(0,0,0,.07);overflow:hidden;">'
         + '<div style="background:#5c5b5a;color:#fff;padding:0.5rem 1rem;font-weight:700;font-size:.85rem;display:flex;align-items:center;gap:8px;">'
         + '<span style="width:12px;height:12px;border-radius:3px;display:inline-block;background:#E87BB0;"></span>'
         + 'Category Scores'
-        + '<span style="font-weight:400;font-size:.75rem;opacity:.8;margin-left:4px;">'+header+'</span>'
+        + (genre ? '<span style="font-weight:400;font-size:.75rem;opacity:.8;margin-left:4px;">'+genre+' — '+data.levelLabel+'</span>' : '<span style="font-weight:400;font-size:.75rem;opacity:.8;margin-left:4px;">'+data.levelLabel+'</span>')
         + '</div>'
-        + '<div style="padding:1rem;display:flex;flex-wrap:wrap;gap:0.6rem;">';
-    data.cats.forEach(function(cat, i) {
-        var v = data.scores[i];
-        var bg = catColor(v);
-        var textCol = (v != null && v >= 3.0) ? '#1d1d1f' : (v != null && v > 0) ? '#fff' : '#aeaeb2';
-        html += '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:70px;flex:1;">'
-            + '<div style="font-size:.6rem;font-weight:600;color:#86868b;text-transform:uppercase;letter-spacing:.04em;text-align:center;line-height:1.2;">' + cat + '</div>'
-            + '<div style="width:44px;height:44px;border-radius:10px;background:'+bg+';display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:800;color:'+textCol+';">'
-            + (v != null ? v.toFixed(1) : '—')
-            + '</div>'
-            + '</div>';
-    });
-    html += '</div>';
-    if (data.notes) {
-        html += '<div style="padding:0 1rem 1rem;font-size:.72rem;color:#5c5b5a;background:#f5f5f7;border-radius:6px;margin:0 1rem 1rem;padding:.4rem .6rem;">'+data.notes+'</div>';
+        + '<div style="padding:.75rem 1rem;overflow-x:auto;">'
+        + '<table style="border-collapse:separate;border-spacing:3px;width:100%;">'
+        + '<thead><tr><th style="'+LBL+'"></th>';
+    data.cats.forEach(function(cat){ html += '<th style="'+HDR+'">'+cat+'</th>'; });
+    html += '</tr></thead><tbody>';
+
+    if (hasBoy) {
+        html += '<tr><td style="'+LBL+'">BOY</td>';
+        data.cats.forEach(function(cat,i){
+            var v=boyD.scores[i], bg=catColor(v), tc=(v!=null&&v>0&&v<3)?'#fff':'#1d1d1f';
+            html += '<td style="'+CELL+'background:'+bg+';color:'+tc+';">'+(v!=null?v.toFixed(1):'—')+'</td>';
+        });
+        html += '</tr>';
     }
+    if (hasMoy) {
+        html += '<tr><td style="'+LBL+'">MOY</td>';
+        data.cats.forEach(function(cat,i){
+            var v=moyD.scores[i], bg=catColor(v), tc=(v!=null&&v>0&&v<3)?'#fff':'#1d1d1f';
+            html += '<td style="'+CELL+'background:'+bg+';color:'+tc+';">'+(v!=null?v.toFixed(1):'—')+'</td>';
+        });
+        html += '</tr>';
+    }
+    if (hasGrowth) {
+        html += '<tr><td style="'+LBL+'">Growth</td>';
+        data.cats.forEach(function(cat,i){
+            var b=boyD.scores[i], m=moyD.scores[i];
+            var g=(b!=null&&m!=null)?Math.round((m-b)*10)/10:null;
+            var bg=growthColor(g), tc=textFor(bg);
+            var lbl=g!=null?(g>0?'+':'')+g.toFixed(1):'—';
+            html += '<td style="'+CELL+'background:'+bg+';color:'+tc+';">'+lbl+'</td>';
+        });
+        html += '</tr>';
+    }
+
+    html += '</tbody></table></div>';
+    if (notes) html += '<div style="margin:0 1rem .75rem;font-size:.72rem;color:#5c5b5a;background:#f5f5f7;border-radius:6px;padding:.4rem .6rem;">'+notes+'</div>';
     html += '</div>';
     return html;
 }
@@ -18449,15 +18489,9 @@ function getStudentLatestCats(name) {
             if ((students[si].name || '').trim().toLowerCase() === normName) { stu = students[si]; break; }
         }
         if (!stu) continue;
-        var seasons = ['spring','winter','fall'];
-        var seasonLabels = { spring:'EOY', winter:'MOY', fall:'BOY' };
-        for (var sj = 0; sj < seasons.length; sj++) {
-            var s = seasons[sj];
-            var d = stu[s];
-            if (d && d.scores && d.scores.some(function(x){ return x != null; })) {
-                return { cats: LEVELS[key].cats, scores: d.scores, season: seasonLabels[s], genre: d.genre || '', notes: d.notes || '', levelKey: key, levelLabel: LEVELS[key].label, avg: d.avg };
-            }
-        }
+        var hasSome = ['fall','winter','spring'].some(function(s){ var d=stu[s]; return d&&d.scores&&d.scores.some(function(x){return x!=null;}); });
+        if (!hasSome) continue;
+        return { cats: LEVELS[key].cats, levelKey: key, levelLabel: LEVELS[key].label, fall: stu.fall||null, winter: stu.winter||null, spring: stu.spring||null };
     }
     return null;
 }
