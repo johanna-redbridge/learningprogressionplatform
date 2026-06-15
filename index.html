@@ -8959,20 +8959,14 @@ function drawMapLineGraph(canvas, pts, lineColor, goalSegs, opts) {
     if (opts.fixedYTicks) ctx.restore();
 
     // Score + percentile labels drawn after clip restore so they're always fully visible
-    var _scoreFont = 'bold 10px -apple-system,sans-serif';
-    var _pctFont   = '9px -apple-system,sans-serif';
     pts.forEach(function(p, i) {
         if (p.score === null) return;
         var x = xOf(i), y = yOf(p.score);
-        // Clamp x so label doesn't overflow canvas edges
-        ctx.font = _scoreFont;
-        var _sw = ctx.measureText(p.score).width;
-        var _tx = Math.max(padL + _sw / 2 + 2, Math.min(padL + plotW - _sw / 2 - 2, x));
-        ctx.fillStyle = '#3a3a3c'; ctx.textAlign = 'center';
-        ctx.fillText(p.score, _tx, y - 10);
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#3a3a3c'; ctx.font = 'bold 10px -apple-system,sans-serif';
+        ctx.fillText(p.score, x, y - 10);
         if (p.pct !== null) {
-            ctx.font = _pctFont;
-            ctx.fillStyle = '#86868b';
+            ctx.fillStyle = '#86868b'; ctx.font = '9px -apple-system,sans-serif';
             ctx.fillText(p.pct + '%ile', x, y + 20);
         }
     });
